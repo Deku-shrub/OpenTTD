@@ -141,8 +141,10 @@ one pixel across the viewport. Texture detail may
 change slightly during zooming; it should not sharpen again after a pause at rest.
 
 Following a moving vehicle uses the same fast sampler, including in its separate
-vehicle window. Full-quality filtering returns when it stops or the simulation
-pauses. Native zoom levels continue to use the original integer renderer.
+vehicle window. Panning and following retain that sampler when movement stops
+or the simulation pauses, avoiding a later change in fine details. A subsequent
+zoom transition chooses its filter before settling. Native zoom levels continue
+to use the original integer renderer.
 
 The updated main toolbar displays a compact percentage button, such as **84%**.
 Its tooltip shows the nearest traditional level. Click it to stop the transition
@@ -413,14 +415,22 @@ See [the controls documentation](smooth_zoom_controls.md) for more behavior deta
 ### Fractional panning
 
 Dragging and substantial eased panning use the faster motion sampler at fractional
-zoom levels. Eased pans return to settled filtering in the last eight screen pixels;
-dragging returns to settled filtering on the update after the gesture ends. This
-avoids using the expensive area filter throughout a whole-viewport pan. Native
-zoom levels retain their existing pixel-scroll path.
+zoom levels. That sampler now remains in use after the pan stops: the resting
+view keeps the same fine-detail filtering seen during movement. There is no
+delayed redraw to refine it with the area filter. Changing zoom can select a
+different filter during that transition. Native zoom levels retain their existing
+pixel-scroll path. This uses the existing viewport flag and adds no image cache.
 
-In the 960x600 software-rendered fixture at 130%, the same posted drag/capture
+For the earlier pan-performance fix, in the 960x600 software-rendered fixture at
+130%, the same posted drag/capture
 sequence observed a median interval between visible updates of 109 ms before
 this change and 32 ms afterwards (worst gaps 133 ms and 88 ms). The land crop
 remained unchanged beyond 300 ms after release. These are captured observations,
 not an isolated performance benchmark: the baseline ran during compilation.
 Larger resolutions, other renderers and complex NewGRFs need further checks.
+
+The subsequent release-interval check found that changing filters could still
+refine land after release. With consistent sampling, the static land crop's last
+change was 87 ms after posting release, while final input/frame updates completed;
+it then remained identical for the rest of the one-second observation. A native
+snap and a subsequent wheel transition also passed the settling check.

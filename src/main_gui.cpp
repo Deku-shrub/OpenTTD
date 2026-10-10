@@ -334,11 +334,14 @@ void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms)
 	auto it = _smooth_zoom_animations.find(w);
 	if (it == _smooth_zoom_animations.end()) {
 		if (w->viewport != nullptr && !_viewport_flights.contains(w)) {
-			const bool fast = UseFastPanSampling(w);
+			/* Panning must not change sampling after the camera stops. Keep its
+			 * filter until a zoom/flight explicitly chooses another one. This also
+			 * avoids a delayed quality redraw when a follow camera stops or pauses. */
+			const bool fast = UseFastPanSampling(w) ||
+					(w->viewport->zoom_step > 0 && w->viewport->zoom_animation);
 			if (w->viewport->zoom_animation != fast) {
 				w->viewport->zoom_animation = fast;
-				/* Redraw immediately on stop/pause, even when the camera origin is
-				 * unchanged. Otherwise its final fast-sampled image could linger. */
+				/* Redraw when the sampling mode changes, including a return to native zoom. */
 				w->SetDirty();
 			}
 		}

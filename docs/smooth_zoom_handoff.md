@@ -382,3 +382,21 @@ started target=1, arrived at 1.3000x after 2209 ms; disabling fly_vehicles preve
 a repeat flight. Basic/Expert settings screenshots were refreshed. Three town
 trips all arrived at 1.3000x in the new recording: 1731, 2247 and 2217 ms actual
 elapsed (1706, 2200, 2200 ms planned). Updated clip has 191 captures / 10.14 s.
+
+## Remaining post-scroll stabilisation - 10 October 2026
+
+The previous pan-speed fix still restored area filtering after gesture release.
+The earlier check excluded the first 300 ms and did not prove no final refinement.
+A tighter capture saw changes at 130 ms and 389 ms after release. Idle camera
+updates now retain the existing fast sampler for fractional views instead of
+resetting it after a pan or stopped/paused follow. Zoom/flight transitions still
+choose filtering before settling; native zoom resets the fractional state.
+This uses the existing viewport boolean, with no image cache or new setting.
+Tradeoff: panned/followed views retain motion-sampled fine details at rest rather
+than refining them later. The user guide explains this explicitly.
+1280x800 software checks at 130% found the last static-land change at 87 ms after
+posted release while the final input/frame updates completed, then identical
+land throughout the remaining one-second observation. Native snap showed 100%;
+wheel-settled land was identical across captures 700 ms apart. Release build and
+13,700 assertions in 132 cases passed. Raw evidence: pan-consistent-land.json and
+stable-filter-wheel-*.png in ignored build-smoothzoom.

@@ -299,6 +299,11 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [x] Consecutive town trips retain 130% arrival zoom and all remain animated.
 - [x] Full final Release build: 13,700 assertions in 132 cases pass.
 - [x] Refresh Basic master / Expert override screenshots and consecutive-town animation.
+- [x] Remove the post-pan / stopped-follow area-filter redraw: retain the same
+      fractional sampler at rest, without adding a cache. Document the fine-detail tradeoff.
+- [x] Inspect the immediate release interval, not only times beyond 300 ms:
+      last static-land change at 87 ms while final updates completed, then stable.
+- [x] Native snap and subsequent wheel settling remain valid; all 13,700 assertions pass.
 - [ ] Broader pan-performance checks at larger resolutions and with complex NewGRFs.
 
 ## Long-term visual additions
