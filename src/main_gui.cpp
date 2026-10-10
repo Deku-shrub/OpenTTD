@@ -308,12 +308,12 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 	vp.scrollpos_y = vp.dest_scrollpos_y = static_cast<int>(std::lround(pose.y)) - vp.virtual_height / 2;
 	vp.zoom_animation = flight.path.UseFastSampling(std::max(vp.width, vp.height));
 	if (vp.overlay != nullptr) vp.overlay->SetDirty();
-	if (zoom_changed || vp.zoom_step > 0 || vp.overlay != nullptr) {
-		/* Fractional movement changes sampling phase and needs a complete redraw.
-		 * At a constant native zoom, leave the displayed origin for the normal
-		 * viewport update to scroll existing pixels and redraw exposed strips. */
+	if (zoom_changed || vp.overlay != nullptr) {
+		/* Scale changes need a complete redraw. Constant-scale translation,
+		 * including fractional views, keeps its sampling phase and reuses pixels. */
 		vp.virtual_left = vp.scrollpos_x;
 		vp.virtual_top = vp.scrollpos_y;
+		vp.pixel_phase.Reset(vp.virtual_left, vp.virtual_top, vp.zoom_step);
 		w->SetDirty();
 	}
 	if (zoom_changed) w->InvalidateData();
@@ -392,6 +392,7 @@ void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms)
 		vp.scrollpos_y = vp.dest_scrollpos_y = animation.origin_y + GetZoomAnchorOffset(animation.anchor_y, animation.start, actual_step);
 		vp.virtual_left = vp.scrollpos_x;
 		vp.virtual_top = vp.scrollpos_y;
+		vp.pixel_phase.Reset(vp.virtual_left, vp.virtual_top, vp.zoom_step);
 	}
 	/* Keep independently requested arrow/edge scrolling or a smooth camera move. */
 	vp.dest_scrollpos_x = vp.scrollpos_x + pending_scroll_x;

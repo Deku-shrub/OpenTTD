@@ -292,10 +292,17 @@ int ViewportScale(const Viewport &vp, int v)
 }
 
 /** Convert virtual coordinates to screen pixels, rounding towards the lower edge. */
-int ViewportUnScale(const Viewport &vp, int v)
+int ViewportUnScale(const Viewport &vp, double v)
 {
 	if (vp.zoom_step > 0) return static_cast<int>(std::floor(v / static_cast<double>(vp.zoom_step)));
-	return UnScaleByZoomLower(v, vp.zoom);
+	return UnScaleByZoomLower(static_cast<int>(v), vp.zoom);
+}
+
+/** Convert a screen offset using the origin actually used to render the viewport. */
+static int ViewportScreenCoordinate(const Viewport &vp, double origin, int offset)
+{
+	if (vp.zoom_step > 0) return static_cast<int>(std::floor(origin + offset * static_cast<double>(vp.zoom_step)));
+	return static_cast<int>(origin) + ScaleByZoom(offset, vp.zoom);
 }
 
 /**
@@ -336,6 +343,7 @@ bool SetViewportSmoothZoom(Window *w, float scale, bool cancel_animation)
 	vp.scrollpos_y = vp.dest_scrollpos_y = centre_y - vp.virtual_height / 2;
 	vp.virtual_left = vp.scrollpos_x;
 	vp.virtual_top = vp.scrollpos_y;
+	vp.pixel_phase.Reset(vp.virtual_left, vp.virtual_top, vp.zoom_step);
 	if (vp.overlay != nullptr) vp.overlay->SetDirty();
 
 	w->SetDirty();
@@ -422,24 +430,24 @@ static void SetViewportPosition(Window *w, int x, int y)
 	vp.virtual_top = y;
 
 	if (vp.zoom_step > 0) {
-		/* With smooth zoom the sub-pixel phase of the content changes with every move, so scrolling the
-		 * old pixels would leave seams against the newly drawn ones. Redraw the whole viewport instead. */
-		if (old_left == x && old_top == y) return;
-		RedrawScreenRect(std::max(0, vp.left), std::max(0, vp.top),
-				std::min(_screen.width, vp.left + vp.width), std::min(_screen.height, vp.top + vp.height));
-		return;
+		if (vp.pixel_phase.step != vp.zoom_step) {
+			vp.pixel_phase.Reset(x, y, vp.zoom_step);
+			RedrawScreenRect(std::max(0, vp.left), std::max(0, vp.top),
+					std::min(_screen.width, vp.left + vp.width), std::min(_screen.height, vp.top + vp.height));
+			return;
+		}
+		/* Keep the sampling origin on its existing pixel grid. The displayed
+		 * camera is at most half a pixel from the desired integer world origin;
+		 * copied pixels and freshly exposed strips therefore sample identically. */
+		const auto [dx, dy] = vp.pixel_phase.Move(x, y);
+		old_left = dx;
+		old_top = dy;
+	} else {
+		vp.pixel_phase.step = 0;
+		/* Native viewports stay bound to their rounded-down top-left corner. */
+		old_left = UnScaleByZoomLower(old_left, vp.zoom) - UnScaleByZoomLower(x, vp.zoom);
+		old_top = UnScaleByZoomLower(old_top, vp.zoom) - UnScaleByZoomLower(y, vp.zoom);
 	}
-
-	/* Viewport is bound to its left top corner, so it must be rounded down (UnScaleByZoomLower)
-	 * else glitch described in FS#1412 will happen (offset by 1 pixel with zoom level > NORMAL)
-	 */
-	old_left = UnScaleByZoomLower(old_left, vp.zoom);
-	old_top = UnScaleByZoomLower(old_top, vp.zoom);
-	x = UnScaleByZoomLower(x, vp.zoom);
-	y = UnScaleByZoomLower(y, vp.zoom);
-
-	old_left -= x;
-	old_top -= y;
 
 	if (old_top == 0 && old_left == 0) return;
 
@@ -514,8 +522,8 @@ Point TranslateXYToTileCoord(const Viewport &vp, int x, int y, bool clamp_to_map
 	}
 
 	return InverseRemapCoords2(
-			ViewportScale(vp, x - vp.left) + vp.virtual_left,
-			ViewportScale(vp, y - vp.top) + vp.virtual_top, clamp_to_map);
+			ViewportScreenCoordinate(vp, vp.GetRenderLeft(), x - vp.left),
+			ViewportScreenCoordinate(vp, vp.GetRenderTop(), y - vp.top), clamp_to_map);
 }
 
 /* When used for zooming, check area below current coordinates (x,y)
@@ -1993,8 +2001,8 @@ static void ViewportDoDrawFractional(const Viewport &vp, int sx0, int sy0, int s
 	_vd.dpi.zoom_animation = vp.zoom_animation;
 	_vd.combine_sprites = SpriteCombineMode::None;
 
-	_vd.dpi.virtual_left = vp.virtual_left + (sx0 - vp.left) * step;
-	_vd.dpi.virtual_top = vp.virtual_top + (sy0 - vp.top) * step;
+	_vd.dpi.virtual_left = vp.GetRenderLeft() + (sx0 - vp.left) * step;
+	_vd.dpi.virtual_top = vp.GetRenderTop() + (sy0 - vp.top) * step;
 	_vd.dpi.pixel_width = sx1 - sx0;
 	_vd.dpi.pixel_height = sy1 - sy0;
 
@@ -2275,8 +2283,22 @@ void UpdateViewportPosition(Window *w, uint32_t delta_ms)
  */
 static bool MarkViewportDirty(const Viewport &vp, int left, int top, int right, int bottom)
 {
+	if (vp.zoom_step > 0) {
+		const double x0 = std::max(0.0, left - vp.GetRenderLeft());
+		const double y0 = std::max(0.0, top - vp.GetRenderTop());
+		const double x1 = right - vp.GetRenderLeft();
+		const double y1 = bottom - vp.GetRenderTop();
+		if (x1 <= 0 || y1 <= 0 || x0 >= vp.width * static_cast<double>(vp.zoom_step) ||
+				y0 >= vp.height * static_cast<double>(vp.zoom_step)) return false;
+		AddDirtyBlock(
+				static_cast<int>(std::floor(x0 / vp.zoom_step)) + vp.left - 1,
+				static_cast<int>(std::floor(y0 / vp.zoom_step)) + vp.top - 1,
+				static_cast<int>(std::ceil(x1 / vp.zoom_step)) + vp.left + 2,
+				static_cast<int>(std::ceil(y1 / vp.zoom_step)) + vp.top + 2);
+		return true;
+	}
 	/* Rounding wrt. zoom-out level */
-	const int round_up = vp.zoom_step > 0 ? static_cast<int>(std::ceil(vp.zoom_step)) : (1 << to_underlying(vp.zoom));
+	const int round_up = 1 << to_underlying(vp.zoom);
 	right += round_up - 1;
 	bottom += round_up - 1;
 
@@ -2288,24 +2310,11 @@ static bool MarkViewportDirty(const Viewport &vp, int left, int top, int right, 
 
 	left = std::max(0, left - vp.virtual_left);
 
-	const int virtual_width = vp.zoom_step > 0 ? static_cast<int>(std::ceil(vp.width * static_cast<double>(vp.zoom_step))) : vp.virtual_width;
-	if (left >= virtual_width) return false;
+	if (left >= vp.virtual_width) return false;
 
 	top = std::max(0, top - vp.virtual_top);
 
-	const int virtual_height = vp.zoom_step > 0 ? static_cast<int>(std::ceil(vp.height * static_cast<double>(vp.zoom_step))) : vp.virtual_height;
-	if (top >= virtual_height) return false;
-
-	if (vp.zoom_step > 0) {
-		/* Smooth zoom resamples sprites over a one pixel wider area, so be generous. */
-		AddDirtyBlock(
-			static_cast<int>(std::floor(left / vp.zoom_step)) + vp.left - 1,
-			static_cast<int>(std::floor(top / vp.zoom_step)) + vp.top - 1,
-			static_cast<int>(std::ceil(right / vp.zoom_step)) + vp.left + 2,
-			static_cast<int>(std::ceil(bottom / vp.zoom_step)) + vp.top + 2
-		);
-		return true;
-	}
+	if (top >= vp.virtual_height) return false;
 
 	AddDirtyBlock(
 		UnScaleByZoomLower(left, vp.zoom) + vp.left,
@@ -2518,8 +2527,8 @@ static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y, const Vie
 		const double scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
 		const int width = GetViewportLabelExtent(small ? sign->width_small : sign->width_normal, scale);
 		const int height = GetViewportLabelExtent(WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom, scale);
-		const int left = static_cast<int>(std::floor((sign->center - vp.virtual_left) / step - width / 2)) + vp.left;
-		const int top = ViewportUnScale(vp, sign->top - vp.virtual_top) + vp.top;
+		const int left = static_cast<int>(std::floor((sign->center - vp.GetRenderLeft()) / step - width / 2)) + vp.left;
+		const int top = ViewportUnScale(vp, sign->top - vp.GetRenderTop()) + vp.top;
 		return x >= left && x < left + width && y >= top && y < top + height;
 	}
 	int sign_half_width = ViewportScale(vp, (small ? sign->width_small : sign->width_normal) / 2);
@@ -2543,8 +2552,8 @@ static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y)
 
 	const int screen_x = x;
 	const int screen_y = y;
-	x = ViewportScale(vp, x - vp.left) + vp.virtual_left;
-	y = ViewportScale(vp, y - vp.top) + vp.virtual_top;
+	x = ViewportScreenCoordinate(vp, vp.GetRenderLeft(), x - vp.left);
+	y = ViewportScreenCoordinate(vp, vp.GetRenderTop(), y - vp.top);
 	const bool screen_labels = vp.zoom_step > 0 || BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom();
 	const int click_x = screen_labels ? screen_x : x;
 	const int click_y = screen_labels ? screen_y : y;
@@ -3945,8 +3954,8 @@ Point GetViewportStationMiddle(const Viewport &vp, const Station *st)
 	int z = GetSlopePixelZ(Clamp(x, 0, Map::SizeX() * TILE_SIZE - 1), Clamp(y, 0, Map::SizeY() * TILE_SIZE - 1));
 
 	Point p = RemapCoords(x, y, z);
-	p.x = (vp.zoom_step > 0 ? ViewportUnScale(vp, p.x - vp.virtual_left) : UnScaleByZoom(p.x - vp.virtual_left, vp.zoom)) + vp.left;
-	p.y = (vp.zoom_step > 0 ? ViewportUnScale(vp, p.y - vp.virtual_top) : UnScaleByZoom(p.y - vp.virtual_top, vp.zoom)) + vp.top;
+	p.x = (vp.zoom_step > 0 ? ViewportUnScale(vp, p.x - vp.GetRenderLeft()) : UnScaleByZoom(p.x - vp.virtual_left, vp.zoom)) + vp.left;
+	p.y = (vp.zoom_step > 0 ? ViewportUnScale(vp, p.y - vp.GetRenderTop()) : UnScaleByZoom(p.y - vp.virtual_top, vp.zoom)) + vp.top;
 	return p;
 }
 

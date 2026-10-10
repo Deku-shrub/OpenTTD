@@ -11,6 +11,7 @@
 #define VIEWPORT_TYPE_H
 
 #include "core/enum_type.hpp"
+#include "core/viewport_pixel_phase.hpp"
 #include "zoom_type.h"
 
 class LinkGraphOverlay;
@@ -43,8 +44,12 @@ struct Viewport {
 
 	ZoomLevel zoom; ///< The zoom level of the viewport. When #zoom_step is set, the nearest integer level.
 	float zoom_step = 0; ///< Smooth zoom: virtual pixels per screen pixel, or 0 when using integer #zoom.
-	bool zoom_animation = false; ///< Interactive zoom uses fast sampling until motion settles.
+	bool zoom_animation = false; ///< Whether interactive zoom motion is active.
+	ViewportPixelPhase pixel_phase; ///< Client-only sampling origin for pixel-aligned fractional panning.
 	std::shared_ptr<LinkGraphOverlay> overlay;
+
+	double GetRenderLeft() const { return this->zoom_step > 0 && this->pixel_phase.step == this->zoom_step ? this->pixel_phase.left : this->virtual_left; }
+	double GetRenderTop() const { return this->zoom_step > 0 && this->pixel_phase.step == this->zoom_step ? this->pixel_phase.top : this->virtual_top; }
 };
 
 /** Location information about a sign as seen on the viewport */

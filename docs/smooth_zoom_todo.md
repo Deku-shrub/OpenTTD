@@ -17,7 +17,9 @@ entries for the same behaviour.
 - [x] Check Arabic and accented Latin signs with Segoe UI, Japanese signs with Yu Gothic.
 - [x] Verify the NewGRF tram fixture is operating and record the dynamic scene with trees, company colours, wires and adjacent trains.
 - [x] Capture comparative pan-performance measurements without image-recording overhead.
-- [ ] Reduce full-viewport fractional-pan redraw cost: about 47 drawing FPS at 960 × 600, 16 at 1920 × 1080 versus about 60 at native zoom on the test machine.
+- [x] Retain fractional pixel phase and reuse pixels while panning: about 60 drawing FPS at 960 × 600 and 58 at 1920 × 1080, up from about 47/16 on the test machine.
+- [x] Check copied land/label pixels against full redraws at 130%, 84% and 66⅔%; move palette dependencies with copied pixels and keep picking on the rendered origin.
+- [x] Build and inspect eight objects, including gasometer, transmitter, lighthouse, substations and forests; check transparency and record zoom/pan demonstrations.
 
 A checked implementation item
 does not imply that every runtime check has passed or that the installed

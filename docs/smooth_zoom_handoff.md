@@ -458,3 +458,39 @@ redraw cost: about 47 drawing FPS at 960 x 600 and 16 at 1920 x 1080 at 130%,
 versus about 60 at native zoom. A static palette resolution experiment was
 removed after failing to establish a useful improvement. This performance gap
 remains explicit in the TODO and coverage notes.
+
+## Fractional pan pixel reuse
+
+The follow-up removes the full-viewport pan bottleneck. `ViewportPixelPhase`
+keeps a double rendering origin on its existing pixel grid at a fixed step;
+`Move` returns whole-pixel offsets and leaves at most half a screen pixel of
+error against the requested integer-world camera position. Half-open rounding
+prevents repeated half-pixel ties from oscillating. A scale change resets the
+phase and still marks the viewport dirty; cursor-anchored wheel and flight
+updates reset it after assigning their new origins.
+
+Fractional drawing, sign/vehicle picking, tile translation, station overlay
+positions and dirty bounds use that same rendering origin. Constant-scale
+flights now use the ordinary viewport scroll path. Palette dependency masks
+move with copied screen pixels, using one bounded scratch block map; native
+animation metadata continues to use each blitter's existing scroll method.
+No texture cache, setting, savegame field or network command is added.
+
+Release checks pass 68,807 assertions in 140 cases. The new cases cover camera
+error/phase invariants and half-pixel ties, copied partial-alpha pixels versus
+fresh repaint, and palette dependency translation in both directions.
+All eleven OpenGFX configurations pass the pan/full-redraw matrix; additional
+High Def software/OpenGL and Classic 1080p runs pass too. Actual pan movement
+is asserted before comparing the paused land/label crop with the F9-bound full
+refresh. Stock -> modified -> stock save/load was repeated successfully.
+
+Capture-free 130% pan now measures about 60 drawing FPS at 960 x 600 and 58 at
+1920 x 1080; 512-sample viewport means are about 2.4/4.1 ms. The earlier 47/16
+FPS measurements above describe the superseded full-redraw path. Scale changes
+still require full rendering, so this does not establish the same improvement
+for continuous large-window zoom.
+
+New `fractional-pan-optimised.webp` stays unchanged in its land crop for over
+four seconds after motion. `newgrf-objects.webp` adds the gasometer/forest scene.
+`ZoomCoverage.Objects()` builds eight available object types; the constructor
+log includes their names/locations. The main script retains its UTF-8 BOM.

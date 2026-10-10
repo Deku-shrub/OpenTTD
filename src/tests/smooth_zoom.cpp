@@ -17,6 +17,7 @@
 #include "../gfx_type.h"
 #include "../palette_func.h"
 #include "../core/backup_type.hpp"
+#include "../core/viewport_pixel_phase.hpp"
 #include "../settings_type.h"
 #include "../spritecache_type.h"
 #include "../zoom_func.h"
@@ -28,6 +29,47 @@ class SmoothZoomTestBlitter : public Blitter_32bppSimple {
 public:
 	using Blitter_32bppSimple::Pixel;
 };
+
+TEST_CASE("Fractional pixel scrolling matches a complete sprite repaint", "[smoothzoom]")
+{
+	const float step = GENERATE(4.0f / 1.3f, 4.0f / 0.84f, 1.5f, 2.25f, 6.0f);
+	SmoothZoomTestBlitter blitter;
+	std::array<SmoothZoomTestBlitter::Pixel, 65 * 33> source;
+	for (size_t i = 0; i < source.size(); ++i) {
+		source[i] = {static_cast<uint8_t>(i * 17), static_cast<uint8_t>(i * 37), static_cast<uint8_t>(i * 61),
+				static_cast<uint8_t>(i % 7 < 2 ? 0 : i % 7 == 2 ? 96 : 255), 0, 0};
+	}
+	constexpr int width = 8, height = 4;
+	const Colour background(10, 20, 30);
+	ViewportPixelPhase phase;
+	phase.Reset(2, 3, step);
+	auto render = [&]() {
+		std::array<Colour, width * height> pixels;
+		pixels.fill(background);
+		Blitter::ScaledBlitterParams bp{source.data(), nullptr, 65, 33, phase.left, phase.top, step,
+				width, height, pixels.data(), width};
+		bp.nearest = true;
+		REQUIRE(blitter.DrawScaled(&bp, BlitterMode::Normal));
+		return pixels;
+	};
+	auto previous = render();
+	for (int i = 1; i <= 24; ++i) {
+		const auto [dx, dy] = phase.Move(2 + static_cast<int>(12 * std::sin(i * 0.17)),
+				3 + static_cast<int>(5 * std::sin(i * 0.23)));
+		auto complete = render();
+		auto scrolled = complete; // Exposed strips are freshly rendered.
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				const int old_x = x - dx, old_y = y - dy;
+				if (old_x >= 0 && old_x < width && old_y >= 0 && old_y < height) {
+					scrolled[y * width + x] = previous[old_y * width + old_x];
+				}
+			}
+		}
+		CHECK(scrolled == complete);
+		previous = complete;
+	}
+}
 
 TEST_CASE("Motion sampling selects pixel centres without touching pitch guards", "[smoothzoom]")
 {

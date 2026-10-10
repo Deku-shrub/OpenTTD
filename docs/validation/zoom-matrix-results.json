@@ -1,13 +1,14 @@
 {
   "date": "2026-10-10",
-  "unit_assertions": 53540,
-  "unit_cases": 137,
+  "unit_assertions": 68807,
+  "unit_cases": 140,
   "sets": [
     {
       "graphics": "OpenGFX",
       "results": [
         {
           "case": "cjk",
+          "graphics": "OpenGFX",
           "blitter": "32bpp-anim",
           "driver": "win32:no_threads",
           "language": "japanese.lng",
@@ -16,7 +17,7 @@
             1280,
             800
           ],
-          "artifacts": "build-smoothzoom\\coverage\\cjk-20261010T182958",
+          "artifacts": "build-smoothzoom\\coverage\\cjk-20261010T202628",
           "checks": [
             "render 1",
             "render 1.3",
@@ -24,6 +25,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -31,6 +35,7 @@
         },
         {
           "case": "hidpi",
+          "graphics": "OpenGFX",
           "blitter": "32bpp-anim",
           "driver": "win32:no_threads",
           "language": "english.lng",
@@ -39,7 +44,7 @@
             1600,
             1000
           ],
-          "artifacts": "build-smoothzoom\\coverage\\hidpi-20261010T182908",
+          "artifacts": "build-smoothzoom\\coverage\\hidpi-20261010T202505",
           "checks": [
             "render 1",
             "render 1.3",
@@ -47,6 +52,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -54,6 +62,7 @@
         },
         {
           "case": "large",
+          "graphics": "OpenGFX",
           "blitter": "32bpp-anim",
           "driver": "win32:no_threads",
           "language": "english.lng",
@@ -62,7 +71,7 @@
             1920,
             1080
           ],
-          "artifacts": "build-smoothzoom\\coverage\\large-20261010T182843",
+          "artifacts": "build-smoothzoom\\coverage\\large-20261010T202423",
           "checks": [
             "render 1",
             "render 1.3",
@@ -70,6 +79,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -77,6 +89,7 @@
         },
         {
           "case": "legacy",
+          "graphics": "OpenGFX",
           "blitter": "8bpp-optimized",
           "driver": "win32:no_threads",
           "language": "english.lng",
@@ -85,7 +98,7 @@
             960,
             600
           ],
-          "artifacts": "build-smoothzoom\\coverage\\legacy-20261010T182833",
+          "artifacts": "build-smoothzoom\\coverage\\legacy-20261010T202414",
           "checks": [
             "render 1",
             "unsupported fractional request does not crash"
@@ -94,6 +107,7 @@
         },
         {
           "case": "opengl",
+          "graphics": "OpenGFX",
           "blitter": "40bpp-anim",
           "driver": "win32-opengl:no_threads",
           "language": "english.lng",
@@ -102,7 +116,7 @@
             960,
             600
           ],
-          "artifacts": "build-smoothzoom\\coverage\\opengl-20261010T182809",
+          "artifacts": "build-smoothzoom\\coverage\\opengl-20261010T202333",
           "checks": [
             "render 1",
             "render 1.3",
@@ -110,6 +124,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -117,6 +134,7 @@
         },
         {
           "case": "optimized",
+          "graphics": "OpenGFX",
           "blitter": "32bpp-optimized",
           "driver": "win32:no_threads",
           "language": "english.lng",
@@ -125,7 +143,7 @@
             960,
             600
           ],
-          "artifacts": "build-smoothzoom\\coverage\\optimized-20261010T182656",
+          "artifacts": "build-smoothzoom\\coverage\\optimized-20261010T202132",
           "checks": [
             "render 1",
             "render 1.3",
@@ -133,6 +151,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -140,6 +161,7 @@
         },
         {
           "case": "rtl",
+          "graphics": "OpenGFX",
           "blitter": "32bpp-anim",
           "driver": "win32:no_threads",
           "language": "arabic_egypt.lng",
@@ -148,7 +170,7 @@
             1280,
             800
           ],
-          "artifacts": "build-smoothzoom\\coverage\\rtl-20261010T182933",
+          "artifacts": "build-smoothzoom\\coverage\\rtl-20261010T202547",
           "checks": [
             "render 1",
             "render 1.3",
@@ -156,6 +178,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -163,6 +188,7 @@
         },
         {
           "case": "simple",
+          "graphics": "OpenGFX",
           "blitter": "32bpp-simple",
           "driver": "win32:no_threads",
           "language": "english.lng",
@@ -171,7 +197,7 @@
             960,
             600
           ],
-          "artifacts": "build-smoothzoom\\coverage\\simple-20261010T182631",
+          "artifacts": "build-smoothzoom\\coverage\\simple-20261010T202052",
           "checks": [
             "render 1",
             "render 1.3",
@@ -179,6 +205,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -186,6 +215,7 @@
         },
         {
           "case": "software",
+          "graphics": "OpenGFX",
           "blitter": "32bpp-anim",
           "driver": "win32:no_threads",
           "language": "english.lng",
@@ -194,7 +224,7 @@
             960,
             600
           ],
-          "artifacts": "build-smoothzoom\\coverage\\software-20261010T182607",
+          "artifacts": "build-smoothzoom\\coverage\\software-20261010T202012",
           "checks": [
             "render 1",
             "render 1.3",
@@ -202,6 +232,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -209,6 +242,7 @@
         },
         {
           "case": "sse2",
+          "graphics": "OpenGFX",
           "blitter": "32bpp-sse2-anim",
           "driver": "win32:no_threads",
           "language": "english.lng",
@@ -217,7 +251,7 @@
             960,
             600
           ],
-          "artifacts": "build-smoothzoom\\coverage\\sse2-20261010T182720",
+          "artifacts": "build-smoothzoom\\coverage\\sse2-20261010T202213",
           "checks": [
             "render 1",
             "render 1.3",
@@ -225,6 +259,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -232,6 +269,7 @@
         },
         {
           "case": "sse4",
+          "graphics": "OpenGFX",
           "blitter": "32bpp-sse4-anim",
           "driver": "win32:no_threads",
           "language": "english.lng",
@@ -240,7 +278,7 @@
             960,
             600
           ],
-          "artifacts": "build-smoothzoom\\coverage\\sse4-20261010T182744",
+          "artifacts": "build-smoothzoom\\coverage\\sse4-20261010T202253",
           "checks": [
             "render 1",
             "render 1.3",
@@ -248,6 +286,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -317,7 +358,7 @@
             1920,
             1080
           ],
-          "artifacts": "build-smoothzoom\\coverage\\large-20261010T190339",
+          "artifacts": "build-smoothzoom\\coverage\\large-20261010T202806",
           "checks": [
             "render 1",
             "render 1.3",
@@ -325,6 +366,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -622,7 +666,7 @@
             960,
             600
           ],
-          "artifacts": "build-smoothzoom\\coverage\\opengl-20261010T190431",
+          "artifacts": "build-smoothzoom\\coverage\\opengl-20261010T202026",
           "checks": [
             "render 1",
             "render 1.3",
@@ -630,6 +674,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -718,7 +765,7 @@
             960,
             600
           ],
-          "artifacts": "build-smoothzoom\\coverage\\software-20261010T185741",
+          "artifacts": "build-smoothzoom\\coverage\\software-20261010T202752",
           "checks": [
             "render 1",
             "render 1.3",
@@ -726,6 +773,9 @@
             "render 0.84",
             "render 0.25",
             "stable fractional rest",
+            "pan matches complete redraw 1.3",
+            "pan matches complete redraw 0.84",
+            "pan matches complete redraw 0.6666666666666666",
             "save/load screenshot"
           ],
           "settled_crop_difference": null,
@@ -782,9 +832,81 @@
       ]
     }
   ],
+  "extra_scenes": [
+    {
+      "case": "software",
+      "graphics": "OpenGFX",
+      "blitter": "32bpp-anim",
+      "driver": "win32:no_threads",
+      "language": "english.lng",
+      "interface_scale": 100,
+      "size": [
+        960,
+        600
+      ],
+      "artifacts": "build-smoothzoom\\coverage\\software-20261010T204808",
+      "checks": [
+        "render 1",
+        "render 1.3",
+        "render 2",
+        "render 0.84",
+        "render 0.25",
+        "stable fractional rest",
+        "pan matches complete redraw 1.3",
+        "pan matches complete redraw 0.84",
+        "pan matches complete redraw 0.6666666666666666",
+        "save/load screenshot"
+      ],
+      "settled_crop_difference": null,
+      "status": "passed",
+      "save": "build-smoothzoom/objects-profile/save/zoom-objects-coverage.sav"
+    }
+  ],
   "archive_sha256": {
     "opengfx-8.0.tar": "9389bcb0807058c80bd95121e978f05d9ef86b4b1bc3ac2da8da8bb02456043c",
     "OpenGFX2_Classic-0.8.tar": "e4c4efba59fd4c662e86e456fc584be0196e7ae147c6b509f793caacc95ec771",
     "OpenGFX2_HighDef-0.8.tar": "f5a49b80e53204e22f15c6f68f629119e267a040b716dd230dd9d0992eeec358"
-  }
+  },
+  "pan_performance": [
+    {
+      "size": [
+        960,
+        600
+      ],
+      "zoom": 1,
+      "messages": 546,
+      "seconds": 10.41969099995913,
+      "framerate_report": "Console log output started to 'C:/Users/chris/github/OpenTTD/build-smoothzoom/coverage/pan-profile-960/zoom-1.log'.\n\u200e] fps\nBased on num. data points: 64 128 512\nDrawing rate: 60.01fps  (expected: 33.33fps)\nVideo output rate: 60.05fps  (expected: 60.00fps)\nDrawing times: 0.98ms  0.92ms  1.23ms\n  Viewport drawing times: 0.50ms  0.47ms  0.54ms\nVideo output times: 0.55ms  0.56ms  0.74ms\n\u200e] script\nConsole log file closed.\n"
+    },
+    {
+      "size": [
+        960,
+        600
+      ],
+      "zoom": 1.3,
+      "messages": 546,
+      "seconds": 10.41781670000637,
+      "framerate_report": "Console log output started to 'C:/Users/chris/github/OpenTTD/build-smoothzoom/coverage/pan-profile-960/zoom-1.3.log'.\n\u200e] fps\nBased on num. data points: 64 128 512\nDrawing rate: 59.98fps  (expected: 33.33fps)\nVideo output rate: 60.14fps  (expected: 60.00fps)\nDrawing times: 2.59ms  2.81ms  2.96ms\n  Viewport drawing times: 2.19ms  2.34ms  2.41ms\nVideo output times: 0.45ms  0.51ms  0.59ms\n\u200e] script\nConsole log file closed.\n"
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "zoom": 1,
+      "messages": 544,
+      "seconds": 10.409623300016392,
+      "framerate_report": "Console log output started to 'C:/Users/chris/github/OpenTTD/build-smoothzoom/coverage/pan-profile-1920/zoom-1.log'.\n\u200e] fps\nBased on num. data points: 64 128 512\nDrawing rate: 59.92fps  (expected: 33.33fps)\nVideo output rate: 59.98fps  (expected: 60.00fps)\nDrawing times: 3.03ms  3.05ms  3.67ms\n  Viewport drawing times: 0.74ms  0.72ms  0.81ms\nVideo output times: 2.00ms  1.93ms  2.16ms\n\u200e] script\nConsole log file closed.\n"
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "zoom": 1.3,
+      "messages": 545,
+      "seconds": 10.416796599980444,
+      "framerate_report": "Console log output started to 'C:/Users/chris/github/OpenTTD/build-smoothzoom/coverage/pan-profile-1920/zoom-1.3.log'.\n\u200e] fps\nBased on num. data points: 64 128 512\nDrawing rate: 57.99fps  (expected: 33.33fps)\nVideo output rate: 59.99fps  (expected: 60.00fps)\nDrawing times: 6.03ms  6.23ms  6.85ms\n  Viewport drawing times: 3.98ms  3.88ms  4.10ms\nVideo output times: 1.41ms  1.75ms  1.89ms\n\u200e] script\nConsole log file closed.\n"
+    }
+  ]
 }

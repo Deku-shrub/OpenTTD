@@ -37,7 +37,7 @@ CASES = {
 }
 class Game:
  def __init__(self, executable, config, blitter, driver, size, save, graphics, out):
-  self.out=out;self.hwnd=None;self.graphics=graphics
+  self.out=out;self.hwnd=None;self.graphics=graphics;self.size=size
   self.stdout=open(out/'stdout.log','w');self.stderr=open(out/'stderr.log','w')
   args=[str(executable),'-c',str(config),'-x','-X','-s','null','-m','null','-b',blitter,'-v',driver,'-I',graphics,'-r',f'{size[0]}x{size[1]}','-g']
   if save:args.append(str(save))
@@ -83,6 +83,14 @@ class Game:
   if texts and texts[-1].startswith('load '):
    time.sleep(30 if self.graphics=='OpenGFX2 High Def' else 1)
   else:self.toggle();time.sleep(.3)
+ def pan(self,seconds=1.7):
+  x,y=self.size[0]//2,self.size[1]//2
+  self.post(0x200,0,x|(y<<16));self.post(0x204,2,x|(y<<16))
+  start=time.monotonic()
+  while time.monotonic()-start<seconds:
+   offset=8 if int((time.monotonic()-start)*2)%2==0 else -8
+   self.post(0x200,2,(x+offset)|(y<<16));time.sleep(.016)
+  self.post(0x205,0,x|(y<<16));time.sleep(.4)
  def snapshot(self,name):
   filename='matrix-'+self.out.name+'-'+name
   path=WORK/'screenshot'/(filename+'.png')
@@ -106,6 +114,8 @@ def run(name,args):
  blitter,driver,language,scale,size=CASES[name]
  stamp=time.strftime('%Y%m%dT%H%M%S');out=WORK/'coverage'/(name+'-'+stamp);out.mkdir(parents=True)
  exe=Path(args.executable).resolve();save=Path(args.save).resolve()
+ if args.pan_check:
+  (WORK/'hotkeys.cfg').write_text('[global]\nrefresh_screen = F9\n[maintoolbar]\ncompanies =\n')
  for lng in [language]:shutil.copy2(exe.parent.parent/'lang'/lng,WORK/'lang'/lng)
  config=WORK/('matrix-'+name+'-'+stamp+'.cfg')
  config.write_text(f'''[misc]
@@ -125,7 +135,7 @@ threaded_saves = false
 [graphicsset]
 name = {args.graphics}
 ''')
- result={'case':name,'graphics':args.graphics,'blitter':blitter,'driver':driver,'language':language,'interface_scale':scale,'size':size,'artifacts':str(out.relative_to(ROOT)),'checks':[]}
+ result={'case':name,'graphics':args.graphics,'save':str(save.relative_to(ROOT)) if save.is_relative_to(ROOT) else str(save),'blitter':blitter,'driver':driver,'language':language,'interface_scale':scale,'size':size,'artifacts':str(out.relative_to(ROOT)),'checks':[]}
  game=None
  try:
   game=Game.__new__(Game)
@@ -143,6 +153,19 @@ name = {args.graphics}
    result['settled_crop_difference']=bbox
    if bbox is not None:raise AssertionError('Static land changed after rest')
    result['checks'].append('stable fractional rest')
+   if args.pan_check:
+    for zoom in [1.3,.84,2.0/3.0]:
+     game.commands('smoothzoom '+str(zoom))
+     start_image=game.snapshot('pan-start-'+str(zoom))
+     game.pan()
+     before=game.snapshot('pan-'+str(zoom))
+     if ImageChops.difference(start_image.crop(crop),before.crop(crop)).getbbox() is None:
+      raise AssertionError('Pan input did not move the tested scene')
+     game.key(120);time.sleep(.5) # Isolated F9 binding forces a complete redraw.
+     after=game.snapshot('redraw-'+str(zoom))
+     bbox=ImageChops.difference(before.crop(crop),after.crop(crop)).getbbox()
+     if bbox is not None:raise AssertionError('Cached pan differs from full redraw at '+str(zoom)+': '+str(bbox))
+     result['checks'].append('pan matches complete redraw '+str(zoom))
    roundtrip='matrix-roundtrip-'+out.name
    game.commands('save '+roundtrip)
    game.commands('load '+roundtrip+'.sav');time.sleep(1)
@@ -160,9 +183,10 @@ name = {args.graphics}
  return result
 
 if __name__=='__main__':
- p=argparse.ArgumentParser();p.add_argument('--case',choices=list(CASES)+['all'],default='all');p.add_argument('--executable',default='C:/ottd-build/Release/openttd.exe');p.add_argument('--save',default=str(ROOT/'docs/validation/zoom-navigation.sav'));p.add_argument('--graphics',default='OpenGFX');args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--case',choices=list(CASES)+['all'],default='all');p.add_argument('--executable',default='C:/ottd-build/Release/openttd.exe');p.add_argument('--save',default=str(ROOT/'docs/validation/zoom-navigation.sav'));p.add_argument('--graphics',default='OpenGFX');p.add_argument('--pan-check',action='store_true');args=p.parse_args()
  results=[run(name,args) for name in (CASES if args.case=='all' else [args.case])]
- summary=WORK/'coverage'/('matrix-summary-'+args.graphics.replace(' ','-')+'.json')
+ fixture_suffix='-'+Path(args.save).stem if Path(args.save).resolve()!=ROOT/'docs/validation/zoom-navigation.sav' else ''
+ summary=WORK/'coverage'/('matrix-summary-'+args.graphics.replace(' ','-')+fixture_suffix+'.json')
  previous=json.loads(summary.read_text()) if summary.exists() else []
  combined={item['case']:item for item in previous+results}
  summary.write_text(json.dumps([combined[name] for name in CASES if name in combined],indent=2))

@@ -1,5 +1,20 @@
 ﻿require("vehicles.nut");
 class ZoomCoverage extends ZoomVehicles {
+    function Objects() {
+        local types=AIObjectTypeList(),built=0;
+        for(local type=types.Begin(); !types.IsEnd() && built<8; type=types.Next()) {
+            local site=this.Rectangle(4,4);
+            if(site==null) break;
+            local tile=this.Tile(site.x+1,site.y+1);
+            if(AIObjectType.BuildObject(type,0,tile)) {
+                local name=AIObjectType.GetName(type);
+                AISign.BuildSign(tile,"ZOOM object "+name);
+                AILog.Info("COVERAGE OBJECT type="+type+", name="+name+", scrollto "+tile);
+                built++;
+            }
+        }
+        AILog.Info("COVERAGE OBJECTS built="+built);
+    }
     function Start() {
         this.SetCommandDelay(1);
         if(!this.loaded) {
@@ -12,6 +27,7 @@ class ZoomCoverage extends ZoomVehicles {
                 local types=AIRailTypeList();
                 for(local type=types.Begin(); !types.IsEnd(); type=types.Next()) this.TrainRoute(type);
                 this.Rail();
+                this.Objects();
                 local signs=["Zoom scaling", "مقياس التكبير", "拡大縮小の表示", "Échelle du zoom"];
                 foreach(i,text in signs) {
                     local tile=this.Tile(80,80+i*3);

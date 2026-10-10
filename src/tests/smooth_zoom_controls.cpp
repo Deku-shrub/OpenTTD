@@ -13,9 +13,60 @@
 #include "../core/smooth_zoom_palette.hpp"
 #include "../core/smooth_zoom_motion.hpp"
 #include "../core/viewport_label_scale.hpp"
+#include "../core/viewport_pixel_phase.hpp"
 #include "../gfx_type.h"
 
 #include "../safeguards.h"
+
+TEST_CASE("Fractional pan retains its sampling phase and bounds camera error", "[smoothzoom]")
+{
+	const float step = GENERATE(4.0f / 1.3f, 4.0f / 0.84f, 1.0f, 1.5f, 6.0f, 31.0f);
+	ViewportPixelPhase phase;
+	phase.Reset(12345, -6789, step);
+	for (int i = 0; i < 500; ++i) {
+		const int x = 12345 + static_cast<int>(120 * std::sin(i * 0.13));
+		const int y = -6789 + static_cast<int>(90 * std::cos(i * 0.17));
+		const double old_left = phase.left, old_top = phase.top;
+		const auto [dx, dy] = phase.Move(x, y);
+		CHECK((old_left - phase.left) / step == Approx(dx).margin(1e-9));
+		CHECK((old_top - phase.top) / step == Approx(dy).margin(1e-9));
+		CHECK(std::abs(phase.left - x) <= step * 0.5 + 1e-9);
+		CHECK(std::abs(phase.top - y) <= step * 0.5 + 1e-9);
+		CHECK((phase.Move(x, y) == std::pair{0, 0}));
+	}
+	phase.Reset(12345, -6789, step * 0.9f);
+	CHECK(phase.left == 12345);
+	CHECK(phase.top == -6789);
+	CHECK(phase.step == step * 0.9f);
+}
+
+TEST_CASE("Copied fractional pixels retain their animated palette dependencies", "[smoothzoom]")
+{
+	SmoothZoomPaletteTracker tracker;
+	tracker.Resize(192, 24);
+	tracker.Register(0, 0, 64, 8, 1);
+	tracker.Register(128, 0, 192, 8, 2);
+	tracker.Scroll(0, 0, 192, 24, 64, 8);
+	/* The exposed strips are repainted without animated colours. */
+	tracker.Clear(0, 0, 64, 24);
+	tracker.Clear(64, 0, 192, 8);
+	std::vector<std::array<int, 4>> affected;
+	auto collect = [&](int l, int t, int r, int b) { affected.push_back({l, t, r, b}); };
+	tracker.ForEachChanged(1, collect);
+	CHECK((affected == std::vector<std::array<int, 4>>{{64, 8, 128, 16}}));
+	affected.clear();
+	tracker.ForEachChanged(2, collect);
+	CHECK(affected.empty());
+	tracker.Scroll(0, 0, 192, 24, -64, -8);
+	tracker.Clear(128, 0, 192, 24);
+	tracker.Clear(0, 16, 128, 24);
+	tracker.ForEachChanged(1, collect);
+	CHECK((affected == std::vector<std::array<int, 4>>{{0, 0, 64, 8}}));
+	tracker.Scroll(0, 0, 192, 24, 5, 3);
+	affected.clear();
+	tracker.ForEachChanged(1, collect);
+	CHECK((affected == std::vector<std::array<int, 4>>{{0, 0, 64, 8}, {0, 8, 64, 16}, {64, 0, 128, 8}, {64, 8, 128, 16}}));
+}
 
 TEST_CASE("Zoom motion settles exactly without overshooting a single target", "[smoothzoom]")
 {

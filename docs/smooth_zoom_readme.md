@@ -107,7 +107,7 @@ during a flight. Infrastructure, representative moving vehicles and camera
 cancellation have been checked. Save-format declarations and the savegame
 version remain unchanged; the only save/load adaptation converts the camera
 view to the existing integer representation. The latest full Release suite
-passes 53,540 assertions across 137 cases. The graphics-set matrix and stock
+passes 68,807 assertions across 140 cases. The graphics-set matrix and stock
 save round trip are recorded in the [coverage notes](validation/zoom-coverage.md).
 Source references:
 [camera save/load](../src/saveload/misc_sl.cpp),
@@ -504,3 +504,17 @@ Graphics-set and renderer test results are recorded in the
 [coverage notes](validation/zoom-coverage.md), including OpenGL, legacy blitters,
 large windows, interface scaling and multilingual text. These notes distinguish
 completed checks from work still in progress.
+
+### Fractional panning
+
+Panning now reuses the displayed pixels at a fixed fractional zoom, with the
+same sampling phase for newly exposed scenery. This improves responsiveness
+and avoids a later change when that scenery is redrawn. On the test machine,
+130% panning improved from about 47 to 60 FPS at 960 × 600, and from about
+16 to 58 FPS at 1920 × 1080. Changing the zoom still redraws the view.
+
+![Fractional pan followed by a stable resting view](images/smooth-zoom/fractional-pan-optimised.webp)
+
+The extended validation world also includes moving trams and NewGRF objects:
+
+![NewGRF gasometer, forests and labels during zoom](images/smooth-zoom/newgrf-objects.webp)

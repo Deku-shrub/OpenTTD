@@ -103,6 +103,7 @@ void GfxScroll(int left, int top, int width, int height, int xo, int yo)
 
 	if (_networking) NetworkUndrawChatMessage();
 
+	_smooth_zoom_palette.Scroll(left, top, width, height, xo, yo);
 	blitter->ScrollBuffer(_screen.dst_ptr, left, top, width, height, xo, yo);
 	/* This part of the screen is now dirty. */
 	VideoDriver::GetInstance()->MakeDirty(left, top, width, height);

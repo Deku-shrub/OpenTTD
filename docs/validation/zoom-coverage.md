@@ -21,7 +21,7 @@ OpenGL check exposed a background-composition issue: palette indices can live
 separately from RGB pixels. Scaled labels now resolve those colours through the
 blitter before blending their text edges.
 
-The release unit suite passes 53,540 assertions in 137 cases after this fix,
+The release unit suite passes 68,807 assertions in 140 cases after this fix,
 including GPU-format decoding, palette/partial-alpha sprites and clipped-source
 checks. Native SSE palette and alpha arithmetic can differ from the scalar
 compositor by one RGB unit; opaque non-palette comparisons remain byte-exact.
@@ -77,23 +77,48 @@ Interface-language checks above are separate from these custom-sign checks.
 
 ![Moving NewGRF tram and rail scene during zoom](../images/smooth-zoom/newgrf-tram.webp)
 
+The extended fixture also builds eight objects, including a gasometer,
+substations, a transmitter, a lighthouse and forests. The objects and their
+shadows were checked at fractional zoom, including the game's transparency
+toggle. The fixture's construction log identifies their locations for repeatable
+camera checks.
+
+![NewGRF objects and their labels during zoom](../images/smooth-zoom/newgrf-objects.webp)
+
 ## Pan performance
 
 A capture-free nine-second right-drag check on the paused OpenGFX fixture,
 using `32bpp-anim` and `win32:no_threads`, measured:
 
-| Window | Native 100% drawing rate | Fractional 130% drawing rate |
-| --- | --- | --- |
-| 960 × 600 | about 60 FPS | about 47 FPS |
-| 1920 × 1080 | about 60 FPS | about 16 FPS |
+| Window | Native 100% | Fractional 130% before | Fractional 130% after |
+| --- | --- | --- | --- |
+| 960 × 600 | about 60 FPS | about 47 FPS | about 60 FPS |
+| 1920 × 1080 | about 60 FPS | about 16 FPS | about 58 FPS |
 
 These are this machine's measurements, not a hardware-independent promise.
-Fractional pan still redraws the full viewport to preserve its sampling phase;
-native pan can copy existing pixels and redraw exposed strips. Larger fractional
-views therefore remain a performance gap even though their functional matrix
-checks pass. The first measurements ran without screenshot capture or another
-active matrix. A later palette-resolution experiment did not establish a useful
-speed improvement and was removed.
+Fractional pan now retains a pixel-aligned rendering origin at a fixed scale,
+allowing it to copy pixels and redraw exposed strips. The displayed origin stays
+within half a screen pixel of the requested position. Picking and dirty bounds
+use that same origin, and animated palette dependencies move with copied pixels.
+Changing the scale still redraws the viewport.
+
+Both the original and final measurements ran without screenshot capture or
+another active matrix. A palette-resolution experiment did not establish a useful
+speed improvement and was removed. The final 512-sample viewport drawing means
+were about 2.4 ms at 960 × 600 and 4.1 ms at 1920 × 1080 during the pan check.
+
+All eleven OpenGFX configurations pass the updated matrix. Supported renderers
+add 130%, 84% and 66⅔% pan checks, proving that the scene moves and that the
+paused land/label crop matches a forced full redraw. The additional checks also
+pass with High Def software/OpenGL and Classic at 1080p. These checks validate
+the copied pixels rather than relying only on apparent steadiness.
+
+![Fractional pan with retained sampling phase](../images/smooth-zoom/fractional-pan-optimised.webp)
+
+In this paused object/coast fixture, the recorded land crop last changed at
+2,222 ms, before the right-button release at 2,400 ms, and stayed unchanged
+through the final capture at 6,523 ms. Palette animation and moving world content
+remain separate from camera settling.
 
 ## Existing saves
 
