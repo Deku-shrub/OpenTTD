@@ -65,3 +65,5 @@ Desktop integration checks should also cover:
   and wheel zoom remains available.
 - Switch between supported 32bpp rendering and an unsupported blitter, confirming
   that integer zoom remains usable.
+
+Map labels scale gently with zoom at native and fractional levels: 100% map zoom uses the interface font size, 400% uses about 141%, and wide views stop shrinking at 75%. Their frames and click targets scale with the text. Window and toolbar text continue to use the interface size setting. See the [label examples](smooth_zoom_readme.md#map-text-and-labels).

@@ -63,6 +63,7 @@
 #include "stdafx.h"
 #include "core/backup_type.hpp"
 #include "core/viewport_flight.hpp"
+#include "core/viewport_label_scale.hpp"
 #include "industry.h"
 #include "industry_map.h"
 #include "depot_map.h"
@@ -1413,13 +1414,14 @@ std::string *ViewportAddString(const DrawPixelInfo *dpi, const ViewportSign *sig
 
 	bool small = flags.Test(ViewportStringFlag::Small);
 	const double step = dpi->zoom_step > 0 ? dpi->zoom_step : ScaleByZoom(1, dpi->zoom);
-	int sign_height = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom) * step));
-	const double sign_half_width = (small ? sign->width_small : sign->width_normal) / 2 * step;
+	const double label_scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+	const int sign_height = static_cast<int>(std::ceil(GetViewportLabelExtent(WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom, label_scale) * step));
+	const double sign_half_width = GetViewportLabelExtent(small ? sign->width_small : sign->width_normal, label_scale) / 2 * step;
 
 	if (bottom < sign->top ||
 			top   > sign->top + sign_height ||
 			right < sign->center - sign_half_width ||
-			left  > sign->center + sign_half_width) {
+			left  > sign->center - sign_half_width + GetViewportLabelExtent(small ? sign->width_small : sign->width_normal, label_scale) * step) {
 		return nullptr;
 	}
 
@@ -1431,8 +1433,9 @@ static Rect ExpandRectWithViewportSignMargins(Rect r, ZoomLevel zoom, double zoo
 	const int fh = std::max(GetCharacterHeight(FontSize::Normal), GetCharacterHeight(FontSize::Small));
 	const int max_tw = _viewport_sign_maxwidth / 2 + 1;
 	const double step = zoom_step > 0 ? zoom_step : ScaleByZoom(1, zoom);
-	const int expand_y = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.top + fh + WidgetDimensions::scaled.fullbevel.bottom) * step));
-	const int expand_x = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.left + max_tw + WidgetDimensions::scaled.fullbevel.right) * step));
+	const double label_scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+	const int expand_y = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.top + fh + WidgetDimensions::scaled.fullbevel.bottom) * step * label_scale)) + static_cast<int>(std::ceil(step));
+	const int expand_x = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.left + max_tw + WidgetDimensions::scaled.fullbevel.right) * step * label_scale)) + static_cast<int>(std::ceil(step));
 
 	r.left -= expand_x;
 	r.right += expand_x;
@@ -1595,7 +1598,7 @@ static void ViewportAddKdtreeSigns(DrawPixelInfo *dpi)
 	});
 
 	/* Small versions of signs are used zoom level 4X and higher. */
-	bool small = dpi->zoom >= ZoomLevel::Out4x;
+	bool small = !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() && dpi->zoom >= ZoomLevel::Out4x;
 
 	/* Layering order (bottom to top): Town names, signs, stations */
 	ViewportAddTownStrings(dpi, towns, small);
@@ -1659,10 +1662,12 @@ void ViewportSign::MarkDirty(ZoomLevel maxzoom) const
 		if (vp.zoom <= maxzoom) {
 			assert(vp.width != 0);
 			Rect zl = zoomlevels[vp.zoom];
-			if (vp.zoom_step > 0) {
-				const int scaled_width = static_cast<int>(std::ceil(half_width * vp.zoom_step));
-				zl = {this->center - scaled_width, this->top - static_cast<int>(std::ceil(vp.zoom_step)),
-						this->center + scaled_width, this->top + static_cast<int>(std::ceil(height * vp.zoom_step))};
+			if (vp.zoom_step > 0 || BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+				const double step = vp.zoom_step > 0 ? vp.zoom_step : ScaleByZoom(1, vp.zoom);
+				const double scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+				const int scaled_width = static_cast<int>(std::ceil((half_width * scale + 1) * step));
+				zl = {this->center - scaled_width, this->top - static_cast<int>(std::ceil(step)),
+						this->center + scaled_width, this->top + static_cast<int>(std::ceil((height * scale + 1) * step))};
 			}
 			MarkViewportDirty(vp, zl.left, zl.top, zl.right, zl.bottom);
 		}
@@ -1860,41 +1865,104 @@ static void ViewportDrawDirtyBlocks()
 	} while (--bottom > 0);
 }
 
+static void ViewportDrawLabel(const StringSpriteToDraw &ss, int x, int y)
+{
+	const bool small = ss.flags.Test(ViewportStringFlag::Small);
+	const int w = ss.width;
+	int h = WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom;
+
+	ExtendedTextColour colour{TextColour::White};
+	if (ss.flags.Test(ViewportStringFlag::ColourRect)) {
+		if (ss.colour != Colours::Invalid) DrawFrameRect(x, y, x + w - 1, y + h - 1, ss.colour, {});
+		colour = TextColour::Black;
+	} else if (ss.flags.Test(ViewportStringFlag::TransparentRect)) {
+		DrawFrameRect(x, y, x + w - 1, y + h - 1, ss.colour, FrameFlag::Transparent);
+	}
+
+	if (ss.flags.Test(ViewportStringFlag::TextColour)) {
+		if (ss.colour != Colours::Invalid) colour = ExtendedTextColour{GetColourGradient(ss.colour, Shade::Lighter)};
+	}
+
+	int left = x + WidgetDimensions::scaled.fullbevel.left;
+	int right = x + w - 1 - WidgetDimensions::scaled.fullbevel.right;
+	int top = y + WidgetDimensions::scaled.fullbevel.top;
+
+	int shadow_offset = 0;
+	if (small && ss.flags.Test(ViewportStringFlag::Shadow)) {
+		/* Shadow needs to be shifted 1 pixel. */
+		shadow_offset = WidgetDimensions::scaled.fullbevel.top;
+		DrawString(left + shadow_offset, right + shadow_offset, top, ss.string, TextColour::Black, AlignmentH::Centre, false, FontSize::Small);
+	}
+
+	DrawString(left, right, top - shadow_offset, ss.string, colour, AlignmentH::Centre, false, small ? FontSize::Small : FontSize::Normal);
+}
+
+/** Rasterise at the interface font size, then scale coverage and colour together. */
+static void ViewportDrawScaledLabel(const StringSpriteToDraw &ss, int x, int y, double scale)
+{
+	const int width = ss.width;
+	const int height = WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(ss.flags.Test(ViewportStringFlag::Small) ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom;
+	if (width <= 0 || height <= 0) return;
+	/* Reused scratch storage, not a cache: text, font and colour changes are immediate. */
+	static std::vector<Colour> black, white;
+	black.assign(static_cast<size_t>(width) * height, Colour(0, 0, 0));
+	white.assign(black.size(), Colour(255, 255, 255));
+	DrawPixelInfo raster{};
+	raster.width = raster.pitch = width;
+	raster.height = height;
+	raster.zoom = ZoomLevel::Min;
+	{
+		AutoRestoreBackup disable_animation(_screen_disable_anim, true);
+		/* Rectangle primitives use the global pitch even for offscreen drawing. */
+		AutoRestoreBackup screen_pitch(_screen.pitch, width);
+		AutoRestoreBackup dpi(_cur_dpi, &raster);
+		raster.dst_ptr = black.data();
+		ViewportDrawLabel(ss, 0, 0);
+		raster.dst_ptr = white.data();
+		ViewportDrawLabel(ss, 0, 0);
+	}
+	const int output_width = GetViewportLabelExtent(width, scale);
+	const int output_height = GetViewportLabelExtent(height, scale);
+	const DrawPixelInfo &dpi = *_cur_dpi;
+	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
+	for (int dy = std::max(0, dpi.top - y); dy < std::min(output_height, dpi.top + dpi.height - y); ++dy) {
+		const double sy = std::clamp((dy + 0.5) / scale - 0.5, 0.0, double(height - 1));
+		const int iy = static_cast<int>(sy), jy = std::min(iy + 1, height - 1);
+		const double fy = sy - iy;
+		for (int dx = std::max(0, dpi.left - x); dx < std::min(output_width, dpi.left + dpi.width - x); ++dx) {
+			const double sx = std::clamp((dx + 0.5) / scale - 0.5, 0.0, double(width - 1));
+			const int ix = static_cast<int>(sx), jx = std::min(ix + 1, width - 1);
+			const double fx = sx - ix;
+			const auto sample = [&](const std::vector<Colour> &pixels) {
+				const auto channel = [&](auto member) {
+					return static_cast<uint8_t>(std::lround((pixels[iy * width + ix].*member * (1 - fx) + pixels[iy * width + jx].*member * fx) * (1 - fy) +
+							(pixels[jy * width + ix].*member * (1 - fx) + pixels[jy * width + jx].*member * fx) * fy));
+				};
+				return Colour(channel(&Colour::r), channel(&Colour::g), channel(&Colour::b));
+			};
+			const Colour b = sample(black), w = sample(white);
+			if (b == Colour(0, 0, 0) && w == Colour(255, 255, 255)) continue;
+			const int px = x + dx - dpi.left, py = y + dy - dpi.top;
+			Colour *destination = static_cast<Colour *>(blitter->MoveTo(dpi.dst_ptr, px, py));
+			const Colour output = CompositeViewportLabelPixel(b, w, *destination);
+			/* Clear the animation-buffer entry beneath opaque/covered label pixels. */
+			blitter->SetPixel(dpi.dst_ptr, px, py, PixelColour{0});
+			*destination = output;
+		}
+	}
+}
+
 static void ViewportDrawStrings(ZoomLevel zoom, const StringSpriteToDrawVector *sstdv, const DrawPixelInfo *fractional_dpi = nullptr)
 {
+	const double step = fractional_dpi != nullptr ? fractional_dpi->zoom_step : ScaleByZoom(1, zoom);
+	const double scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
 	for (const StringSpriteToDraw &ss : *sstdv) {
-		bool small = ss.flags.Test(ViewportStringFlag::Small);
-		int w = ss.width;
-		int x = fractional_dpi == nullptr ? UnScaleByZoom(static_cast<int>(ss.x), zoom) :
-				static_cast<int>(std::floor((ss.x - fractional_dpi->virtual_left) / fractional_dpi->zoom_step));
-		int y = fractional_dpi == nullptr ? UnScaleByZoom(static_cast<int>(ss.y), zoom) :
-				static_cast<int>(std::floor((ss.y - fractional_dpi->virtual_top) / fractional_dpi->zoom_step));
-		int h = WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom;
-
-		ExtendedTextColour colour{TextColour::White};
-		if (ss.flags.Test(ViewportStringFlag::ColourRect)) {
-			if (ss.colour != Colours::Invalid) DrawFrameRect(x, y, x + w - 1, y + h - 1, ss.colour, {});
-			colour = TextColour::Black;
-		} else if (ss.flags.Test(ViewportStringFlag::TransparentRect)) {
-			DrawFrameRect(x, y, x + w - 1, y + h - 1, ss.colour, FrameFlag::Transparent);
-		}
-
-		if (ss.flags.Test(ViewportStringFlag::TextColour)) {
-			if (ss.colour != Colours::Invalid) colour = ExtendedTextColour{GetColourGradient(ss.colour, Shade::Lighter)};
-		}
-
-		int left = x + WidgetDimensions::scaled.fullbevel.left;
-		int right = x + w - 1 - WidgetDimensions::scaled.fullbevel.right;
-		int top = y + WidgetDimensions::scaled.fullbevel.top;
-
-		int shadow_offset = 0;
-		if (small && ss.flags.Test(ViewportStringFlag::Shadow)) {
-			/* Shadow needs to be shifted 1 pixel. */
-			shadow_offset = WidgetDimensions::scaled.fullbevel.top;
-			DrawString(left + shadow_offset, right + shadow_offset, top, ss.string, TextColour::Black, AlignmentH::Centre, false, FontSize::Small);
-		}
-
-		DrawString(left, right, top - shadow_offset, ss.string, colour, AlignmentH::Centre, false, small ? FontSize::Small : FontSize::Normal);
+		const int x = fractional_dpi == nullptr ? UnScaleByZoom(static_cast<int>(ss.x), zoom) :
+				static_cast<int>(std::floor((ss.x - fractional_dpi->virtual_left) / step));
+		const int y = fractional_dpi == nullptr ? UnScaleByZoom(static_cast<int>(ss.y), zoom) :
+				static_cast<int>(std::floor((ss.y - fractional_dpi->virtual_top) / step));
+		if (scale == 1) ViewportDrawLabel(ss, x, y);
+		else ViewportDrawScaledLabel(ss, x, y, scale);
 	}
 }
 
@@ -2435,12 +2503,14 @@ void SetSelectionRed(bool b)
  */
 static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y, const ViewportSign *sign)
 {
-	bool small = (vp.zoom >= ZoomLevel::Out4x);
-	if (vp.zoom_step > 0) {
-		/* Labels keep their screen size. Hit-test the same rounded rectangle that is drawn. */
-		const int width = small ? sign->width_small : sign->width_normal;
-		const int height = WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom;
-		const int left = static_cast<int>(std::floor((sign->center - vp.virtual_left) / static_cast<double>(vp.zoom_step) - width / 2)) + vp.left;
+	bool small = !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() && vp.zoom >= ZoomLevel::Out4x;
+	if (vp.zoom_step > 0 || BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+		/* Match the scaled rectangle, including native stops between fractional views. */
+		const double step = vp.zoom_step > 0 ? vp.zoom_step : ScaleByZoom(1, vp.zoom);
+		const double scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+		const int width = GetViewportLabelExtent(small ? sign->width_small : sign->width_normal, scale);
+		const int height = GetViewportLabelExtent(WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom, scale);
+		const int left = static_cast<int>(std::floor((sign->center - vp.virtual_left) / step - width / 2)) + vp.left;
 		const int top = ViewportUnScale(vp, sign->top - vp.virtual_top) + vp.top;
 		return x >= left && x < left + width && y >= top && y < top + height;
 	}
@@ -2467,8 +2537,9 @@ static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y)
 	const int screen_y = y;
 	x = ViewportScale(vp, x - vp.left) + vp.virtual_left;
 	y = ViewportScale(vp, y - vp.top) + vp.virtual_top;
-	const int click_x = vp.zoom_step > 0 ? screen_x : x;
-	const int click_y = vp.zoom_step > 0 ? screen_y : y;
+	const bool screen_labels = vp.zoom_step > 0 || BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom();
+	const int click_x = screen_labels ? screen_x : x;
+	const int click_y = screen_labels ? screen_y : y;
 
 	Rect search_rect{ x - 1, y - 1, x + 1, y + 1 };
 	search_rect = ExpandRectWithViewportSignMargins(search_rect, vp.zoom, vp.zoom_step);

@@ -309,7 +309,7 @@ cannot establish subjective smoothness. No game error dialogs were found.
 ## Long-term visual additions
 
 - [ ] Standalone optional clouds effect layer mod to make large fly-outs feel more realistic; investigate depth, transparency and a bounded rendering budget.
-- [ ] Smooth scaling for signs and labels, including readable text, positioning and click targets throughout fractional zoom.
+- [x] Smooth scaling for signs and labels, including readable text, positioning and click targets throughout fractional zoom (see implementation notes below).
 
 ## Destination arrival fitting — 10 October 2026
 
@@ -327,3 +327,14 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [x] Regression coverage for 130%/84% redraw partitioning and bounded fractional flight landing at multiple viewport sizes. Release: 16,024 assertions / 135 cases pass.
 - [x] Record fractional wheel and 130% flight landings: static land remains unchanged for 2.4 and 3 seconds respectively after its final movement. Fractional drag also shows no changes beyond 300 ms after release.
 - [ ] Extend settling checks to complex NewGRFs, higher resolutions and unpaused scenes, distinguishing camera changes from animated world content.
+
+## Continuous map labels
+
+- [x] Apply one readability-bounded scaling curve to towns, stations, waypoints and signs at both fractional and native zoom levels.
+- [x] Scale text, backgrounds, frames, click bounds, culling margins and dirty rectangles together.
+- [x] Preserve interface font sizing and legacy-blitter behaviour; keep normal map-label content through zoom transitions.
+- [x] Reuse per-label scratch rasters; handle offscreen pitch and palette-animation state safely, with no persistent text cache.
+- [x] Test scaling continuity, monotonicity, readability limits and transparent/coloured coverage composition.
+- [x] GUI checks at 12.5%, 84%, 130%, 200%, 400%; station edge click, custom sign editor and town window pass. Settled labels stay unchanged across 700 ms captures.
+- [x] Add station/sign and town scaling animations to the user guide.
+- [ ] Broader multilingual/RTL, unusual fonts, high interface scales, dense NewGRF station names and waypoint-specific visual checks.

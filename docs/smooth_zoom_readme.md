@@ -465,3 +465,35 @@ last change occurred at 1,974 ms, followed by about 3 seconds unchanged.
 These observations cover this paused fixture, rather than every mod or moving
 scene. Release checks passed 16,024 assertions in 135 cases, including fractional
 landing-tail bounds and redraw partitioning at 130% and 84%.
+
+### Map text and labels
+
+Town names, station and waypoint labels, custom signs and their frames now
+scale continuously with the map. Growth is deliberately gentler than terrain
+scaling: labels stay readable on wide views and avoid becoming oversized close
+up. Native and fractional zoom levels use the same sizing policy.
+
+| Map zoom | Label size relative to the interface font |
+| --- | --- |
+| 400% | 141% |
+| 200% | 119% |
+| 100% | 100% |
+| 50% | 84% |
+| 25% and below | 75% minimum |
+
+Their click rectangles and redraw bounds follow the displayed size. Normal map
+labels keep the same font and content through zoom transitions, including town
+population and station icons when enabled. Interface font settings still provide
+the base size; toolbar and window text follow the interface size setting.
+Legacy blitters without smooth zoom support retain their original labels.
+
+![Station labels and custom signs scaling during zoom](images/smooth-zoom/labels-map.webp)
+
+![Town labels scaling during zoom](images/smooth-zoom/labels-town.webp)
+
+The paused fixture was checked at 12.5%, 84%, 130%, 200% and 400%. Clicking a
+station near its enlarged edge, a custom sign and a town name opened the expected
+windows. Static labels and scenery were identical in captures 700 ms apart after
+settling. The renderer reuses two scratch rasters for the current label rather
+than caching every label, so text and colour updates take effect immediately.
+Dense label overlap still follows the game's existing placement rules.

@@ -12,6 +12,8 @@
 #include "../zoom_func.h"
 #include "../core/smooth_zoom_palette.hpp"
 #include "../core/smooth_zoom_motion.hpp"
+#include "../core/viewport_label_scale.hpp"
+#include "../gfx_type.h"
 
 #include "../safeguards.h"
 
@@ -183,4 +185,36 @@ TEST_CASE("Zoom buttons choose adjacent integer levels from fractional scales", 
 	CHECK(GetNextIntegerZoom(31.99, false, ZoomLevel::Min, ZoomLevel::Max) == ZoomLevel::Max);
 	CHECK(GetNextIntegerZoom(2, true, ZoomLevel::In2x, ZoomLevel::Out4x) == ZoomLevel::In2x);
 	CHECK(GetNextIntegerZoom(16, false, ZoomLevel::In2x, ZoomLevel::Out4x) == ZoomLevel::Out4x);
+}
+
+TEST_CASE("Map label scaling is continuous at native stops and bounded for readability", "[smoothzoom][labels]")
+{
+	CHECK(GetViewportLabelScale(4, 4) == 1);
+	CHECK(GetViewportLabelScale(1, 4) == Approx(std::sqrt(2.0)));
+	CHECK(GetViewportLabelScale(32, 4) == 0.75);
+	double previous = 2;
+	for (int i = 100; i <= 3200; ++i) {
+		const double step = i / 100.0;
+		const double scale = GetViewportLabelScale(step, 4);
+		CHECK(scale <= previous);
+		CHECK(scale >= 0.75);
+		CHECK(scale <= 1.5);
+		previous = scale;
+	}
+	for (double step : {1.0, 2.0, 4.0, 8.0, 16.0, 32.0}) {
+		CHECK(GetViewportLabelScale(step - 0.000001, 4) == Approx(GetViewportLabelScale(step + 0.000001, 4)).margin(0.00001));
+	}
+	const double step = GENERATE(4.0 / 1.3, 4.0 / 0.84, 1.0, 32.0);
+	const double scale = GetViewportLabelScale(step, 4);
+	CHECK(GetViewportLabelExtent(123, scale) >= 123 * scale);
+	CHECK(GetViewportLabelExtent(123, scale) < 123 * scale + 1);
+}
+
+TEST_CASE("Scaled map label coverage preserves scenery and coloured text", "[smoothzoom][labels]")
+{
+	const Colour background(100, 150, 200);
+	CHECK(CompositeViewportLabelPixel(Colour(0, 0, 0), Colour(255, 255, 255), background) == background);
+	CHECK(CompositeViewportLabelPixel(Colour(32, 64, 0), Colour(32, 64, 0), background) == Colour(32, 64, 0));
+	CHECK(CompositeViewportLabelPixel(Colour(32, 64, 0), Colour(159, 191, 127), background) == Colour(82, 139, 100));
+	CHECK(CompositeViewportLabelPixel(Colour(0, 0, 0), Colour(127, 127, 127), background) == Colour(50, 75, 100));
 }

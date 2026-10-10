@@ -70,3 +70,9 @@ The paused fixture was exercised at 960 × 600: town directory trips from 25% ar
 All 16,024 assertions in 135 cases pass after the consistent-sampler and subpixel flight-tail changes. Coverage adds 130%/84% redraw partitions and landing-tail bounds at 640, 1280 and 3840 pixel viewport extents.
 
 Paused 960 x 600 fixture recordings: [wheel landing](../images/smooth-zoom/fractional-wheel-landing.webp) last static crop change 565 ms, captures through 3,016 ms; [130% flight landing](../images/smooth-zoom/fractional-flight-landing.webp) last change 1,974 ms, captures through 5,022 ms. The latter deliberately uses `gui.fly_town_zoom 7` to land at a fractional level; the default automatic fit was restored afterwards. A 130% right-drag check found no changes beyond 300 ms after release. Local raw timing JSON and frames use the `demo-fractional-*-landing` prefix in ignored build-smoothzoom.
+
+## Continuous map-label checks
+
+The suite passes 53,284 assertions in 137 cases, including label-scale continuity at native stops, readability limits, monotonic scaling and text coverage composition. Final logs: `build-smoothzoom/build-label-scaling-final.log` and `validation-label-scaling.txt` (local ignored artifacts).
+
+At 960 x 600, the fixture was inspected at 12.5%, 84%, 130%, 200% and 400%. Enlarged station-edge, custom sign and town-name clicks opened their expected windows. Station/sign land crops remained identical across captures 700 ms apart after wheel settling. [Station/sign scaling](../images/smooth-zoom/labels-map.webp) and [town scaling](../images/smooth-zoom/labels-town.webp) preserve measured capture timing (5.07 s and 5.01 s playback). Maximum observed capture intervals were 78 ms and 66 ms respectively; these are recording observations, not a rendering benchmark.
