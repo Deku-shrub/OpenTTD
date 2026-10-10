@@ -65,7 +65,8 @@ generation_seed = 12345
 [graphicsset]
 name = OpenGFX
 '@
-$navigationConfigText.Replace('name = OpenGFX', "name = $GraphicsSet") | Set-Content -LiteralPath $navigationConfig -Encoding UTF8
+# OpenTTD's INI parser requires the first group header to start at byte zero.
+[System.IO.File]::WriteAllText($navigationConfig, $navigationConfigText.Replace('name = OpenGFX', "name = $GraphicsSet"), [System.Text.UTF8Encoding]::new($false))
 $navigationArguments = @('-c', $navigationConfig, '-x', '-X', '-r', "${Width}x${Height}", '-s', 'null', '-m', 'null', '-b', $Blitter, '-v', $VideoDriver, '-I', $GraphicsSet, '-g')
 if ($Savegame) { $navigationArguments += $Savegame }
 $navigationArgumentLine = ($navigationArguments | ForEach-Object { '"' + $_.Replace('"', '\"') + '"' }) -join ' '

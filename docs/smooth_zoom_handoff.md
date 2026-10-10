@@ -494,3 +494,8 @@ New `fractional-pan-optimised.webp` stays unchanged in its land crop for over
 four seconds after motion. `newgrf-objects.webp` adds the gasometer/forest scene.
 `ZoomCoverage.Objects()` builds eight available object types; the constructor
 log includes their names/locations. The main script retains its UTF-8 BOM.
+
+The final launcher smoke test exposed an INI encoding error: Windows PowerShell
+`Set-Content -Encoding UTF8` added a BOM, hiding the first group header from the
+config parser. The launcher now uses an explicit BOM-free UTF-8 writer. The
+1280 x 800 prototype launches normally and accepts 130% zoom after this fix.
