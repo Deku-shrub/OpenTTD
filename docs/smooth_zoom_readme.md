@@ -71,8 +71,9 @@ and remaining flight time are not preserved.
 The patch adds no savegame fields, chunks or savegame-version bump. A game saved
 here should therefore remain readable by an **unmodified build that understands
 the same upstream savegame version**, provided its content dependencies are
-available. This is a source-level compatibility expectation, not a tested stock
-save/load round trip. An older OpenTTD release, a newer-format save, or a save
+available. A stock -> modified -> stock save/load round trip passed against the
+matching upstream revision; see the [coverage notes](validation/zoom-coverage.md).
+An older OpenTTD release, a newer-format save, or a save
 from a patch pack with its own format extensions may still be incompatible.
 To retain the option of returning to an older installation, keep the original
 save and save prototype sessions under a different filename. Turning the camera
@@ -85,7 +86,7 @@ has been exercised. No specific third-party NewGRF set is certified yet.
 
 | Content or environment | Retrofit implications and current limits |
 | --- | --- |
-| OpenGFX / ordinary base graphics | OpenGFX 8.0 is the tested base set. Other supported base sets should use the same sprite pipeline, but have not been checked visually. |
+| Base graphics | OpenGFX 8.0, OpenGFX2 Classic 0.8 and OpenGFX2 High Def 0.8 passed the eleven-configuration runtime matrix, including fractional rest and save/load. Original TTD graphics and zBase are untested. |
 | 8-bit NewGRF artwork | Expected to work through a supported 32bpp blitter, including palette remapping. **8-bit artwork is not the same as an 8bpp renderer**; switching the blitter does not require replacing those NewGRFs. |
 | 32-bit / extra-zoom NewGRFs | Expected to load normally, without format or asset conversion. Different artwork at native sprite zoom levels can visibly change during a transition. Large sprites and high-resolution packs can increase redraw cost. These sets still need visual tests. |
 | Vehicle, industry/cargo, house, object, station, track, road/tram and bridge NewGRFs | No deliberate content restriction or changes to their simulation rules. Custom sprite bounds, transparency, company colours, animation, articulated vehicles and trams remain important coverage gaps. Base infrastructure and representative base vehicles have been exercised; that does not validate every custom set. |
@@ -93,9 +94,9 @@ has been exercised. No specific third-party NewGRF set is certified yet.
 | AIs and Game Scripts | No AI/API format change is required. Script-triggered camera movement can animate when its flight option is enabled, changing presentation timing. Disable flights to preserve ordinary navigation behaviour. Local script navigation has a separate switch; multiplayer script redirects use the script switch; their runtime validation remains open. |
 | Scenarios and heightmaps | Ordinary load/version/content requirements apply. A loaded scenario can use the camera options; an imported heightmap creates a world through the ordinary generator. |
 | Sound/music packs | No audio format or playback changes are introduced by this patch. |
-| Supported software 32bpp blitters | Fractional rendering is implemented in simple, optimized, SSE and animation families. Most runtime checks used `32bpp-anim` with the Windows `win32` video driver; other variants have differing runtime coverage. |
+| Supported software 32bpp blitters | Runtime checks passed for simple, optimized, SSE2, SSE4 and animation variants on Windows with all three tested base sets. |
 | 8bpp or null/headless blitters | Smooth zoom and animated flights are unavailable; normal navigation remains. A dedicated server does not need to render the effect. |
-| OpenGL / `40bpp-anim` | Rendering support exists in the code, but full runtime and visual validation remains open. Do not infer support quality from the software-driver recordings. |
+| OpenGL / `40bpp-anim` | Runtime zoom, fractional settling and save/load checks passed with all three tested base sets. GPU palette-backed label composition is corrected. Other GPU/driver combinations still need testing. |
 | Multiplayer | Camera preferences are per client, but normal executable-revision and NewGRF compatibility checks still apply. This private build has a different revision from stock OpenTTD and ordinarily cannot join a stock server. Use matching builds and content for server/clients; multiplayer testing is still open. See the [official multiplayer guide](https://wiki.openttd.org/en/Manual/Multiplayer). |
 | Other engine patches / patch packs | Not a plug-in for another executable. Port the source changes and rebuild. Changes to viewports, blitters, zoom, toolbar/window input or settings may conflict; patches with custom save formats add separate compatibility constraints. No patch-pack integration has been validated. |
 
@@ -106,14 +107,15 @@ during a flight. Infrastructure, representative moving vehicles and camera
 cancellation have been checked. Save-format declarations and the savegame
 version remain unchanged; the only save/load adaptation converts the camera
 view to the existing integer representation. The latest full Release suite
-passes 13,627 assertions across 130 cases. Source references:
+passes 53,540 assertions across 137 cases. The graphics-set matrix and stock
+save round trip are recorded in the [coverage notes](validation/zoom-coverage.md).
+Source references:
 [camera save/load](../src/saveload/misc_sl.cpp),
 [local settings](../src/table/settings/gui_settings.ini), and
 [network revision checks](../src/network/core/network_game_info.cpp).
 
-Still required: a stock-created save loaded here and saved back into a matching
-stock build, representative NewGRF packs (including extra zoom and trams),
-multiplayer with matching builds, multiplayer script redirects, and integration
+Still required: broader combinations of NewGRFs, multiplayer with matching
+builds, multiplayer script redirects, and integration
 with any intended patch pack. Keep these separate from the validated base-game
 coverage in the [TODO list](smooth_zoom_todo.md).
 
@@ -497,3 +499,8 @@ windows. Static labels and scenery were identical in captures 700 ms apart after
 settling. The renderer reuses two scratch rasters for the current label rather
 than caching every label, so text and colour updates take effect immediately.
 Dense label overlap still follows the game's existing placement rules.
+
+Graphics-set and renderer test results are recorded in the
+[coverage notes](validation/zoom-coverage.md), including OpenGL, legacy blitters,
+large windows, interface scaling and multilingual text. These notes distinguish
+completed checks from work still in progress.

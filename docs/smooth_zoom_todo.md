@@ -1,6 +1,24 @@
 # Smooth zoom progress
 
 Updated 10 October 2026. Checkpoint and regular commits are now authorized.
+Current cross-renderer and graphics-set results are in
+[the coverage notes](validation/zoom-coverage.md). The dated sections below
+retain historical checkpoints; later checked items supersede earlier pending
+entries for the same behaviour.
+
+## Current coverage follow-up
+
+- [x] OpenGFX: eleven renderer, resolution, interface-scale and language configurations.
+- [x] OpenGFX2 Classic 0.8: the same eleven configurations.
+- [x] OpenGFX2 High Def 0.8: eleven configurations, with repeated runs consolidated.
+- [x] Correct GPU palette-backed label background blending.
+- [x] Add GPU-format encoded sprite decoding and clipping unit coverage.
+- [x] Verify stock-created save -> modified fractional view/save -> stock reload.
+- [x] Check Arabic and accented Latin signs with Segoe UI, Japanese signs with Yu Gothic.
+- [x] Verify the NewGRF tram fixture is operating and record the dynamic scene with trees, company colours, wires and adjacent trains.
+- [x] Capture comparative pan-performance measurements without image-recording overhead.
+- [ ] Reduce full-viewport fractional-pan redraw cost: about 47 drawing FPS at 960 × 600, 16 at 1920 × 1080 versus about 60 at native zoom on the test machine.
+
 A checked implementation item
 does not imply that every runtime check has passed or that the installed
 prototype executable contains the latest source changes.
@@ -175,7 +193,7 @@ subjective smoothness.
 - [ ] Labels and signs at intermediate scales, including hit testing.
 - [ ] Window occlusion, viewport edges, resize and extra viewports in-game.
 - [ ] Save/load centre preservation and runtime blitter switching in-game.
-- [ ] OpenGL / 40bpp runtime validation and 8bpp fallback.
+- [x] OpenGL / 40bpp runtime validation and 8bpp fallback with three base graphics sets.
 - [ ] End-to-end frame-time and resource measurements on land, coast and
       vehicle-heavy scenes; assess suitability for upstream adoption.
 - [x] Fresh complete build and full test suite after current integration.

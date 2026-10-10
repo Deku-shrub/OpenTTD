@@ -426,3 +426,35 @@ Release logs: `build-smoothzoom/build-fractional-landing.log`, `validation-fract
 Labels render into reusable black/white scratch rasters to recover premultiplied coverage, then bilinear samples are composited onto the existing world. Offscreen drawing must guard both `_screen_disable_anim` and `_screen.pitch`, because rectangle primitives use the global pitch. An initial GUI stall exposed the missing pitch guard; it was corrected before commit. Covered screen pixels clear their underlying palette-animation entries. No persistent label cache is added; changing names, colours and fonts is reflected on the next redraw.
 
 GUI evidence at 960 x 600: station/sign screenshots at 130%/200%, town at 400%, wide labels at 12.5%; station enlarged-edge click opens Drennwell West, sign click opens its editor, town edge click opens Bafinghill. Labels/land are identical across captures 700 ms apart. New `labels-map.webp` and `labels-town.webp` animations are linked from the guide. Regression cases cover bounded continuous scale and recovered text coverage. Broader font/language/NewGRF and waypoint visual coverage remains on the TODO list.
+
+## Graphics-set coverage and GPU label correction
+
+The 10 October coverage pass checks OpenGFX 8.0, OpenGFX2 Classic 0.8 and
+OpenGFX2 High Def 0.8 in eleven configurations each: five software renderers,
+OpenGL/40bpp, legacy 8bpp, 1080p, 200% interface scale, Arabic and Japanese UI.
+All final runs pass. JSON evidence, source URLs, archive hashes and repeatable
+Windows runners are linked from `validation/zoom-coverage.md`.
+
+Scaled labels now call `CopyImageToBuffer` for each clipped background row before
+compositing. Reading raw framebuffer RGB omitted the separate GPU palette
+index/brightness metadata. Native 200% software/GPU label crops match exactly.
+The unit suite passes 53,540 assertions in 137 cases, including encoded 40bpp
+mipmaps, palette colours, partial alpha and unaligned clipped sprites. Unit
+offscreen rendering supplies a dummy screen and disables animation; native SSE
+brightness/alpha comparisons allow its documented one-RGB-unit rounding difference.
+
+Stock upstream `fab8089e6bed2be570b6b0a2cb9f19a5db16a7da` was built locally.
+Stock-created -> modified fractional view/save -> stock reload succeeds using
+an isolated profile. This replaces the earlier untested save-format expectation.
+
+`ZoomCoverage` adds official OpenGFX2 tram/tree/station/object GRFs, tram stops,
+company colours and Unicode signs. Its source requires a UTF-8 BOM. Segoe UI
+renders Arabic/Latin; Yu Gothic renders Japanese. Tram 10, a truck and four
+trains show changing locations and nonzero speeds in the AI debug window.
+`newgrf-tram.webp` records the moving scene during zoom.
+
+Capture-free fractional pan profiling still finds a substantial full-viewport
+redraw cost: about 47 drawing FPS at 960 x 600 and 16 at 1920 x 1080 at 130%,
+versus about 60 at native zoom. A static palette resolution experiment was
+removed after failing to establish a useful improvement. This performance gap
+remains explicit in the TODO and coverage notes.

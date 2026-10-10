@@ -1,6 +1,7 @@
 param(
     [string]$Executable = 'C:\ottd-build\Release\openttd.exe',
     [string]$GraphicsArchive = '',
+    [string]$GraphicsSet = 'OpenGFX',
     [string]$Savegame = '',
     [switch]$NewMap,
     [string]$Blitter = '32bpp-anim',
@@ -20,7 +21,7 @@ Copy-Item -LiteralPath (Join-Path $navigationBuild 'lang\english.lng') -Destinat
 Get-ChildItem -LiteralPath (Join-Path $navigationBuild 'baseset') -File | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $navigationWork "baseset\$($_.Name)") -Force
 }
-foreach ($navigationFixture in @('ZoomStatic', 'ZoomStaticExtra', 'ZoomVehicles')) {
+foreach ($navigationFixture in @('ZoomStatic', 'ZoomStaticExtra', 'ZoomVehicles', 'ZoomCoverage')) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $navigationFixture) -Destination (Join-Path $navigationWork 'ai') -Recurse -Force
 }
 if ($GraphicsArchive) {
@@ -41,7 +42,7 @@ if ($NewMap -and $Savegame) { throw 'Choose -NewMap or -Savegame, not both.' }
 if (!$NewMap -and !$Savegame) { $Savegame = Join-Path $PSScriptRoot 'zoom-navigation.sav' }
 if ($Savegame) { $Savegame = (Resolve-Path -LiteralPath $Savegame).Path }
 $navigationConfig = Join-Path $navigationWork 'navigation-demo.cfg'
-@'
+$navigationConfigText = @'
 [misc]
 fullscreen = false
 sounddriver = null
@@ -63,8 +64,9 @@ map_y = 8
 generation_seed = 12345
 [graphicsset]
 name = OpenGFX
-'@ | Set-Content -LiteralPath $navigationConfig -Encoding ASCII
-$navigationArguments = @('-c', $navigationConfig, '-x', '-X', '-r', "${Width}x${Height}", '-s', 'null', '-m', 'null', '-b', $Blitter, '-v', $VideoDriver, '-g')
+'@
+$navigationConfigText.Replace('name = OpenGFX', "name = $GraphicsSet") | Set-Content -LiteralPath $navigationConfig -Encoding UTF8
+$navigationArguments = @('-c', $navigationConfig, '-x', '-X', '-r', "${Width}x${Height}", '-s', 'null', '-m', 'null', '-b', $Blitter, '-v', $VideoDriver, '-I', $GraphicsSet, '-g')
 if ($Savegame) { $navigationArguments += $Savegame }
 $navigationArgumentLine = ($navigationArguments | ForEach-Object { '"' + $_.Replace('"', '\"') + '"' }) -join ' '
 $navigationProcess = Start-Process -FilePath $navigationExecutable -ArgumentList $navigationArgumentLine -WorkingDirectory $navigationWork -WindowStyle Normal -PassThru -RedirectStandardOutput (Join-Path $navigationWork "navigation-stdout.log") -RedirectStandardError (Join-Path $navigationWork "navigation-stderr.log")

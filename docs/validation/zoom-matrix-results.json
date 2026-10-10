@@ -1,0 +1,790 @@
+{
+  "date": "2026-10-10",
+  "unit_assertions": 53540,
+  "unit_cases": 137,
+  "sets": [
+    {
+      "graphics": "OpenGFX",
+      "results": [
+        {
+          "case": "cjk",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "japanese.lng",
+          "interface_scale": 100,
+          "size": [
+            1280,
+            800
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\cjk-20261010T182958",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "hidpi",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 200,
+          "size": [
+            1600,
+            1000
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\hidpi-20261010T182908",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "large",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            1920,
+            1080
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\large-20261010T182843",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "legacy",
+          "blitter": "8bpp-optimized",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\legacy-20261010T182833",
+          "checks": [
+            "render 1",
+            "unsupported fractional request does not crash"
+          ],
+          "status": "passed"
+        },
+        {
+          "case": "opengl",
+          "blitter": "40bpp-anim",
+          "driver": "win32-opengl:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\opengl-20261010T182809",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "optimized",
+          "blitter": "32bpp-optimized",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\optimized-20261010T182656",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "rtl",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "arabic_egypt.lng",
+          "interface_scale": 100,
+          "size": [
+            1280,
+            800
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\rtl-20261010T182933",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "simple",
+          "blitter": "32bpp-simple",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\simple-20261010T182631",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "software",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\software-20261010T182607",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "sse2",
+          "blitter": "32bpp-sse2-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\sse2-20261010T182720",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "sse4",
+          "blitter": "32bpp-sse4-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\sse4-20261010T182744",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "graphics": "OpenGFX2 Classic",
+      "results": [
+        {
+          "case": "cjk",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "japanese.lng",
+          "interface_scale": 100,
+          "size": [
+            1280,
+            800
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\cjk-20261010T190451",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "hidpi",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 200,
+          "size": [
+            1600,
+            1000
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\hidpi-20261010T190403",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "large",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            1920,
+            1080
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\large-20261010T190339",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "legacy",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "8bpp-optimized",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\legacy-20261010T190329",
+          "checks": [
+            "render 1",
+            "unsupported fractional request does not crash"
+          ],
+          "status": "passed"
+        },
+        {
+          "case": "opengl",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "40bpp-anim",
+          "driver": "win32-opengl:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\opengl-20261010T190305",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "optimized",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "32bpp-optimized",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\optimized-20261010T190153",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "rtl",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "arabic_egypt.lng",
+          "interface_scale": 100,
+          "size": [
+            1280,
+            800
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\rtl-20261010T190427",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "simple",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "32bpp-simple",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\simple-20261010T190129",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "software",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\software-20261010T190104",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "sse2",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "32bpp-sse2-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\sse2-20261010T190217",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "sse4",
+          "graphics": "OpenGFX2 Classic",
+          "blitter": "32bpp-sse4-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\sse4-20261010T190241",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "graphics": "OpenGFX2 High Def",
+      "results": [
+        {
+          "case": "cjk",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "japanese.lng",
+          "interface_scale": 100,
+          "size": [
+            1280,
+            800
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\cjk-20261010T191013",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "hidpi",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 200,
+          "size": [
+            1600,
+            1000
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\hidpi-20261010T190730",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "large",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            1920,
+            1080
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\large-20261010T191208",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "legacy",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "8bpp-optimized",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\legacy-20261010T190553",
+          "checks": [
+            "render 1",
+            "unsupported fractional request does not crash"
+          ],
+          "status": "passed"
+        },
+        {
+          "case": "opengl",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "40bpp-anim",
+          "driver": "win32-opengl:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\opengl-20261010T190431",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "optimized",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "32bpp-optimized",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\optimized-20261010T191121",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "rtl",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "arabic_egypt.lng",
+          "interface_scale": 100,
+          "size": [
+            1280,
+            800
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\rtl-20261010T190852",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "simple",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "32bpp-simple",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\simple-20261010T185908",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "software",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "32bpp-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\software-20261010T185741",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "sse2",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "32bpp-sse2-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\sse2-20261010T190148",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        },
+        {
+          "case": "sse4",
+          "graphics": "OpenGFX2 High Def",
+          "blitter": "32bpp-sse4-anim",
+          "driver": "win32:no_threads",
+          "language": "english.lng",
+          "interface_scale": 100,
+          "size": [
+            960,
+            600
+          ],
+          "artifacts": "build-smoothzoom\\coverage\\sse4-20261010T190310",
+          "checks": [
+            "render 1",
+            "render 1.3",
+            "render 2",
+            "render 0.84",
+            "render 0.25",
+            "stable fractional rest",
+            "save/load screenshot"
+          ],
+          "settled_crop_difference": null,
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "archive_sha256": {
+    "opengfx-8.0.tar": "9389bcb0807058c80bd95121e978f05d9ef86b4b1bc3ac2da8da8bb02456043c",
+    "OpenGFX2_Classic-0.8.tar": "e4c4efba59fd4c662e86e456fc584be0196e7ae147c6b509f793caacc95ec771",
+    "OpenGFX2_HighDef-0.8.tar": "f5a49b80e53204e22f15c6f68f629119e267a040b716dd230dd9d0992eeec358"
+  }
+}

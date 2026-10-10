@@ -12,6 +12,8 @@
 #include "../blitter/32bpp_simple.hpp"
 #include "../blitter/32bpp_optimized.hpp"
 #include "../blitter/32bpp_sse2.hpp"
+#include "../blitter/40bpp_anim.hpp"
+#include "../gfx_func.h"
 #include "../gfx_type.h"
 #include "../palette_func.h"
 #include "../core/backup_type.hpp"
@@ -269,7 +271,15 @@ protected:
 
 TEST_CASE("Fractional encoded sprite decoding agrees with integer blitting at every mipmap", "[smoothzoom]")
 {
+	AutoRestoreBackup animation_backup(_screen_disable_anim, true);
+	Colour screen_pixel;
+	AutoRestoreBackup screen_backup(_screen.dst_ptr, static_cast<void *>(&screen_pixel));
+	AutoRestoreBackup palette_backup(_cur_palette, _cur_palette);
+	_cur_palette.palette[42] = Colour(30, 90, 160);
+	_cur_palette.palette[PALETTE_ANIM_START + 2] = Colour(0, 240, 140);
 	const bool nearest = GENERATE(false, true);
+	const bool partial_alpha = GENERATE(false, true);
+	const bool palette_pixels = GENERATE(false, true);
 	AutoRestoreBackup zoom_min_backup(_settings_client.gui.zoom_min, ZoomLevel::Min);
 	AutoRestoreBackup zoom_max_backup(_settings_client.gui.zoom_max, ZoomLevel::Max);
 	SpriteLoader::SpriteCollection sprites;
@@ -281,12 +291,14 @@ TEST_CASE("Fractional encoded sprite decoding agrees with integer blitting at ev
 		pixels.resize(width * height);
 		for (size_t i = 0; i < pixels.size(); i++) {
 			pixels[i] = {static_cast<uint8_t>(i * 17), static_cast<uint8_t>(i * 37), static_cast<uint8_t>(i * 61),
-					static_cast<uint8_t>(i % 7 < 3 ? 0 : 255), 0};
+					static_cast<uint8_t>(i % 7 < 3 ? 0 : partial_alpha && i % 7 == 3 ? 96 : 255),
+					static_cast<uint8_t>(!palette_pixels ? 0 : i % 11 == 3 ? 42 : i % 11 == 5 ? PALETTE_ANIM_START + 2 : 0)};
 		}
 		sprites[zoom] = {static_cast<uint16_t>(height), static_cast<uint16_t>(width), 0, 0, {}, pixels.data()};
 	}
 	std::vector<std::unique_ptr<Blitter>> blitters;
 	blitters.push_back(std::make_unique<Blitter_32bppOptimized>());
+	blitters.push_back(std::make_unique<Blitter_40bppAnim>());
 #ifdef WITH_SSE
 	blitters.push_back(std::make_unique<Blitter_32bppSSE2>());
 #endif
@@ -307,13 +319,26 @@ TEST_CASE("Fractional encoded sprite decoding agrees with integer blitting at ev
 					static_cast<double>(ScaleByZoom(1, zoom)), width, height, scaled.data(), width + 1};
 			fractional.nearest = nearest;
 			REQUIRE(blitter->DrawScaled(&fractional, BlitterMode::Normal));
-			CHECK(scaled == reference);
+			if ((partial_alpha || palette_pixels) && blitter->GetName() == "32bpp-sse2") {
+				/* Native SSE brightness and alpha arithmetic round differently
+				 * from their scalar counterparts. Allow only one RGB unit for
+				 * those cases; opaque non-palette sprites remain byte-exact. */
+				CHECK(std::equal(scaled.begin(), scaled.end(), reference.begin(), [](Colour a, Colour b) {
+					return std::abs(int(a.r) - b.r) <= 1 && std::abs(int(a.g) - b.g) <= 1 &&
+							std::abs(int(a.b) - b.b) <= 1 && a.a == b.a;
+				}));
+			} else {
+				CHECK(scaled == reference);
+			}
 		}
 	}
 }
 
 TEST_CASE("Unaligned encoded sub-sprite edges use a mipmap that preserves the clipped source", "[smoothzoom]")
 {
+	AutoRestoreBackup animation_backup(_screen_disable_anim, true);
+	Colour screen_pixel;
+	AutoRestoreBackup screen_backup(_screen.dst_ptr, static_cast<void *>(&screen_pixel));
 	const bool nearest = GENERATE(false, true);
 	AutoRestoreBackup zoom_min_backup(_settings_client.gui.zoom_min, ZoomLevel::Min);
 	AutoRestoreBackup zoom_max_backup(_settings_client.gui.zoom_max, ZoomLevel::Max);
@@ -333,6 +358,7 @@ TEST_CASE("Unaligned encoded sub-sprite edges use a mipmap that preserves the cl
 	}
 	std::vector<std::unique_ptr<Blitter>> blitters;
 	blitters.push_back(std::make_unique<Blitter_32bppOptimized>());
+	blitters.push_back(std::make_unique<Blitter_40bppAnim>());
 #ifdef WITH_SSE
 	blitters.push_back(std::make_unique<Blitter_32bppSSE2>());
 #endif

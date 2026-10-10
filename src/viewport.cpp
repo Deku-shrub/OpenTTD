@@ -1904,7 +1904,7 @@ static void ViewportDrawScaledLabel(const StringSpriteToDraw &ss, int x, int y, 
 	const int height = WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(ss.flags.Test(ViewportStringFlag::Small) ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom;
 	if (width <= 0 || height <= 0) return;
 	/* Reused scratch storage, not a cache: text, font and colour changes are immediate. */
-	static std::vector<Colour> black, white;
+	static std::vector<Colour> black, white, background;
 	black.assign(static_cast<size_t>(width) * height, Colour(0, 0, 0));
 	white.assign(black.size(), Colour(255, 255, 255));
 	DrawPixelInfo raster{};
@@ -1925,11 +1925,19 @@ static void ViewportDrawScaledLabel(const StringSpriteToDraw &ss, int x, int y, 
 	const int output_height = GetViewportLabelExtent(height, scale);
 	const DrawPixelInfo &dpi = *_cur_dpi;
 	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
+	const int first_x = std::max(0, dpi.left - x);
+	const int last_x = std::min(output_width, dpi.left + dpi.width - x);
+	if (first_x >= last_x) return;
+	background.resize(last_x - first_x);
 	for (int dy = std::max(0, dpi.top - y); dy < std::min(output_height, dpi.top + dpi.height - y); ++dy) {
 		const double sy = std::clamp((dy + 0.5) / scale - 0.5, 0.0, double(height - 1));
 		const int iy = static_cast<int>(sy), jy = std::min(iy + 1, height - 1);
 		const double fy = sy - iy;
-		for (int dx = std::max(0, dpi.left - x); dx < std::min(output_width, dpi.left + dpi.width - x); ++dx) {
+		/* GPU blitters can store palette indices separately from RGB. Resolve
+		 * that background before blending text coverage, then clear its metadata. */
+		blitter->CopyImageToBuffer(blitter->MoveTo(dpi.dst_ptr, x + first_x - dpi.left, y + dy - dpi.top),
+				background.data(), last_x - first_x, 1, last_x - first_x);
+		for (int dx = first_x; dx < last_x; ++dx) {
 			const double sx = std::clamp((dx + 0.5) / scale - 0.5, 0.0, double(width - 1));
 			const int ix = static_cast<int>(sx), jx = std::min(ix + 1, width - 1);
 			const double fx = sx - ix;
@@ -1944,7 +1952,7 @@ static void ViewportDrawScaledLabel(const StringSpriteToDraw &ss, int x, int y, 
 			if (b == Colour(0, 0, 0) && w == Colour(255, 255, 255)) continue;
 			const int px = x + dx - dpi.left, py = y + dy - dpi.top;
 			Colour *destination = static_cast<Colour *>(blitter->MoveTo(dpi.dst_ptr, px, py));
-			const Colour output = CompositeViewportLabelPixel(b, w, *destination);
+			const Colour output = CompositeViewportLabelPixel(b, w, background[dx - first_x]);
 			/* Clear the animation-buffer entry beneath opaque/covered label pixels. */
 			blitter->SetPixel(dpi.dst_ptr, px, py, PixelColour{0});
 			*destination = output;
