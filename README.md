@@ -1,16 +1,88 @@
-# OpenTTD
+# OpenTTD — Smooth Zoom & Fly Navigation
 
-## Smooth zoom prototype
+An experimental [OpenTTD](https://github.com/OpenTTD/OpenTTD) fork with continuous
+map zoom and animated camera journeys. This repository is the home of the fork;
+the standard OpenTTD downloads do not include these changes.
 
-This development branch adds opt-in smooth mouse-wheel zoom, a compact zoom
-percentage/snap control, and simultaneous zoom-and-pan navigation with independent
-destination toggles.
+**[User guide](docs/smooth_zoom_readme.md)** ·
+**[Animated examples](docs/smooth_zoom_readme.md#zoom-examples)** ·
+**[Progress and TODO](docs/smooth_zoom_todo.md)** ·
+**[Testing and compatibility](docs/validation/zoom-coverage.md)**
 
-- [Prototype setup and user guide](docs/smooth_zoom_readme.md)
-- [Implementation and remaining validation](docs/smooth_zoom_todo.md)
-- [Reproducible validation fixtures](docs/validation/README.md)
+## What it adds
 
-## Table of contents
+- **Smooth mouse-wheel zoom:** eased transitions between fractional zoom levels,
+  with the map position beneath the cursor kept in place.
+- **Compact zoom controls:** a toolbar percentage shows the current scale; click
+  it to stop the transition and snap to a traditional zoom level.
+- **Fly-to navigation:** pan and zoom simultaneously to towns, vehicles, stations,
+  industries, news/events and other map destinations. A master switch enables
+  flights, with optional per-category overrides and adjustable pacing.
+- **Immediate manual control:** scrolling or zooming cancels an active flight
+  from its current camera position.
+- **Scaling map labels:** town and station labels and signs scale with the view.
+
+### See it in motion
+
+Zooming around NewGRF objects, trees and map labels:
+
+<img src="docs/images/smooth-zoom/newgrf-objects.webp" alt="Animated smooth zoom around a gasometer, forests and map labels" width="720">
+
+Flying between map locations with simultaneous pan and zoom:
+
+<img src="docs/images/smooth-zoom/flight.webp" alt="Animated flight from the town directory with simultaneous zoom and pan" width="720">
+
+[More examples](docs/smooth_zoom_readme.md#zoom-examples) cover small, large, fast
+and slow zooms, toolbar controls, moving vehicles, rail, tunnels and waterways.
+
+## Try the fork
+
+Build this repository using the [compilation instructions](COMPILING.md), then
+run the resulting game with its matching language files and an installed base
+graphics set. This is an engine modification, not a NewGRF content pack. The
+[user guide](docs/smooth_zoom_readme.md#get-started) includes the Windows demo
+launcher and populated test map.
+
+In **Game Options → Advanced**, search for **smooth** and enable **Smooth
+mouse-wheel zoom** (use the Expert/all-settings filter). Search for **fly** and
+enable **Fly-to navigation** if you also want animated journeys. Both features
+are opt-in and require a supported 32bpp renderer.
+
+Existing saved games can use these features without converting the map, as long
+as this OpenTTD version can load the save. Camera options are local, and the
+patch adds no savegame-format changes. See the [save and mod compatibility
+notes](docs/smooth_zoom_readme.md#existing-saves-rollback-and-mod-compatibility)
+for the tested scope and version limitations.
+
+## Development and feedback
+
+This is a work in progress. The [TODO list](docs/smooth_zoom_todo.md) distinguishes
+implemented work from remaining validation; the [test coverage
+notes](docs/validation/zoom-coverage.md) record graphics sets, renderers and
+performance measurements. [CI requirements and results](docs/validation/upstream-readiness.md)
+track the platform checks and submission constraints. Upstream integration is
+not promised: OpenTTD's current contribution policy prohibits AI-generated code
+submissions, and this fork contains AI-generated code.
+
+For problems with this fork, use [this repository's issue
+tracker](https://github.com/Deku-shrub/OpenTTD/issues). Include the build revision,
+operating system, graphics set, renderer, camera settings and steps to reproduce;
+a savegame or short recording helps with visual issues.
+
+- [Detailed controls](docs/smooth_zoom_controls.md)
+- [Reproducible test maps and validation tools](docs/validation/README.md)
+- [Technical handoff and development notes](docs/smooth_zoom_handoff.md)
+- [License](COPYING.md) and [credits](CREDITS.md)
+
+<details>
+<summary>Original OpenTTD project information, installation, community and licensing</summary>
+
+## OpenTTD documentation
+
+The information below describes the upstream game. Official downloads are the
+unmodified OpenTTD releases; build this fork to use smooth zoom and flights.
+
+### Table of contents
 
 - 1.0) [About](#10-about)
     - 1.1) [Downloading OpenTTD](#11-downloading-openttd)
@@ -216,3 +288,5 @@ See `cmake/3rdparty/llvm/LICENSE.txt` for the complete license text.
 ## 4.0) Credits
 
 See [CREDITS.md](./CREDITS.md)
+
+</details>

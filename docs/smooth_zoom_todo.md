@@ -1,5 +1,8 @@
 # Smooth zoom progress
 
+[Fork homepage](../README.md) · [User guide](smooth_zoom_readme.md) ·
+[CI requirements and results](validation/upstream-readiness.md)
+
 Updated 10 October 2026. Checkpoint and regular commits are now authorized.
 Current cross-renderer and graphics-set results are in
 [the coverage notes](validation/zoom-coverage.md). The dated sections below

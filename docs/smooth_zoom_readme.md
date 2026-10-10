@@ -1,16 +1,43 @@
-# Smooth zoom prototype: setup and use
+# Smooth zoom and fly navigation: user guide
+
+[Fork homepage](../README.md) · [Progress and TODO](smooth_zoom_todo.md) ·
+[Test coverage](validation/zoom-coverage.md)
 
 See the [implementation and validation checklist](smooth_zoom_todo.md) for
 what is complete and what still needs work.
 
-This experimental build adds smaller mouse-wheel zoom steps. Smooth zoom is
-disabled by default and requires a supported 32bpp blitter. Fractional rendering
-can be slower than ordinary integer zoom. The prepared executable was rebuilt
-on 10 October 2026 with animated wheel transitions, the toolbar snap control,
-and opt-in fly-to navigation.
-Restart an older running prototype to use these changes.
+This experimental fork adds eased fractional mouse-wheel zoom, a compact toolbar
+percentage/snap control, scaling labels and simultaneous pan-and-zoom flights.
+Smooth zoom and flights are disabled by default and require a supported 32bpp
+blitter. Fractional rendering can be slower than ordinary integer zoom.
 
-## Launch the prepared Windows prototype
+## Get started
+
+Clone or download [this fork](https://github.com/Deku-shrub/OpenTTD), then follow
+[COMPILING.md](../COMPILING.md) for your platform's dependencies and build steps.
+Run the resulting game with the matching language files and an installed base
+graphics set. Official OpenTTD releases do not contain this fork's features.
+
+Enable **Smooth mouse-wheel zoom** in **Game Options > Advanced**; select the
+Expert/all-settings filter and search for **smooth**. For animated navigation,
+search for **fly** and enable **Fly-to navigation**. See the
+[zoom controls](#enable-smooth-mouse-wheel-zoom) and [flight settings](#fly-to-a-location)
+below for the full controls and per-destination overrides.
+
+For a populated Windows demonstration, run the checked-in launcher from the
+repository root, supplying your own built executable and installed OpenGFX 8.0
+archive. For example, with a Visual Studio Release build in `build`:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\docs\validation\launch-prototype.ps1 -Executable .\build\Release\openttd.exe -GraphicsArchive "C:\path\to\opengfx-8.0.tar"
+```
+
+The launcher enables camera features in an isolated configuration and loads the
+included test map. It requires a compiled executable and graphics archive; it
+does not download them. Keep the terminal open while playing. See the fixture
+instructions below for company selection and moving vehicles.
+
+## Launch the prepared Windows prototype on the development machine
 
 On this development machine, the executable is `C:\ottd-build\Release\openttd.exe`.
 The prepared launcher stages the matching language and base-set files and uses

@@ -1,5 +1,8 @@
 # Smooth zoom validation fixtures
 
+[Fork homepage](../../README.md) · [User guide](../smooth_zoom_readme.md) ·
+[Graphics coverage](zoom-coverage.md) · [CI requirements and results](upstream-readiness.md)
+
 ## Quick navigation demo
 
 Run `launch-prototype.ps1` with a compiled Windows game and installed OpenGFX
