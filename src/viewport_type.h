@@ -41,7 +41,9 @@ struct Viewport {
 	int virtual_width;   ///< width << zoom
 	int virtual_height;  ///< height << zoom
 
-	ZoomLevel zoom; ///< The zoom level of the viewport.
+	ZoomLevel zoom; ///< The zoom level of the viewport. When #zoom_step is set, the nearest integer level.
+	float zoom_step = 0; ///< Smooth zoom: virtual pixels per screen pixel, or 0 when using integer #zoom.
+	bool zoom_animation = false; ///< Interactive zoom uses fast sampling until motion settles.
 	std::shared_ptr<LinkGraphOverlay> overlay;
 };
 

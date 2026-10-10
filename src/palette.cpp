@@ -10,10 +10,12 @@
 #include "stdafx.h"
 #include "blitter/base.hpp"
 #include "blitter/factory.hpp"
+#include "gfx_func.h"
 #include "gfx_type.h"
 #include "landscape_type.h"
 #include "palette_func.h"
 #include "settings_type.h"
+#include "core/smooth_zoom_palette.hpp"
 
 #include "table/palettes.h"
 
@@ -350,10 +352,22 @@ void DoPaletteAnimations()
 
 	if (blitter != nullptr && blitter->UsePaletteAnimation() == Blitter::PaletteAnimation::None) {
 		palette_animation_counter = old_tc;
-	} else if (_cur_palette.count_dirty == 0 && !std::ranges::equal(current_palette, original_palette)) {
-		/* Did we changed anything on the palette? Seems so.  Mark it as dirty */
-		_cur_palette.first_dirty = PALETTE_ANIM_START;
-		_cur_palette.count_dirty = PALETTE_ANIM_SIZE;
+	} else if (!std::ranges::equal(current_palette, original_palette)) {
+		if (_cur_palette.count_dirty == 0) {
+			/* Did we changed anything on the palette? Seems so.  Mark it as dirty */
+			_cur_palette.first_dirty = PALETTE_ANIM_START;
+			_cur_palette.count_dirty = PALETTE_ANIM_SIZE;
+		}
+		/* Filtered pixels can depend on several palette entries. Redraw only screen
+		 * blocks whose dependencies include an entry that actually changed. */
+		if (blitter != nullptr && blitter->SupportsSmoothZoom()) {
+			static_assert(PALETTE_ANIM_SIZE <= 32);
+			uint32_t changed = 0;
+			for (size_t i = 0; i < current_palette.size(); ++i) {
+				if (current_palette[i] != original_palette[i]) changed |= uint32_t{1} << i;
+			}
+			InvalidateSmoothZoomPalette(changed);
+		}
 	}
 }
 

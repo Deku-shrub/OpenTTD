@@ -10,6 +10,7 @@
 #ifndef ZOOM_FUNC_H
 #define ZOOM_FUNC_H
 
+#include <cmath>
 #include "zoom_type.h"
 
 /**
@@ -117,6 +118,26 @@ inline int ScaleSpriteTrad(int value)
 inline int ScaleGUITrad(int value)
 {
 	return value * _gui_scale / 100;
+}
+
+/** Wheel zoom advances by a quarter octave, bounded by the client's allowed levels. */
+inline double GetSmoothZoomStep(double step, bool in, ZoomLevel minimum, ZoomLevel maximum, uint notches = 1)
+{
+	return std::clamp(step * std::exp2((in ? -0.25 : 0.25) * notches),
+		static_cast<double>(ScaleByZoom(1, minimum)), static_cast<double>(ScaleByZoom(1, maximum)));
+}
+
+/** Virtual scroll adjustment needed to keep a screen position fixed while changing scale. */
+inline int GetZoomAnchorOffset(int screen_position, double old_step, double new_step)
+{
+	return static_cast<int>(std::lround(screen_position * (old_step - new_step)));
+}
+
+/** Next integer zoom level in a direction, including fractional starting levels. */
+inline ZoomLevel GetNextIntegerZoom(double step, bool in, ZoomLevel minimum, ZoomLevel maximum)
+{
+	const double level = std::log2(step);
+	return std::clamp(static_cast<ZoomLevel>(static_cast<int>(in ? std::ceil(level) - 1 : std::floor(level) + 1)), minimum, maximum);
 }
 
 #endif /* ZOOM_FUNC_H */

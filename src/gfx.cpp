@@ -8,6 +8,7 @@
 /** @file gfx.cpp Handling of drawing text and other gfx related stuff. */
 
 #include "stdafx.h"
+#include "core/smooth_zoom_palette.hpp"
 #include "gfx_func.h"
 #include "gfx_layout.h"
 #include "zoom_func.h"
@@ -80,6 +81,16 @@ static const uint DIRTY_BLOCK_WIDTH    = 64;
 static size_t _dirty_blocks_per_row = 0;
 static size_t _dirty_blocks_per_column = 0;
 static std::vector<uint8_t> _dirty_blocks;
+static SmoothZoomPaletteTracker _smooth_zoom_palette;
+static_assert(DIRTY_BLOCK_WIDTH == SmoothZoomPaletteTracker::BLOCK_WIDTH);
+static_assert(DIRTY_BLOCK_HEIGHT == SmoothZoomPaletteTracker::BLOCK_HEIGHT);
+
+void InvalidateSmoothZoomPalette(uint32_t changed)
+{
+	_smooth_zoom_palette.ForEachChanged(changed, [](int left, int top, int right, int bottom) {
+		AddDirtyBlock(left, top, right, bottom);
+	});
+}
 extern uint _dirty_block_colour;
 
 void GfxScroll(int left, int top, int width, int height, int xo, int yo)
@@ -401,6 +412,21 @@ void GfxDrawLine(int x, int y, int x2, int y2, PixelColour colour, int width, in
 void GfxDrawLineUnscaled(int x, int y, int x2, int y2, PixelColour colour)
 {
 	DrawPixelInfo *dpi = _cur_dpi;
+	if (dpi->zoom_step > 0) {
+		/* Convert against the exact origin before clipping in destination pixels. */
+		x = static_cast<int>(std::floor((x - dpi->virtual_left) / dpi->zoom_step));
+		y = static_cast<int>(std::floor((y - dpi->virtual_top) / dpi->zoom_step));
+		x2 = static_cast<int>(std::floor((x2 - dpi->virtual_left) / dpi->zoom_step));
+		y2 = static_cast<int>(std::floor((y2 - dpi->virtual_top) / dpi->zoom_step));
+		DrawPixelInfo screen_dpi = *dpi;
+		screen_dpi.left = screen_dpi.top = 0;
+		screen_dpi.width = dpi->pixel_width;
+		screen_dpi.height = dpi->pixel_height;
+		if (GfxPreprocessLine(&screen_dpi, x, y, x2, y2, 1)) {
+			GfxDoDrawLine(dpi->dst_ptr, x, y, x2, y2, dpi->pixel_width, dpi->pixel_height, colour, 1);
+		}
+		return;
+	}
 	if (GfxPreprocessLine(dpi, x, y, x2, y2, 1)) {
 		GfxDoDrawLine(dpi->dst_ptr,
 				UnScaleByZoom(x, dpi->zoom), UnScaleByZoom(y, dpi->zoom),
@@ -1242,8 +1268,83 @@ std::unique_ptr<uint32_t[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel 
 	return result;
 }
 
+/**
+ * Draw a viewport sprite at a fractional zoom step (smooth zoom).
+ * The sprite is always taken at the finest zoom level and filtered down by the blitter.
+ * Sub-sprite clipping is approximate: edge pixels may include up to a source step of content outside the sub-sprite.
+ * @param sprite The sprite to draw.
+ * @param x Left coordinate of the sprite origin, in virtual (#ZoomLevel::Min times #ZOOM_BASE) coordinates.
+ * @param y Top coordinate of the sprite origin, in virtual coordinates.
+ * @param mode The settings for the blitter to pass.
+ * @param sub Whether to only draw a sub set of the sprite.
+ */
+static void GfxBlitterFractional(const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub)
+{
+	const DrawPixelInfo *dpi = _cur_dpi;
+	const double step = dpi->zoom_step;
+	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
+
+	x += sprite->x_offs;
+	y += sprite->y_offs;
+
+	/* Source rectangle, in sprite pixels. */
+	int sl = 0, st = 0, sr = sprite->width, sb = sprite->height;
+	if (sub != nullptr) {
+		constexpr int base = static_cast<int>(ZOOM_BASE);
+		sl = std::max<int>(0, -sprite->x_offs + sub->left * base);
+		st = std::max<int>(0, -sprite->y_offs + sub->top * base);
+		sr = std::min<int>(sprite->width, -sprite->x_offs + (sub->right + 1) * base);
+		sb = std::min<int>(sprite->height, -sprite->y_offs + (sub->bottom + 1) * base);
+		if (sl >= sr || st >= sb) return;
+	}
+
+	/* Destination rectangle, in destination pixels, clipped to the dpi. */
+	const int dest_width = dpi->pixel_width;
+	const int dest_height = dpi->pixel_height;
+	const int dx0 = std::max(0, static_cast<int>(std::floor((x + sl - dpi->virtual_left) / step)));
+	const int dy0 = std::max(0, static_cast<int>(std::floor((y + st - dpi->virtual_top) / step)));
+	const int dx1 = std::min(dest_width, static_cast<int>(std::ceil((x + sr - dpi->virtual_left) / step)));
+	const int dy1 = std::min(dest_height, static_cast<int>(std::ceil((y + sb - dpi->virtual_top) / step)));
+	if (dx0 >= dx1 || dy0 >= dy1) return;
+
+	Blitter::ScaledBlitterParams bp;
+	bp.sprite = sprite->data;
+	bp.remap = _colour_remap_ptr;
+	bp.sprite_width = sprite->width;
+	bp.sprite_height = sprite->height;
+	bp.src_x = dpi->virtual_left + dx0 * step - x;
+	bp.clip_left = sl;
+	bp.clip_top = st;
+	bp.clip_right = sprite->width - sr;
+	bp.clip_bottom = sprite->height - sb;
+	bp.src_y = dpi->virtual_top + dy0 * step - y;
+	bp.step = step;
+	bp.nearest = dpi->zoom_animation;
+	bp.width = dx1 - dx0;
+	bp.height = dy1 - dy0;
+	bp.dst = blitter->MoveTo(dpi->dst_ptr, dx0, dy0);
+	bp.pitch = dpi->pitch;
+
+	if (!blitter->DrawScaled(&bp, mode)) return;
+	if (bp.palette_mask != 0 && !_screen_disable_anim && _screen.dst_ptr != nullptr && _screen.pitch > 0) {
+		const uintptr_t base = reinterpret_cast<uintptr_t>(_screen.dst_ptr);
+		const uintptr_t destination = reinterpret_cast<uintptr_t>(bp.dst);
+		const size_t screen_bytes = static_cast<size_t>(_screen.pitch) * _screen.height * sizeof(Colour);
+		if (destination >= base && destination - base < screen_bytes && (destination - base) % sizeof(Colour) == 0) {
+			const size_t offset = (destination - base) / sizeof(Colour);
+			const int left = static_cast<int>(offset % _screen.pitch);
+			const int top = static_cast<int>(offset / _screen.pitch);
+			_smooth_zoom_palette.Register(left, top, left + bp.width, top + bp.height, bp.palette_mask);
+		}
+	}
+}
+
 static void GfxMainBlitterViewport(const Sprite *sprite, int x, int y, BlitterMode mode, const SubSprite *sub, SpriteID sprite_id)
 {
+	if (_cur_dpi->zoom_step > 0) {
+		GfxBlitterFractional(sprite, x, y, mode, sub);
+		return;
+	}
 	GfxBlitter<ZOOM_BASE, false>(sprite, x, y, mode, sub, sprite_id, _cur_dpi->zoom);
 }
 
@@ -1323,6 +1424,7 @@ void ScreenSizeChanged()
 	_dirty_blocks_per_row = CeilDiv(_screen.width, DIRTY_BLOCK_WIDTH);
 	_dirty_blocks_per_column = CeilDiv(_screen.height, DIRTY_BLOCK_HEIGHT);
 	_dirty_blocks.resize(_dirty_blocks_per_column * _dirty_blocks_per_row);
+	_smooth_zoom_palette.Resize(_screen.width, _screen.height);
 
 	/* check the dirty rect */
 	if (_invalid_rect.right >= _screen.width) _invalid_rect.right = _screen.width;
@@ -1440,6 +1542,7 @@ void RedrawScreenRect(int left, int top, int right, int bottom)
 
 	if (_networking) NetworkUndrawChatMessage();
 
+	_smooth_zoom_palette.Clear(left, top, right, bottom);
 	DrawOverlappedWindowForAll(left, top, right, bottom);
 
 	VideoDriver::GetInstance()->MakeDirty(left, top, right - left, bottom - top);
@@ -1865,7 +1968,11 @@ bool AdjustGUIZoom(bool automatic)
 			w->top    = (w->top    * _gui_scale) / old_scale;
 		}
 		if (w->viewport != nullptr) {
-			w->viewport->zoom = Clamp(w->viewport->zoom - zoom_shift, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
+			if (w->viewport->zoom_step > 0) {
+				SetViewportSmoothZoom(w, static_cast<float>(ZOOM_BASE / std::ldexp(w->viewport->zoom_step, -zoom_shift)));
+			} else {
+				w->viewport->zoom = Clamp(w->viewport->zoom - zoom_shift, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
+			}
 		}
 	}
 

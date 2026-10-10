@@ -30,6 +30,8 @@
 #include "string_func.h"
 #include "strings_func.h"
 #include "viewport_func.h"
+#include "zoom_func.h"
+#include "blitter/factory.hpp"
 #include "window_func.h"
 #include "timer/timer.h"
 #include "company_func.h"
@@ -345,6 +347,7 @@ static bool ConZoomToLevel(std::span<std::string_view> argv)
 				} else {
 					Window *w = GetMainWindow();
 					Viewport &vp = *w->viewport;
+					if (vp.zoom_step > 0) SetViewportSmoothZoom(w, 0);
 					while (vp.zoom > zoom_lvl) DoZoomInOutWindow(ZOOM_IN, w);
 					while (vp.zoom < zoom_lvl) DoZoomInOutWindow(ZOOM_OUT, w);
 				}
@@ -355,6 +358,52 @@ static bool ConZoomToLevel(std::span<std::string_view> argv)
 	}
 
 	return false;
+}
+
+/**
+ * Set a smooth (fractional) zoom on the main viewport.
+ * @copydoc IConsoleCmdProc
+ */
+static bool ConSmoothZoom(std::span<std::string_view> argv)
+{
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "Set a smooth (fractional) zoom of the main viewport. Experimental.");
+		IConsolePrint(CC_HELP, "Usage: 'smoothzoom [scale]'. Without a scale, reports the current zoom. 1.0 is normal, 2.0 twice as large, 0.5 half as large; 0 returns to integer zoom.");
+		IConsolePrint(CC_HELP, "Requires a supported 32bpp blitter. Enable 'gui.smooth_zoom' for fractional mouse-wheel zoom.");
+		return true;
+	}
+	if (argv.size() == 1) {
+		const Window *w = GetMainWindow();
+		if (w == nullptr || w->viewport == nullptr) {
+			IConsolePrint(CC_ERROR, "There is no main viewport to zoom.");
+		} else {
+			const Viewport &vp = *w->viewport;
+			const double step = vp.zoom_step > 0 ? vp.zoom_step : ScaleByZoom(1, vp.zoom);
+			IConsolePrint(CC_DEFAULT, "Zoom {:.4f}x; nearest traditional {:.4f}x; {} rendering.",
+				ZOOM_BASE / step, static_cast<double>(ZOOM_BASE) / ScaleByZoom(1, vp.zoom), vp.zoom_step > 0 ? "fractional" : "integer");
+		}
+		return true;
+	}
+	if (argv.size() != 2) return false;
+
+	std::string_view text = argv[1];
+	float scale = 0;
+	auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), scale);
+	if (ec != std::errc() || ptr != text.data() + text.size() || !std::isfinite(scale) || scale < 0) {
+		IConsolePrint(CC_ERROR, "Invalid scale '{}'.", text);
+		return true;
+	}
+
+	Window *w = GetMainWindow();
+	if (w == nullptr || w->viewport == nullptr) {
+		IConsolePrint(CC_ERROR, "There is no main viewport to zoom.");
+	} else if (scale > 0 && !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+		IConsolePrint(CC_ERROR, "Smooth zoom is not supported by the current blitter. Use a supported 32bpp blitter.");
+	} else {
+		SetViewportSmoothZoom(w, scale);
+		w->InvalidateData();
+	}
+	return true;
 }
 
 /**
@@ -2984,6 +3033,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("screenshot",              ConScreenShot);
 	IConsole::CmdRegister("script",                  ConScript);
 	IConsole::CmdRegister("zoomto",                  ConZoomToLevel);
+	IConsole::CmdRegister("smoothzoom",              ConSmoothZoom);
 	IConsole::CmdRegister("scrollto",                ConScrollToTile);
 	IConsole::CmdRegister("alias",                   ConAlias);
 	IConsole::CmdRegister("load",                    ConLoad);

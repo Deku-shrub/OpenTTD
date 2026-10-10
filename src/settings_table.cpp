@@ -414,6 +414,25 @@ static void SpriteZoomMinChanged(int32_t)
 	MarkWholeScreenDirty();
 }
 
+/** Return fractional viewports to integer zoom when smooth zoom is disabled. */
+static void SmoothZoomChanged(int32_t new_value)
+{
+	if (new_value != 0) return;
+	for (Window *w : Window::Iterate()) {
+		if (w->viewport != nullptr && w->viewport->zoom_step > 0) {
+			SetViewportSmoothZoom(w, 0);
+			w->InvalidateData();
+		}
+	}
+}
+
+/** Turning off flight navigation stops it at the displayed location. */
+static void FlyNavigationChanged(int32_t new_value)
+{
+	if (new_value != 0) return;
+	for (Window *w : Window::Iterate()) CancelViewportFlight(w);
+}
+
 /**
  * Update any possible saveload window and delete any newgrf dialogue as
  * its widget parts might change. Reinit all windows as it allows access to the

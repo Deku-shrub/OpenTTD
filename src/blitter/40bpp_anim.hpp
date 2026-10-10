@@ -37,6 +37,7 @@ public:
 	template <BlitterMode mode> void Draw(const Blitter::BlitterParams *bp, ZoomLevel zoom);
 
 protected:
+	void WriteScaledPixel(Colour *dst, const Pixel &pixel, BlitterMode mode, const uint8_t *remap) override;
 	static inline Colour RealizeBlendedColour(uint8_t anim, Colour c)
 	{
 		return anim != 0 ? AdjustBrightness(LookupColourInPalette(anim), GetColourBrightness(c)) : c;

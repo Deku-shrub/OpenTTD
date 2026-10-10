@@ -2458,8 +2458,8 @@ void NWidgetViewport::UpdateViewportCoordinates(Window *w)
 	vp.width  = this->current_x;
 	vp.height = this->current_y;
 
-	vp.virtual_width  = ScaleByZoom(vp.width, vp.zoom);
-	vp.virtual_height = ScaleByZoom(vp.height, vp.zoom);
+	vp.virtual_width  = ViewportScale(vp, vp.width);
+	vp.virtual_height = ViewportScale(vp, vp.height);
 }
 
 /**

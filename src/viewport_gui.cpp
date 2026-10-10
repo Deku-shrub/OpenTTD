@@ -58,7 +58,7 @@ public:
 
 		NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_EV_VIEWPORT);
 		nvp->InitializeViewport(this, tile, ScaleZoomGUI(ZoomLevel::Viewport));
-		if (_settings_client.gui.zoom_min == viewport->zoom) this->DisableWidget(WID_EV_ZOOM_IN);
+		HandleZoomMessage(this, *this->viewport, WID_EV_ZOOM_IN, WID_EV_ZOOM_OUT);
 	}
 
 	std::string GetWidgetString(WidgetID widget, StringID stringid) const override
@@ -113,8 +113,8 @@ public:
 
 	void OnScroll(Point delta) override
 	{
-		this->viewport->scrollpos_x += ScaleByZoom(delta.x, this->viewport->zoom);
-		this->viewport->scrollpos_y += ScaleByZoom(delta.y, this->viewport->zoom);
+		this->viewport->scrollpos_x += ViewportScale(*this->viewport, delta.x);
+		this->viewport->scrollpos_y += ViewportScale(*this->viewport, delta.y);
 		this->viewport->dest_scrollpos_x = this->viewport->scrollpos_x;
 		this->viewport->dest_scrollpos_y = this->viewport->scrollpos_y;
 	}
@@ -128,6 +128,7 @@ public:
 	{
 		if (widget != WID_EV_VIEWPORT) return;
 		if (_settings_client.gui.scrollwheel_scrolling != ScrollWheelScrolling::Off) {
+			if (TrySmoothZoomWindow(wheel < 0, this, true, static_cast<uint>(std::abs(wheel)))) return;
 			ZoomInOrOutToCursorWindow(wheel < 0, this);
 		}
 	}

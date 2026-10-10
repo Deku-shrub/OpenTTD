@@ -14,6 +14,7 @@
 #include "window_gui.h"
 #include "window_func.h"
 #include "viewport_func.h"
+#include "zoom_func.h"
 #include "command_func.h"
 #include "dropdown_type.h"
 #include "dropdown_func.h"
@@ -1520,7 +1521,31 @@ public:
 
 /** Container for the 'normal' main toolbar */
 class NWidgetMainToolbarContainer : public NWidgetToolbarContainer {
+	uint zoom_width = 0;
+	mutable std::vector<WidgetID> arrangement_with_zoom;
+
+	void SetupSmallestSize(Window *w) override
+	{
+		this->NWidgetToolbarContainer::SetupSmallestSize(w);
+		this->zoom_width = w->GetWidget<NWidgetLeaf>(WID_TN_ZOOM_LEVEL)->smallest_x;
+		_toolbar_width += this->zoom_width;
+	}
+
 	const WidgetID *GetButtonArrangement(uint &width, uint &arrangeable_count, uint &button_count, uint &spacer_count) const override
+	{
+		/* Reserve the text control's width before choosing the existing icon arrangement. */
+		const bool show_zoom = width >= 14 * this->smallest_x + this->zoom_width;
+		if (show_zoom) width -= this->zoom_width;
+		const WidgetID *icons = this->GetImageButtonArrangement(width, arrangeable_count, button_count, spacer_count);
+		if (!show_zoom) return icons;
+		this->arrangement_with_zoom.assign(icons, icons + arrangeable_count);
+		auto pos = std::find(this->arrangement_with_zoom.begin(), this->arrangement_with_zoom.end(), WID_TN_ZOOM_OUT);
+		this->arrangement_with_zoom.insert(pos == this->arrangement_with_zoom.end() ? pos : pos + 1, WID_TN_ZOOM_LEVEL);
+		++arrangeable_count;
+		return this->arrangement_with_zoom.data();
+	}
+
+	const WidgetID *GetImageButtonArrangement(uint &width, uint &arrangeable_count, uint &button_count, uint &spacer_count) const
 	{
 		static const uint SMALLEST_ARRANGEMENT = 14;
 		static const uint BIGGEST_ARRANGEMENT  = 20;
@@ -2036,8 +2061,44 @@ struct MainToolbarWindow : Window {
 		this->DrawWidgets();
 	}
 
+	std::string GetWidgetString(WidgetID widget, StringID stringid) const override
+	{
+		if (widget != WID_TN_ZOOM_LEVEL) return this->Window::GetWidgetString(widget, stringid);
+		const Viewport &vp = *GetMainWindow()->viewport;
+		const double step = vp.zoom_step > 0 ? vp.zoom_step : ScaleByZoom(1, vp.zoom);
+		return GetString(STR_TOOLBAR_SMOOTH_ZOOM_LEVEL, static_cast<int>(std::lround(100.0 * ZOOM_BASE / step)));
+	}
+
+	bool OnTooltip(Point, WidgetID widget, TooltipCloseCondition close_cond) override
+	{
+		if (widget != WID_TN_ZOOM_LEVEL) return false;
+		const Viewport &vp = *GetMainWindow()->viewport;
+		const double step = vp.zoom_step > 0 ? vp.zoom_step : ScaleByZoom(1, vp.zoom);
+		GuiShowTooltips(this, GetEncodedString(STR_TOOLBAR_SMOOTH_ZOOM_LEVEL_TOOLTIP,
+			static_cast<int>(std::lround(100.0 * ZOOM_BASE / step)),
+			static_cast<int>(std::lround(100.0 * ZOOM_BASE / ScaleByZoom(1, vp.zoom)))), close_cond);
+		return true;
+	}
+
+	void UpdateWidgetSize(WidgetID widget, Dimension &size, const Dimension &padding, Dimension &, Dimension &) override
+	{
+		if (widget == WID_TN_ZOOM_LEVEL) {
+			const auto [first, next] = GetBroadestDigit(FontSize::Normal);
+			const int widest = first * 100 + next * 11;
+			size = GetStringBoundingBox(GetString(STR_TOOLBAR_SMOOTH_ZOOM_LEVEL, widest));
+			size.width += padding.width;
+			size.height += padding.height;
+		}
+	}
+
 	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
+		if (widget == WID_TN_ZOOM_LEVEL) {
+			Window *main = GetMainWindow();
+			SetViewportSmoothZoom(main, 0);
+			main->InvalidateData();
+			return;
+		}
 		if (_game_mode != GameMode::Menu && !this->IsWidgetDisabled(widget)) _toolbar_button_procs[widget](this);
 	}
 
@@ -2139,6 +2200,7 @@ struct MainToolbarWindow : Window {
 	{
 		if (!gui_scope) return;
 		HandleZoomMessage(this, *GetMainWindow()->viewport, WID_TN_ZOOM_IN, WID_TN_ZOOM_OUT);
+		this->SetWidgetDirty(WID_TN_ZOOM_LEVEL);
 	}
 
 	static inline HotkeyList hotkeys{"maintoolbar", {
@@ -2257,6 +2319,9 @@ static std::unique_ptr<NWidgetBase> MakeMainToolbar()
 		hor->Add(std::move(leaf));
 	}
 
+	auto zoom = std::make_unique<NWidgetLeaf>(WWT_PUSHTXTBTN, Colours::Grey, WID_TN_ZOOM_LEVEL,
+		WidgetData{.string = STR_TOOLBAR_SMOOTH_ZOOM_LEVEL}, STR_TOOLBAR_SMOOTH_ZOOM_LEVEL_TOOLTIP);
+	hor->Add(std::move(zoom));
 	return hor;
 }
 

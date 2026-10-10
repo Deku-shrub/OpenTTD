@@ -10,6 +10,10 @@ add_test_files(
     mock_fontcache.h
     mock_spritecache.cpp
     mock_spritecache.h
+    smooth_zoom.cpp
+    smooth_zoom_benchmark.cpp
+    smooth_zoom_controls.cpp
+    viewport_flight.cpp
     string_builder.cpp
     string_consumer.cpp
     string_inplace.cpp

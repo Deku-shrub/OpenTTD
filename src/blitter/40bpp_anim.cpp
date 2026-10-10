@@ -36,6 +36,19 @@ static inline uint8_t *ScreenToAnimationBuffer(const void *video)
 	return ::ScreenToAnimationBuffer(video, VideoDriver::GetInstance()->GetAnimBuffer(), _screen.pitch);
 }
 
+/** Resolve GPU palette metadata before blending a fractionally filtered sprite. */
+void Blitter_40bppAnim::WriteScaledPixel(Colour *dst, const Pixel &pixel, BlitterMode mode, const uint8_t *remap)
+{
+	if (_screen_disable_anim) {
+		Blitter_32bppSimple::WriteScaledPixel(dst, pixel, mode, remap);
+		return;
+	}
+	uint8_t *anim = ScreenToAnimationBuffer(dst);
+	*dst = RealizeBlendedColour(*anim, *dst);
+	Blitter_32bppSimple::WriteScaledPixel(dst, pixel, mode, remap);
+	*anim = 0;
+}
+
 void Blitter_40bppAnim::SetPixel(void *video, int x, int y, PixelColour colour)
 {
 	if (_screen_disable_anim) {

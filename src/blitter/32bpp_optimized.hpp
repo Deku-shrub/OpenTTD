@@ -22,6 +22,7 @@ public:
 	};
 
 	void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom) override;
+	bool DrawScaled(ScaledBlitterParams *bp, BlitterMode mode) override;
 	Sprite *Encode(SpriteType sprite_type, const SpriteLoader::SpriteCollection &sprite, SpriteAllocator &allocator) override;
 
 	std::string_view GetName() override { return "32bpp-optimized"; }

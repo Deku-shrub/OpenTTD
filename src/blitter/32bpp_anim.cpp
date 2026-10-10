@@ -20,6 +20,12 @@
 /** Instantiation of the 32bpp with animation blitter factory. */
 static FBlitter_32bppAnim iFBlitter_32bppAnim;
 
+void Blitter_32bppAnim::WriteScaledPixel(Colour *dst, const Pixel &pixel, BlitterMode mode, const uint8_t *remap)
+{
+	Blitter_32bppSimple::WriteScaledPixel(dst, pixel, mode, remap);
+	if (!_screen_disable_anim && this->anim_buf != nullptr) *this->ScreenToAnimationBuffer(dst) = 0;
+}
+
 template <BlitterMode mode>
 inline void Blitter_32bppAnim::Draw(const Blitter::BlitterParams *bp, ZoomLevel zoom)
 {

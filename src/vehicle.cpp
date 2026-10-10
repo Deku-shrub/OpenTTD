@@ -1250,8 +1250,8 @@ Vehicle *CheckClickOnVehicle(const Viewport &vp, int x, int y)
 	y -= vp.top;
 	if (!IsInsideMM(x, 0, vp.width) || !IsInsideMM(y, 0, vp.height)) return nullptr;
 
-	x = ScaleByZoom(x, vp.zoom) + vp.virtual_left;
-	y = ScaleByZoom(y, vp.zoom) + vp.virtual_top;
+	x = ViewportScale(vp, x) + vp.virtual_left;
+	y = ViewportScale(vp, y) + vp.virtual_top;
 
 	/* Border size of MAX_VEHICLE_PIXEL_xy */
 	const int xb = MAX_VEHICLE_PIXEL_X * ZOOM_BASE;

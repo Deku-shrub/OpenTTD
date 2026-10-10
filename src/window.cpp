@@ -1111,6 +1111,7 @@ void Window::CloseChildWindowById(WindowClass wc, WindowNumber number) const
  */
 void Window::Close([[maybe_unused]] int data)
 {
+	CancelViewportSmoothZoomAnimation(this);
 	/* Don't close twice. */
 	if (*this->z_position == nullptr) return;
 
@@ -2795,23 +2796,24 @@ static void HandleAutoscroll()
 
 	x -= vp->left;
 	y -= vp->top;
+	if (x < 15 || x > vp->width - 15 || y < 15 || y > vp->height - 15) CancelViewportFlight(w);
 
 	/* here allows scrolling in both x and y axis */
 	/* If we succeed at scrolling in any direction, stop following a vehicle. */
 	static const int SCROLLSPEED = 3;
 	if (x - 15 < 0) {
 		w->viewport->CancelFollow(*w);
-		w->viewport->dest_scrollpos_x += ScaleByZoom((x - 15) * SCROLLSPEED, vp->zoom);
+		w->viewport->dest_scrollpos_x += ViewportScale(*vp, (x - 15) * SCROLLSPEED);
 	} else if (15 - (vp->width - x) > 0) {
 		w->viewport->CancelFollow(*w);
-		w->viewport->dest_scrollpos_x += ScaleByZoom((15 - (vp->width - x)) * SCROLLSPEED, vp->zoom);
+		w->viewport->dest_scrollpos_x += ViewportScale(*vp, (15 - (vp->width - x)) * SCROLLSPEED);
 	}
 	if (y - 15 < 0) {
 		w->viewport->CancelFollow(*w);
-		w->viewport->dest_scrollpos_y += ScaleByZoom((y - 15) * SCROLLSPEED, vp->zoom);
+		w->viewport->dest_scrollpos_y += ViewportScale(*vp, (y - 15) * SCROLLSPEED);
 	} else if (15 - (vp->height - y) > 0) {
 		w->viewport->CancelFollow(*w);
-		w->viewport->dest_scrollpos_y += ScaleByZoom((15 - (vp->height - y)) * SCROLLSPEED, vp->zoom);
+		w->viewport->dest_scrollpos_y += ViewportScale(*vp, (15 - (vp->height - y)) * SCROLLSPEED);
 	}
 }
 
@@ -2835,8 +2837,9 @@ static void ScrollMainViewport(int x, int y)
 {
 	if (_game_mode != GameMode::Menu && _game_mode != GameMode::Bootstrap) {
 		Window *w = GetMainWindow();
-		w->viewport->dest_scrollpos_x += ScaleByZoom(x, w->viewport->zoom);
-		w->viewport->dest_scrollpos_y += ScaleByZoom(y, w->viewport->zoom);
+		CancelViewportFlight(w);
+		w->viewport->dest_scrollpos_x += ViewportScale(*w->viewport, x);
+		w->viewport->dest_scrollpos_y += ViewportScale(*w->viewport, y);
 	}
 }
 
@@ -2932,6 +2935,7 @@ static void MouseLoop(MouseClick click, int mousewheel)
 
 	if (vp != nullptr) {
 		if (scrollwheel_scrolling && !w->flags.Test(WindowFlag::DisableVpScroll)) {
+			CancelViewportFlight(w);
 			_scrolling_viewport = true;
 			_cursor.fix_at = true;
 			return;
@@ -2943,6 +2947,7 @@ static void MouseLoop(MouseClick click, int mousewheel)
 				if (HandleViewportClicked(*vp, x, y)) return;
 				if (!w->flags.Test(WindowFlag::DisableVpScroll) &&
 						_settings_client.gui.scroll_mode == ViewportScrollMode::MapLMB) {
+					CancelViewportFlight(w);
 					_scrolling_viewport = true;
 					_cursor.fix_at = false;
 					return;
@@ -2952,6 +2957,7 @@ static void MouseLoop(MouseClick click, int mousewheel)
 			case MouseClick::Right:
 				if (!w->flags.Test(WindowFlag::DisableVpScroll) &&
 						_settings_client.gui.scroll_mode != ViewportScrollMode::MapLMB) {
+					CancelViewportFlight(w);
 					_scrolling_viewport = true;
 					_cursor.fix_at = (_settings_client.gui.scroll_mode == ViewportScrollMode::ViewportRMBFixed ||
 							_settings_client.gui.scroll_mode == ViewportScrollMode::MapRMBFixed);
@@ -3122,6 +3128,7 @@ void CallWindowRealtimeTickEvent(uint delta_ms)
 {
 	_realtime_tick_start = std::chrono::steady_clock::now();
 	for (Window *w : Window::Iterate()) {
+		UpdateViewportSmoothZoomAnimation(w, delta_ms);
 		w->OnRealtimeTick(delta_ms);
 	}
 }

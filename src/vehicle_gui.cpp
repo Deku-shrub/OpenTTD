@@ -3313,9 +3313,10 @@ public:
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(TileVirtXY(v->x_pos, v->y_pos));
 				} else {
-					const Window *mainwindow = GetMainWindow();
+					Window *mainwindow = GetMainWindow();
 					if (click_count > 1) {
 						/* main window 'follows' vehicle */
+						CancelViewportSmoothZoomAnimation(mainwindow);
 						mainwindow->viewport->follow_vehicle = v->index;
 					} else {
 						if (mainwindow->viewport->follow_vehicle == v->index) mainwindow->viewport->follow_vehicle = VehicleID::Invalid();
@@ -3403,7 +3404,7 @@ public:
 	{
 		if (widget != WID_VV_VIEWPORT) return;
 		if (_settings_client.gui.scrollwheel_scrolling != ScrollWheelScrolling::Off) {
-			DoZoomInOutWindow(wheel < 0 ? ZOOM_IN : ZOOM_OUT, this);
+			if (!TrySmoothZoomWindow(wheel < 0, this, false, static_cast<uint>(std::abs(wheel)))) DoZoomInOutWindow(wheel < 0 ? ZOOM_IN : ZOOM_OUT, this);
 		}
 	}
 

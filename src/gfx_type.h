@@ -159,6 +159,12 @@ struct DrawPixelInfo {
 	int left, top, width, height;
 	int pitch;
 	ZoomLevel zoom;
+	float zoom_step = 0; ///< Smooth zoom: virtual pixels per destination pixel, or 0 for integer #zoom.
+	double virtual_left = 0; ///< Smooth zoom: exact virtual x of the left edge of destination pixel 0.
+	double virtual_top = 0; ///< Smooth zoom: exact virtual y of the top edge of destination pixel 0.
+	int pixel_width = 0; ///< Smooth zoom: width of the destination in pixels.
+	int pixel_height = 0; ///< Smooth zoom: height of the destination in pixels.
+	bool zoom_animation = false; ///< Use fast sprite sampling during active zoom motion.
 };
 
 /** Packed colour union to access the alpha, red, green, and blue channels from a 32 bit number for Emscripten build. */

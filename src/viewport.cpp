@@ -62,6 +62,7 @@
 
 #include "stdafx.h"
 #include "core/backup_type.hpp"
+#include "core/viewport_flight.hpp"
 #include "landscape.h"
 #include "viewport_func.h"
 #include "station_base.h"
@@ -119,8 +120,8 @@ struct StringSpriteToDraw {
 	uint16_t width;
 	Colours colour;
 	ViewportStringFlags flags;
-	int32_t x;
-	int32_t y;
+	double x;
+	double y;
 };
 
 struct TileSpriteToDraw {
@@ -273,6 +274,70 @@ void InitializeWindowViewport(Window *w, int x, int y,
 	w->viewport = std::move(vp);
 }
 
+/**
+ * Convert a distance in screen pixels to a distance in virtual viewport coordinates,
+ * honouring smooth zoom.
+ * @param vp The viewport to convert for.
+ * @param v The distance in screen pixels.
+ * @return The distance in virtual viewport coordinates.
+ */
+int ViewportScale(const Viewport &vp, int v)
+{
+	if (vp.zoom_step > 0) return static_cast<int>(std::floor(v * static_cast<double>(vp.zoom_step)));
+	return ScaleByZoom(v, vp.zoom);
+}
+
+/** Convert virtual coordinates to screen pixels, rounding towards the lower edge. */
+int ViewportUnScale(const Viewport &vp, int v)
+{
+	if (vp.zoom_step > 0) return static_cast<int>(std::floor(v / static_cast<double>(vp.zoom_step)));
+	return UnScaleByZoomLower(v, vp.zoom);
+}
+
+/**
+ * Set a smooth (fractional) zoom on the viewport of a window, keeping its centre in place.
+ * @param w The window with the viewport.
+ * @param scale Magnification where 1.0 is #ZoomLevel::Normal, or 0 to return to integer zoom.
+ * @return True iff the zoom was changed.
+ */
+bool SetViewportSmoothZoom(Window *w, float scale, bool cancel_animation)
+{
+	if (w == nullptr || w->viewport == nullptr || !std::isfinite(scale) || scale < 0) return false;
+	if (cancel_animation) CancelViewportSmoothZoomAnimation(w);
+	ViewportData &vp = *w->viewport;
+	const float old_step = vp.zoom_step;
+	const ZoomLevel old_zoom = vp.zoom;
+
+	const int centre_x = vp.scrollpos_x + vp.virtual_width / 2;
+	const int centre_y = vp.scrollpos_y + vp.virtual_height / 2;
+
+	if (scale == 0) {
+		vp.zoom_step = 0;
+		vp.zoom = Clamp(vp.zoom, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
+	} else {
+		if (!BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) return false;
+		const float step = Clamp<float>(static_cast<float>(ZOOM_BASE) / scale,
+				static_cast<float>(ScaleByZoom(1, _settings_client.gui.zoom_min)),
+				static_cast<float>(ScaleByZoom(1, _settings_client.gui.zoom_max)));
+		vp.zoom = Clamp(static_cast<ZoomLevel>(static_cast<int>(std::lround(std::log2(step)))), _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
+		const float integer_step = static_cast<float>(ScaleByZoom(1, vp.zoom));
+		vp.zoom_step = std::abs(step - integer_step) <= integer_step * 0.000001f ? 0 : step;
+	}
+	if (old_step == vp.zoom_step && old_zoom == vp.zoom) return false;
+
+	vp.virtual_width = ViewportScale(vp, vp.width);
+	vp.virtual_height = ViewportScale(vp, vp.height);
+
+	vp.scrollpos_x = vp.dest_scrollpos_x = centre_x - vp.virtual_width / 2;
+	vp.scrollpos_y = vp.dest_scrollpos_y = centre_y - vp.virtual_height / 2;
+	vp.virtual_left = vp.scrollpos_x;
+	vp.virtual_top = vp.scrollpos_y;
+	if (vp.overlay != nullptr) vp.overlay->SetDirty();
+
+	w->SetDirty();
+	return true;
+}
+
 static Point _vp_move_offs;
 
 static void DoSetViewportPosition(Window::IteratorToFront it, int left, int top, int width, int height)
@@ -351,6 +416,15 @@ static void SetViewportPosition(Window *w, int x, int y)
 
 	vp.virtual_left = x;
 	vp.virtual_top = y;
+
+	if (vp.zoom_step > 0) {
+		/* With smooth zoom the sub-pixel phase of the content changes with every move, so scrolling the
+		 * old pixels would leave seams against the newly drawn ones. Redraw the whole viewport instead. */
+		if (old_left == x && old_top == y) return;
+		RedrawScreenRect(std::max(0, vp.left), std::max(0, vp.top),
+				std::min(_screen.width, vp.left + vp.width), std::min(_screen.height, vp.top + vp.height));
+		return;
+	}
 
 	/* Viewport is bound to its left top corner, so it must be rounded down (UnScaleByZoomLower)
 	 * else glitch described in FS#1412 will happen (offset by 1 pixel with zoom level > NORMAL)
@@ -436,8 +510,8 @@ Point TranslateXYToTileCoord(const Viewport &vp, int x, int y, bool clamp_to_map
 	}
 
 	return InverseRemapCoords2(
-			ScaleByZoom(x - vp.left, vp.zoom) + vp.virtual_left,
-			ScaleByZoom(y - vp.top, vp.zoom) + vp.virtual_top, clamp_to_map);
+			ViewportScale(vp, x - vp.left) + vp.virtual_left,
+			ViewportScale(vp, y - vp.top) + vp.virtual_top, clamp_to_map);
 }
 
 /* When used for zooming, check area below current coordinates (x,y)
@@ -486,10 +560,10 @@ Point GetTileZoomCenterWindow(bool in, Window * w)
  */
 void HandleZoomMessage(Window *w, const Viewport &vp, WidgetID widget_zoom_in, WidgetID widget_zoom_out)
 {
-	w->SetWidgetDisabledState(widget_zoom_in, vp.zoom <= _settings_client.gui.zoom_min);
+	w->SetWidgetDisabledState(widget_zoom_in, vp.zoom_step > 0 ? vp.zoom_step <= ScaleByZoom(1, _settings_client.gui.zoom_min) : vp.zoom <= _settings_client.gui.zoom_min);
 	w->SetWidgetDirty(widget_zoom_in);
 
-	w->SetWidgetDisabledState(widget_zoom_out, vp.zoom >= _settings_client.gui.zoom_max);
+	w->SetWidgetDisabledState(widget_zoom_out, vp.zoom_step > 0 ? vp.zoom_step >= ScaleByZoom(1, _settings_client.gui.zoom_max) : vp.zoom >= _settings_client.gui.zoom_max);
 	w->SetWidgetDirty(widget_zoom_out);
 }
 
@@ -870,7 +944,7 @@ void AddChildSpriteScreen(SpriteID image, PaletteID pal, int x, int y, bool tran
  * @param width Width of the string.
  * @returns Reference to raw string which should be filled in by the caller.
  */
-static std::string &AddStringToDraw(int x, int y, Colours colour, ViewportStringFlags flags, uint16_t width)
+static std::string &AddStringToDraw(double x, double y, Colours colour, ViewportStringFlags flags, uint16_t width)
 {
 	assert(width != 0);
 	StringSpriteToDraw &ss = _vd.string_sprites_to_draw.emplace_back();
@@ -1335,8 +1409,9 @@ std::string *ViewportAddString(const DrawPixelInfo *dpi, const ViewportSign *sig
 	int bottom = top + dpi->height;
 
 	bool small = flags.Test(ViewportStringFlag::Small);
-	int sign_height     = ScaleByZoom(WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom, dpi->zoom);
-	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, dpi->zoom);
+	const double step = dpi->zoom_step > 0 ? dpi->zoom_step : ScaleByZoom(1, dpi->zoom);
+	int sign_height = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom) * step));
+	const double sign_half_width = (small ? sign->width_small : sign->width_normal) / 2 * step;
 
 	if (bottom < sign->top ||
 			top   > sign->top + sign_height ||
@@ -1348,12 +1423,13 @@ std::string *ViewportAddString(const DrawPixelInfo *dpi, const ViewportSign *sig
 	return &AddStringToDraw(sign->center - sign_half_width, sign->top, colour, flags, small ? sign->width_small : sign->width_normal);
 }
 
-static Rect ExpandRectWithViewportSignMargins(Rect r, ZoomLevel zoom)
+static Rect ExpandRectWithViewportSignMargins(Rect r, ZoomLevel zoom, double zoom_step = 0)
 {
 	const int fh = std::max(GetCharacterHeight(FontSize::Normal), GetCharacterHeight(FontSize::Small));
 	const int max_tw = _viewport_sign_maxwidth / 2 + 1;
-	const int expand_y = ScaleByZoom(WidgetDimensions::scaled.fullbevel.top + fh + WidgetDimensions::scaled.fullbevel.bottom, zoom);
-	const int expand_x = ScaleByZoom(WidgetDimensions::scaled.fullbevel.left + max_tw + WidgetDimensions::scaled.fullbevel.right, zoom);
+	const double step = zoom_step > 0 ? zoom_step : ScaleByZoom(1, zoom);
+	const int expand_y = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.top + fh + WidgetDimensions::scaled.fullbevel.bottom) * step));
+	const int expand_x = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.left + max_tw + WidgetDimensions::scaled.fullbevel.right) * step));
 
 	r.left -= expand_x;
 	r.right += expand_x;
@@ -1449,7 +1525,7 @@ static void ViewportAddStationStrings(DrawPixelInfo *dpi, const std::vector<cons
 static void ViewportAddKdtreeSigns(DrawPixelInfo *dpi)
 {
 	Rect search_rect{ dpi->left, dpi->top, dpi->left + dpi->width, dpi->top + dpi->height };
-	search_rect = ExpandRectWithViewportSignMargins(search_rect, dpi->zoom);
+	search_rect = ExpandRectWithViewportSignMargins(search_rect, dpi->zoom, dpi->zoom_step);
 
 	bool show_stations = _display_opt.Test(DisplayOption::ShowStationNames) && _game_mode != GameMode::Menu;
 	bool show_waypoints = _display_opt.Test(DisplayOption::ShowWaypointNames) && _game_mode != GameMode::Menu;
@@ -1579,7 +1655,12 @@ void ViewportSign::MarkDirty(ZoomLevel maxzoom) const
 		Viewport &vp = *w->viewport;
 		if (vp.zoom <= maxzoom) {
 			assert(vp.width != 0);
-			Rect &zl = zoomlevels[vp.zoom];
+			Rect zl = zoomlevels[vp.zoom];
+			if (vp.zoom_step > 0) {
+				const int scaled_width = static_cast<int>(std::ceil(half_width * vp.zoom_step));
+				zl = {this->center - scaled_width, this->top - static_cast<int>(std::ceil(vp.zoom_step)),
+						this->center + scaled_width, this->top + static_cast<int>(std::ceil(height * vp.zoom_step))};
+			}
 			MarkViewportDirty(vp, zl.left, zl.top, zl.right, zl.bottom);
 		}
 	}
@@ -1761,27 +1842,30 @@ static void ViewportDrawDirtyBlocks()
 	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
 	const DrawPixelInfo *dpi = _cur_dpi;
 	void *dst;
-	int right =  UnScaleByZoom(dpi->width,  dpi->zoom);
-	int bottom = UnScaleByZoom(dpi->height, dpi->zoom);
+	int right = dpi->zoom_step > 0 ? dpi->pixel_width : UnScaleByZoom(dpi->width, dpi->zoom);
+	int bottom = dpi->zoom_step > 0 ? dpi->pixel_height : UnScaleByZoom(dpi->height, dpi->zoom);
+	if (right <= 0 || bottom <= 0) return;
 
 	PixelColour colour = _string_colourmap[_dirty_block_colour & 0xF];
 
 	dst = dpi->dst_ptr;
 
-	uint8_t bo = UnScaleByZoom(dpi->left + dpi->top, dpi->zoom) & 1;
+	uint8_t bo = (dpi->zoom_step > 0 ? static_cast<int>(std::floor((dpi->virtual_left + dpi->virtual_top) / dpi->zoom_step)) : UnScaleByZoom(dpi->left + dpi->top, dpi->zoom)) & 1;
 	do {
 		for (int i = (bo ^= 1); i < right; i += 2) blitter->SetPixel(dst, i, 0, colour);
 		dst = blitter->MoveTo(dst, 0, 1);
 	} while (--bottom > 0);
 }
 
-static void ViewportDrawStrings(ZoomLevel zoom, const StringSpriteToDrawVector *sstdv)
+static void ViewportDrawStrings(ZoomLevel zoom, const StringSpriteToDrawVector *sstdv, const DrawPixelInfo *fractional_dpi = nullptr)
 {
 	for (const StringSpriteToDraw &ss : *sstdv) {
 		bool small = ss.flags.Test(ViewportStringFlag::Small);
 		int w = ss.width;
-		int x = UnScaleByZoom(ss.x, zoom);
-		int y = UnScaleByZoom(ss.y, zoom);
+		int x = fractional_dpi == nullptr ? UnScaleByZoom(static_cast<int>(ss.x), zoom) :
+				static_cast<int>(std::floor((ss.x - fractional_dpi->virtual_left) / fractional_dpi->zoom_step));
+		int y = fractional_dpi == nullptr ? UnScaleByZoom(static_cast<int>(ss.y), zoom) :
+				static_cast<int>(std::floor((ss.y - fractional_dpi->virtual_top) / fractional_dpi->zoom_step));
 		int h = WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom;
 
 		ExtendedTextColour colour{TextColour::White};
@@ -1811,9 +1895,46 @@ static void ViewportDrawStrings(ZoomLevel zoom, const StringSpriteToDrawVector *
 	}
 }
 
+static void ViewportDrawContents(const Viewport &vp, int x, int y);
+
+/**
+ * Draw (part of) a viewport that uses smooth zoom.
+ * @param vp Viewport to draw.
+ * @param sx0 Left edge of the area to draw, in screen pixels.
+ * @param sy0 Top edge of the area to draw, in screen pixels.
+ * @param sx1 Right edge of the area to draw, in screen pixels.
+ * @param sy1 Bottom edge of the area to draw, in screen pixels.
+ */
+static void ViewportDoDrawFractional(const Viewport &vp, int sx0, int sy0, int sx1, int sy1)
+{
+	const double step = vp.zoom_step;
+
+	_vd.dpi.zoom = vp.zoom;
+	_vd.dpi.zoom_step = vp.zoom_step;
+	_vd.dpi.zoom_animation = vp.zoom_animation;
+	_vd.combine_sprites = SpriteCombineMode::None;
+
+	_vd.dpi.virtual_left = vp.virtual_left + (sx0 - vp.left) * step;
+	_vd.dpi.virtual_top = vp.virtual_top + (sy0 - vp.top) * step;
+	_vd.dpi.pixel_width = sx1 - sx0;
+	_vd.dpi.pixel_height = sy1 - sy0;
+
+	/* The integer rectangle must cover the whole area, as it is used to cull sprites. */
+	_vd.dpi.left = static_cast<int>(std::floor(_vd.dpi.virtual_left));
+	_vd.dpi.top = static_cast<int>(std::floor(_vd.dpi.virtual_top));
+	_vd.dpi.width = static_cast<int>(std::ceil(_vd.dpi.virtual_left + _vd.dpi.pixel_width * step)) - _vd.dpi.left;
+	_vd.dpi.height = static_cast<int>(std::ceil(_vd.dpi.virtual_top + _vd.dpi.pixel_height * step)) - _vd.dpi.top;
+	_vd.dpi.pitch = _cur_dpi->pitch;
+	_vd.last_child = LAST_CHILD_NONE;
+
+	ViewportDrawContents(vp, sx0, sy0);
+}
+
 void ViewportDoDraw(const Viewport &vp, int left, int top, int right, int bottom)
 {
 	_vd.dpi.zoom = vp.zoom;
+	_vd.dpi.zoom_step = 0;
+	_vd.dpi.zoom_animation = false;
 	int mask = ScaleByZoom(-1, vp.zoom);
 
 	_vd.combine_sprites = SpriteCombineMode::None;
@@ -1828,6 +1949,17 @@ void ViewportDoDraw(const Viewport &vp, int left, int top, int right, int bottom
 	int x = UnScaleByZoom(_vd.dpi.left - (vp.virtual_left & mask), vp.zoom) + vp.left;
 	int y = UnScaleByZoom(_vd.dpi.top - (vp.virtual_top & mask), vp.zoom) + vp.top;
 
+	ViewportDrawContents(vp, x, y);
+}
+
+/**
+ * Draw the contents of the viewport into the already prepared #_vd.dpi.
+ * @param vp Viewport to draw.
+ * @param x Screen x coordinate of the left edge of the drawn area.
+ * @param y Screen y coordinate of the top edge of the drawn area.
+ */
+static void ViewportDrawContents(const Viewport &vp, int x, int y)
+{
 	_vd.dpi.dst_ptr = BlitterFactory::GetCurrentBlitter()->MoveTo(_cur_dpi->dst_ptr, x - _cur_dpi->left, y - _cur_dpi->top);
 	AutoRestoreBackup dpi_backup(_cur_dpi, &_vd.dpi);
 
@@ -1852,9 +1984,11 @@ void ViewportDoDraw(const Viewport &vp, int left, int top, int right, int bottom
 
 	DrawPixelInfo dp = _vd.dpi;
 	ZoomLevel zoom = _vd.dpi.zoom;
+	const bool smooth = _vd.dpi.zoom_step > 0;
 	dp.zoom = ZoomLevel::Min;
-	dp.width = UnScaleByZoom(dp.width, zoom);
-	dp.height = UnScaleByZoom(dp.height, zoom);
+	dp.zoom_step = 0;
+	dp.width = smooth ? dp.pixel_width : UnScaleByZoom(dp.width, zoom);
+	dp.height = smooth ? dp.pixel_height : UnScaleByZoom(dp.height, zoom);
 	AutoRestoreBackup cur_dpi(_cur_dpi, &dp);
 
 	if (vp.overlay != nullptr && vp.overlay->GetCargoMask().Any() && vp.overlay->GetCompanyMask().Any()) {
@@ -1866,9 +2000,9 @@ void ViewportDoDraw(const Viewport &vp, int left, int top, int right, int bottom
 
 	if (!_vd.string_sprites_to_draw.empty()) {
 		/* translate to world coordinates */
-		dp.left = UnScaleByZoom(_vd.dpi.left, zoom);
-		dp.top = UnScaleByZoom(_vd.dpi.top, zoom);
-		ViewportDrawStrings(zoom, &_vd.string_sprites_to_draw);
+		dp.left = smooth ? 0 : UnScaleByZoom(_vd.dpi.left, zoom);
+		dp.top = smooth ? 0 : UnScaleByZoom(_vd.dpi.top, zoom);
+		ViewportDrawStrings(zoom, &_vd.string_sprites_to_draw, smooth ? &_vd.dpi : nullptr);
 	}
 
 	_vd.string_sprites_to_draw.clear();
@@ -1891,6 +2025,11 @@ static inline void ViewportDraw(const Viewport &vp, int left, int top, int right
 
 	if (top < vp.top) top = vp.top;
 	if (bottom > vp.top + vp.height) bottom = vp.top + vp.height;
+
+	if (vp.zoom_step > 0) {
+		ViewportDoDrawFractional(vp, left, top, right, bottom);
+		return;
+	}
 
 	ViewportDoDraw(vp,
 		ScaleByZoom(left - vp.left, vp.zoom) + vp.virtual_left,
@@ -2058,8 +2197,9 @@ void UpdateViewportPosition(Window *w, uint32_t delta_ms)
 static bool MarkViewportDirty(const Viewport &vp, int left, int top, int right, int bottom)
 {
 	/* Rounding wrt. zoom-out level */
-	right += (1 << to_underlying(vp.zoom)) - 1;
-	bottom += (1 << to_underlying(vp.zoom)) - 1;
+	const int round_up = vp.zoom_step > 0 ? static_cast<int>(std::ceil(vp.zoom_step)) : (1 << to_underlying(vp.zoom));
+	right += round_up - 1;
+	bottom += round_up - 1;
 
 	right -= vp.virtual_left;
 	if (right <= 0) return false;
@@ -2069,11 +2209,24 @@ static bool MarkViewportDirty(const Viewport &vp, int left, int top, int right, 
 
 	left = std::max(0, left - vp.virtual_left);
 
-	if (left >= vp.virtual_width) return false;
+	const int virtual_width = vp.zoom_step > 0 ? static_cast<int>(std::ceil(vp.width * static_cast<double>(vp.zoom_step))) : vp.virtual_width;
+	if (left >= virtual_width) return false;
 
 	top = std::max(0, top - vp.virtual_top);
 
-	if (top >= vp.virtual_height) return false;
+	const int virtual_height = vp.zoom_step > 0 ? static_cast<int>(std::ceil(vp.height * static_cast<double>(vp.zoom_step))) : vp.virtual_height;
+	if (top >= virtual_height) return false;
+
+	if (vp.zoom_step > 0) {
+		/* Smooth zoom resamples sprites over a one pixel wider area, so be generous. */
+		AddDirtyBlock(
+			static_cast<int>(std::floor(left / vp.zoom_step)) + vp.left - 1,
+			static_cast<int>(std::floor(top / vp.zoom_step)) + vp.top - 1,
+			static_cast<int>(std::ceil(right / vp.zoom_step)) + vp.left + 2,
+			static_cast<int>(std::ceil(bottom / vp.zoom_step)) + vp.top + 2
+		);
+		return true;
+	}
 
 	AddDirtyBlock(
 		UnScaleByZoomLower(left, vp.zoom) + vp.left,
@@ -2112,7 +2265,14 @@ void ConstrainAllViewportsZoom()
 {
 	for (Window *w : Window::Iterate()) {
 		if (w->viewport == nullptr) continue;
+		/* A flight captured its landing scale and bounds before this change. */
+		CancelViewportFlight(w);
 
+		if (w->viewport->zoom_step > 0) {
+			SetViewportSmoothZoom(w, static_cast<float>(ZOOM_BASE) / w->viewport->zoom_step);
+			w->InvalidateData();
+			continue;
+		}
 		ZoomLevel zoom = Clamp(w->viewport->zoom, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
 		if (zoom != w->viewport->zoom) {
 			while (w->viewport->zoom < zoom) DoZoomInOutWindow(ZOOM_OUT, w);
@@ -2273,8 +2433,16 @@ void SetSelectionRed(bool b)
 static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y, const ViewportSign *sign)
 {
 	bool small = (vp.zoom >= ZoomLevel::Out4x);
-	int sign_half_width = ScaleByZoom((small ? sign->width_small : sign->width_normal) / 2, vp.zoom);
-	int sign_height = ScaleByZoom(WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom, vp.zoom);
+	if (vp.zoom_step > 0) {
+		/* Labels keep their screen size. Hit-test the same rounded rectangle that is drawn. */
+		const int width = small ? sign->width_small : sign->width_normal;
+		const int height = WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom;
+		const int left = static_cast<int>(std::floor((sign->center - vp.virtual_left) / static_cast<double>(vp.zoom_step) - width / 2)) + vp.left;
+		const int top = ViewportUnScale(vp, sign->top - vp.virtual_top) + vp.top;
+		return x >= left && x < left + width && y >= top && y < top + height;
+	}
+	int sign_half_width = ViewportScale(vp, (small ? sign->width_small : sign->width_normal) / 2);
+	int sign_height = ViewportScale(vp, WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom);
 
 	return y >= sign->top && y < sign->top + sign_height &&
 			x >= sign->center - sign_half_width && x < sign->center + sign_half_width;
@@ -2292,11 +2460,15 @@ static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y)
 {
 	if (_game_mode == GameMode::Menu) return false;
 
-	x = ScaleByZoom(x - vp.left, vp.zoom) + vp.virtual_left;
-	y = ScaleByZoom(y - vp.top, vp.zoom) + vp.virtual_top;
+	const int screen_x = x;
+	const int screen_y = y;
+	x = ViewportScale(vp, x - vp.left) + vp.virtual_left;
+	y = ViewportScale(vp, y - vp.top) + vp.virtual_top;
+	const int click_x = vp.zoom_step > 0 ? screen_x : x;
+	const int click_y = vp.zoom_step > 0 ? screen_y : y;
 
 	Rect search_rect{ x - 1, y - 1, x + 1, y + 1 };
-	search_rect = ExpandRectWithViewportSignMargins(search_rect, vp.zoom);
+	search_rect = ExpandRectWithViewportSignMargins(search_rect, vp.zoom, vp.zoom_step);
 
 	bool show_stations = _display_opt.Test(DisplayOption::ShowStationNames) && !IsInvisibilitySet(TransparencyOption::Signs);
 	bool show_waypoints = _display_opt.Test(DisplayOption::ShowWaypointNames) && !IsInvisibilitySet(TransparencyOption::Signs);
@@ -2321,7 +2493,7 @@ static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y)
 				if (facilities.None()) facilities = STATION_FACILITY_GHOST;
 				if (!facilities.Any(_facility_display_opt)) break;
 
-				if (CheckClickOnViewportSign(vp, x, y, &st->sign)) last_st = st;
+				if (CheckClickOnViewportSign(vp, click_x, click_y, &st->sign)) last_st = st;
 				break;
 			}
 
@@ -2329,20 +2501,20 @@ static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y)
 				if (!show_waypoints) break;
 				st = BaseStation::Get(std::get<StationID>(item.id));
 				if (!show_competitors && _local_company != st->owner && st->owner != OWNER_NONE) break;
-				if (CheckClickOnViewportSign(vp, x, y, &st->sign)) last_st = st;
+				if (CheckClickOnViewportSign(vp, click_x, click_y, &st->sign)) last_st = st;
 				break;
 
 			case ViewportSignKdtreeItem::VKI_TOWN:
 				if (!show_towns) break;
 				t = Town::Get(std::get<TownID>(item.id));
-				if (CheckClickOnViewportSign(vp, x, y, &t->cache.sign)) last_t = t;
+				if (CheckClickOnViewportSign(vp, click_x, click_y, &t->cache.sign)) last_t = t;
 				break;
 
 			case ViewportSignKdtreeItem::VKI_SIGN:
 				if (!show_signs) break;
 				si = Sign::Get(std::get<SignID>(item.id));
 				if (!show_competitors && _local_company != si->owner && si->owner != OWNER_DEITY) break;
-				if (CheckClickOnViewportSign(vp, x, y, &si->sign)) last_si = si;
+				if (CheckClickOnViewportSign(vp, click_x, click_y, &si->sign)) last_si = si;
 				break;
 
 			default:
@@ -2546,7 +2718,7 @@ void RebuildViewportOverlay(Window *w)
  * @param instant Jump to the location instead of slowly moving to it.
  * @return Destination of the viewport was changed (to activate other actions when the viewport is already at the desired position).
  */
-bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant)
+bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival_scale)
 {
 	/* The slope cannot be acquired outside of the map, so make sure we are always within the map. */
 	if (z == -1) {
@@ -2560,6 +2732,9 @@ bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant)
 
 	Point pt = MapXYZToViewport(*w->viewport, x, y, z);
 	w->viewport->CancelFollow(*w);
+	if (!instant && TryStartViewportFlight(w,
+			{pt.x + w->viewport->virtual_width / 2, pt.y + w->viewport->virtual_height / 2}, arrival_scale)) return true;
+	CancelViewportSmoothZoomAnimation(w);
 
 	if (w->viewport->dest_scrollpos_x == pt.x && w->viewport->dest_scrollpos_y == pt.y) return false;
 
@@ -2595,6 +2770,30 @@ bool ScrollWindowToTile(TileIndex tile, Window *w, bool instant)
 bool ScrollMainWindowToTile(TileIndex tile, bool instant)
 {
 	return ScrollMainWindowTo(TileX(tile) * TILE_SIZE + TILE_SIZE / 2, TileY(tile) * TILE_SIZE + TILE_SIZE / 2, -1, instant);
+}
+
+/** Town navigation can choose a fixed level or conservatively fit the town's cached influence radius. */
+bool ScrollMainWindowToTown(const Town &town)
+{
+	Window *w = GetMainWindow();
+	if (w == nullptr || w->viewport == nullptr) return false;
+	if (!_settings_client.gui.fly_navigation || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+		return ScrollMainWindowToTile(town.xy);
+	}
+	const Viewport &vp = *w->viewport;
+	double step;
+	if (_settings_client.gui.fly_town_zoom != 0) {
+		step = ScaleByZoom(1, static_cast<ZoomLevel>(_settings_client.gui.fly_town_zoom - 1));
+	} else {
+		const double radius = std::max(3.0, std::sqrt(static_cast<double>(*std::max_element(
+				town.cache.squared_town_zone_radius.begin(), town.cache.squared_town_zone_radius.end()))));
+		const double width = 2 * std::sqrt(2.0) * radius * TILE_PIXELS * ZOOM_BASE;
+		const double height = width * 0.5 + 80 * ZOOM_BASE;
+		step = GetNavigationArrivalStep(width, height, vp.width, vp.height, ZOOM_BASE,
+				ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
+	}
+	return ScrollWindowTo(TileX(town.xy) * TILE_SIZE + TILE_SIZE / 2,
+			TileY(town.xy) * TILE_SIZE + TILE_SIZE / 2, -1, w, false, ZOOM_BASE / step);
 }
 
 /**
@@ -3601,8 +3800,8 @@ Point GetViewportStationMiddle(const Viewport &vp, const Station *st)
 	int z = GetSlopePixelZ(Clamp(x, 0, Map::SizeX() * TILE_SIZE - 1), Clamp(y, 0, Map::SizeY() * TILE_SIZE - 1));
 
 	Point p = RemapCoords(x, y, z);
-	p.x = UnScaleByZoom(p.x - vp.virtual_left, vp.zoom) + vp.left;
-	p.y = UnScaleByZoom(p.y - vp.virtual_top, vp.zoom) + vp.top;
+	p.x = (vp.zoom_step > 0 ? ViewportUnScale(vp, p.x - vp.virtual_left) : UnScaleByZoom(p.x - vp.virtual_left, vp.zoom)) + vp.left;
+	p.y = (vp.zoom_step > 0 ? ViewportUnScale(vp, p.y - vp.virtual_top) : UnScaleByZoom(p.y - vp.virtual_top, vp.zoom)) + vp.top;
 	return p;
 }
 

@@ -20,6 +20,25 @@
 /** Instantiation of the SSE2 32bpp blitter factory. */
 static FBlitter_32bppSSE2 iFBlitter_32bppSSE2;
 
+/** SSE sprites already contain dense pixels, so fractional drawing needs no RLE cache. */
+bool Blitter_32bppSSE2::DrawScaled(ScaledBlitterParams *bp, BlitterMode mode)
+{
+	ZoomLevel zoom = this->SelectScaledSpriteZoom(*bp);
+	if (ScaleByZoom(1, zoom) > bp->step) return false;
+	const Blitter_32bppSSE_Base::SpriteData *sprite = static_cast<const Blitter_32bppSSE_Base::SpriteData *>(bp->sprite);
+	const auto &info = sprite->infos[zoom];
+	const int width = info.sprite_width;
+	const int height = UnScaleByZoom(bp->sprite_height, zoom);
+	return this->DrawScaledRows(bp, mode, width, height, ScaleByZoom(1, zoom), [&](int y, Pixel *row) {
+		const Colour *colour = reinterpret_cast<const Colour *>(sprite->data + info.sprite_offset +
+				static_cast<size_t>(y) * info.sprite_line_size) + META_LENGTH;
+		const MapValue *mapping = reinterpret_cast<const MapValue *>(sprite->data + info.mv_offset) + static_cast<size_t>(y) * width;
+		for (int x = 0; x < width; x++) {
+			row[x] = {colour[x].r, colour[x].g, colour[x].b, colour[x].a, mapping[x].m, mapping[x].v};
+		}
+	});
+}
+
 Sprite *Blitter_32bppSSE_Base::Encode(SpriteType sprite_type, const SpriteLoader::SpriteCollection &sprite, SpriteAllocator &allocator)
 {
 	/* First uint32_t of a line = the number of transparent pixels from the left.

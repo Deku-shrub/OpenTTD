@@ -590,6 +590,13 @@ SettingsContainer &GetSettingsTree()
 		{
 			graphics->Add(new SettingEntry("gui.zoom_min"));
 			graphics->Add(new SettingEntry("gui.zoom_max"));
+			graphics->Add(new SettingEntry("gui.smooth_zoom"));
+			graphics->Add(new SettingEntry("gui.fly_navigation"));
+			graphics->Add(new SettingEntry("gui.fly_other_navigation"));
+			graphics->Add(new SettingEntry("gui.fly_pan_speed"));
+			graphics->Add(new SettingEntry("gui.fly_zoom_duration"));
+			graphics->Add(new SettingEntry("gui.fly_zoom_out"));
+			graphics->Add(new SettingEntry("gui.fly_town_zoom"));
 			graphics->Add(new SettingEntry("gui.sprite_zoom_min"));
 			graphics->Add(new SettingEntry("gui.smallmap_land_colour"));
 			graphics->Add(new SettingEntry("gui.linkgraph_colours"));

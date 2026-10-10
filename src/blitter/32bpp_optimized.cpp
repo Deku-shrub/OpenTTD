@@ -285,6 +285,43 @@ void Blitter_32bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, 
 	this->Draw<false>(bp, mode, zoom);
 }
 
+/** Decode the selected RLE mipmap a row at a time for fractional drawing. */
+bool Blitter_32bppOptimized::DrawScaled(ScaledBlitterParams *bp, BlitterMode mode)
+{
+	ZoomLevel zoom = this->SelectScaledSpriteZoom(*bp);
+	if (ScaleByZoom(1, zoom) > bp->step) return false;
+	const SpriteData *sprite = static_cast<const SpriteData *>(bp->sprite);
+	const uint8_t *colour_row = sprite->data + sprite->offset[0][zoom];
+	const uint8_t *mapping_row = sprite->data + sprite->offset[1][zoom];
+	const int width = UnScaleByZoom(bp->sprite_width, zoom);
+	const int height = UnScaleByZoom(bp->sprite_height, zoom);
+	int next_row = 0;
+	return this->DrawScaledRows(bp, mode, width, height, ScaleByZoom(1, zoom), [&](int y, Pixel *row) {
+		/* Requested source rows are monotonically increasing, including cache reuse. */
+		while (next_row < y) {
+			colour_row += *reinterpret_cast<const uint32_t *>(colour_row);
+			mapping_row += *reinterpret_cast<const uint32_t *>(mapping_row);
+			next_row++;
+		}
+		const Colour *colour = reinterpret_cast<const Colour *>(colour_row + sizeof(uint32_t));
+		const uint16_t *mapping = reinterpret_cast<const uint16_t *>(mapping_row + sizeof(uint32_t));
+		for (int x = 0; x < width;) {
+			int length = *mapping++;
+			if (colour->a == 0) {
+				std::fill_n(row + x, length, Pixel{});
+				colour++;
+				mapping++;
+				x += length;
+			} else {
+				for (int i = 0; i < length; i++, x++, colour++, mapping++) {
+					row[x] = {colour->r, colour->g, colour->b, colour->a,
+						static_cast<uint8_t>(*mapping), static_cast<uint8_t>(*mapping >> 8)};
+				}
+			}
+		}
+	});
+}
+
 template <bool Tpal_to_rgb>
 Sprite *Blitter_32bppOptimized::EncodeInternal(SpriteType sprite_type, const SpriteLoader::SpriteCollection &sprite, SpriteAllocator &allocator)
 {

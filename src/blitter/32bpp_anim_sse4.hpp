@@ -41,6 +41,18 @@ public:
 	template <BlitterMode mode, Blitter_32bppSSE_Base::ReadMode read_mode, Blitter_32bppSSE_Base::BlockType bt_last, bool translucent>
 	void Draw(const Blitter::BlitterParams *bp, ZoomLevel zoom, bool animated);
 	void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom) override;
+	bool DrawScaled(ScaledBlitterParams *bp, BlitterMode mode) override
+	{
+		return Blitter_32bppSSE4::DrawScaled(bp, mode);
+	}
+
+protected:
+	void WriteScaledPixel(Colour *dst, const Blitter_32bppSSE4::Pixel &pixel, BlitterMode mode, const uint8_t *remap) override
+	{
+		Blitter_32bppSSE2_Anim::WriteScaledPixel(dst, pixel, mode, remap);
+	}
+
+public:
 
 	Sprite *Encode(SpriteType sprite_type, const SpriteLoader::SpriteCollection &sprite, SpriteAllocator &allocator) override
 	{

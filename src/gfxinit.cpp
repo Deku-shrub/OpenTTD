@@ -18,6 +18,7 @@
 #include "blitter/factory.hpp"
 #include "video/video_driver.hpp"
 #include "window_func.h"
+#include "viewport_func.h"
 #include "palette_func.h"
 #include "base_media_func.h"
 #include "base_media_graphics.h"
@@ -241,6 +242,13 @@ static void RealChangeBlitter(std::string_view repl_blitter)
 	if (!VideoDriver::GetInstance()->AfterBlitterChange()) {
 		/* Failed to switch blitter, let's hope we can return to the old one. */
 		if (BlitterFactory::SelectBlitter(cur_blitter) == nullptr || !VideoDriver::GetInstance()->AfterBlitterChange()) UserError("Failed to reinitialize video driver. Specify a fixed blitter in the config");
+	}
+
+	/* An automatically selected 8bpp blitter cannot draw fractional viewports. */
+	if (!BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+		for (Window *w : Window::Iterate()) {
+			if (w->viewport != nullptr && w->viewport->zoom_step > 0) SetViewportSmoothZoom(w, 0);
+		}
 	}
 
 	/* Clear caches that might have sprites for another blitter. */

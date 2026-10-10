@@ -25,6 +25,8 @@ void SetSelectionRed(bool);
 void InitializeWindowViewport(Window *w, int x, int y, int width, int height, std::variant<TileIndex, VehicleID> focus, ZoomLevel zoom);
 Viewport *IsPtInWindowViewport(const Window *w, int x, int y);
 Point TranslateXYToTileCoord(const Viewport &vp, int x, int y, bool clamp_to_map = true);
+int ViewportScale(const Viewport &vp, int v);
+int ViewportUnScale(const Viewport &vp, int v);
 Point GetTileBelowCursor();
 void UpdateViewportPosition(Window *w, uint32_t delta_ms);
 
@@ -32,6 +34,11 @@ bool MarkAllViewportsDirty(int left, int top, int right, int bottom);
 
 bool DoZoomInOutWindow(ZoomStateChange how, Window *w);
 void ZoomInOrOutToCursorWindow(bool in, Window * w);
+bool TrySmoothZoomWindow(bool in, Window *w, bool to_cursor, uint notches = 1);
+void CancelViewportSmoothZoomAnimation(Window *w);
+void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms);
+void CancelViewportFlight(Window *w);
+bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale = 0);
 void ConstrainAllViewportsZoom();
 Point GetTileZoomCenterWindow(bool in, Window * w);
 void FixTitleGameZoom(int zoom_adjust = 0);
@@ -70,9 +77,10 @@ void SetTileSelectSize(int w, int h);
 void SetTileSelectBigSize(int ox, int oy, int sx, int sy);
 
 void ViewportDoDraw(const Viewport &vp, int left, int top, int right, int bottom);
+bool SetViewportSmoothZoom(Window *w, float scale, bool cancel_animation = true);
 
 bool ScrollWindowToTile(TileIndex tile, Window *w, bool instant = false);
-bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant = false);
+bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant = false, double arrival_scale = 0);
 
 void RebuildViewportOverlay(Window *w);
 
@@ -102,6 +110,7 @@ Point GetViewportStationMiddle(const Viewport &vp, const Station *st);
 struct Station;
 struct Waypoint;
 struct Town;
+bool ScrollMainWindowToTown(const Town &town);
 
 void SetViewportCatchmentStation(const Station *st, bool sel);
 void SetViewportStationRect(const Station *st, bool sel);

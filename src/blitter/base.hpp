@@ -72,6 +72,37 @@ public:
 	 */
 	virtual void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom) = 0;
 
+	/** Parameters for drawing a sprite at a fractional zoom step. */
+	struct ScaledBlitterParams {
+		const void *sprite; ///< Pointer to the sprite how ever the encoder stored it
+		const uint8_t *remap; ///< Colour remap table
+		int sprite_width;   ///< Real width of the sprite
+		int sprite_height;  ///< Real height of the sprite
+		double src_x;       ///< Source x (in sprite pixels) of the left edge of the first destination pixel
+		double src_y;       ///< Source y (in sprite pixels) of the top edge of the first destination pixel
+		double step;        ///< Source pixels per destination pixel
+		int width;          ///< Destination width in pixels
+		int height;         ///< Destination height in pixels
+		void *dst;          ///< Pointer to the first destination pixel
+		int pitch;          ///< The pitch of the destination buffer
+		int clip_left = 0;   ///< Source pixels excluded from the left edge of the sprite
+		int clip_top = 0;    ///< Source pixels excluded from the top edge of the sprite
+		int clip_right = 0;  ///< Source pixels excluded from the right edge of the sprite
+		int clip_bottom = 0; ///< Source pixels excluded from the bottom edge of the sprite
+		uint32_t palette_mask = 0; ///< Output: animated palette entries contributing to pixels actually drawn
+		bool nearest = false; ///< Fast centre sampling during interactive zoom; settled views use area filtering.
+	};
+
+	/**
+	 * Draw an image at a fractional zoom step, filtering the source down to the destination.
+	 * @param bp Parameters for the blitting of the image.
+	 * @param mode The blitting mode to perform.
+	 * @return True if this blitter supports scaled drawing and the sprite was drawn.
+	 */
+	virtual bool DrawScaled([[maybe_unused]] ScaledBlitterParams *bp, [[maybe_unused]] BlitterMode mode) { return false; }
+	/** Whether this blitter can draw fractionally scaled viewport sprites. */
+	virtual bool SupportsSmoothZoom() const { return false; }
+
 	/**
 	 * Draw a colourtable to the screen. This is: the colour of the screen is read
 	 *  and is looked-up in the palette to match a new colour, which then is put

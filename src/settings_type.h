@@ -244,6 +244,13 @@ struct GUISettings {
 	uint8_t window_soft_limit; ///< soft limit of maximum number of non-stickied non-vital windows (0 = no limit)
 	ZoomLevel zoom_min; ///< minimum zoom out level
 	ZoomLevel zoom_max; ///< maximum zoom out level
+	bool smooth_zoom; ///< allow fractional mouse-wheel zoom on supported blitters
+	bool fly_navigation; ///< opt-in zoom-and-pan navigation to towns
+	bool fly_other_navigation; ///< also fly to other main-viewport destinations
+	uint16_t fly_pan_speed; ///< pan speed as a percentage of viewport widths per second
+	uint16_t fly_zoom_duration; ///< zoom timing at departure and arrival, in milliseconds
+	uint8_t fly_zoom_out; ///< maximum extra traditional zoom-out levels
+	uint8_t fly_town_zoom; ///< 0 = fit town; otherwise traditional zoom index plus one
 	ZoomLevel sprite_zoom_min; ///< maximum zoom level at which higher-resolution alternative sprites will be used (if available) instead of scaling a lower resolution sprite
 	uint32_t autosave_interval; ///< how often should we do autosaves?
 	bool threaded_saves; ///< should we do threaded saves?

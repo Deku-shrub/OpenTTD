@@ -478,7 +478,7 @@ public:
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(this->town->xy);
 				} else {
-					ScrollMainWindowToTile(this->town->xy);
+					ScrollMainWindowToTown(*this->town);
 				}
 				break;
 
@@ -965,7 +965,7 @@ public:
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(t->xy);
 				} else {
-					ScrollMainWindowToTile(t->xy);
+					ScrollMainWindowToTown(*t);
 				}
 				break;
 			}
@@ -1069,7 +1069,7 @@ void CcFoundTown(Commands, const CommandCost &result, TileIndex tile)
 
 void CcFoundRandomTown(Commands, const CommandCost &result, Money, TownID town_id)
 {
-	if (result.Succeeded()) ScrollMainWindowToTile(Town::Get(town_id)->xy);
+	if (result.Succeeded()) ScrollMainWindowToTown(*Town::Get(town_id));
 }
 
 static constexpr std::initializer_list<NWidgetPart> _nested_found_town_widgets = {
