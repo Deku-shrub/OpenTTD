@@ -1,5 +1,15 @@
 # OpenTTD
 
+## Smooth zoom prototype
+
+This development branch adds opt-in smooth mouse-wheel zoom, a compact zoom
+percentage/snap control, and simultaneous zoom-and-pan navigation with independent
+destination toggles.
+
+- [Prototype setup and user guide](docs/smooth_zoom_readme.md)
+- [Implementation and remaining validation](docs/smooth_zoom_todo.md)
+- [Reproducible validation fixtures](docs/validation/README.md)
+
 ## Table of contents
 
 - 1.0) [About](#10-about)
