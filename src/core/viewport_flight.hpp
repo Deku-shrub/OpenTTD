@@ -104,8 +104,9 @@ public:
 			}
 		}
 		const double raw_ms = 1000 * this->path_length / std::max(0.01, speed_percent / 100) * duration_percent / 100;
-		/* Cross-map trips that would be cinematic use an immediate, exact arrival. */
-		this->duration_ms = raw_ms > 2500 ? 0 : std::clamp(raw_ms, 300.0, 2200.0);
+		/* Keep enabled navigation animated, accelerating long routes to the time cap.
+		 * An automatic cut after a town arrival looks like the feature stopped working. */
+		this->duration_ms = std::clamp(raw_ms, 300.0, 2200.0);
 	}
 
 	void Advance(unsigned int delta_ms) { this->elapsed_ms = std::min(this->elapsed_ms + delta_ms, this->GetDuration()); }

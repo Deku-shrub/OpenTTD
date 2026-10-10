@@ -26,7 +26,7 @@ prototype executable contains the latest source changes.
 - [x] Toolbar current magnification / nearest traditional level readout and snap control.
 - [x] Animated palette dependency tracking by screen block.
 
-## Current work: animated controls and toolbar
+## Animated controls and toolbar
 
 The first animated prototype was reported as still feeling stepped. The next
 pass is in progress; do not treat the earlier control checks below as proof of
@@ -246,7 +246,8 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [x] Replace distance-based timing with van Wijk-Nuij perceptual path length.
 - [x] Derive height from distance and configurable curvature; flatten to zoom limits.
 - [x] Avoid extra pull-back within one starting viewport width.
-- [x] Bound animated duration to 300-2200 ms; cut if unbounded duration exceeds 2500 ms.
+- [x] Bound animated duration to 300-2200 ms; longer trips now accelerate
+      to the cap instead of cutting (supersedes the initial >2500 ms jump).
 - [x] Preserve fractional arrival zoom for ordinary destinations.
 - [x] Respect smooth scrolling and cancel on any actual key press.
 - [x] Blend vehicle location flights toward the live position in the final 20%.
@@ -260,8 +261,9 @@ cannot establish subjective smoothness. No game error dialogs were found.
       no recorded land-crop changes after arrival in these paused fixtures.
 - [x] Moving bus flight completed in 1.22 s and retained 130% arrival zoom.
 - [ ] Runtime moving vehicle news references and all other vehicle approaches.
-- [x] Generate an isolated 2048-square map and verify the (10,10) to
-      (2000,2000) journey arrives immediately without an active flight.
+- [x] Initial 2048-square direct-cut check completed; superseded by the
+      animated long-trip policy. Cross-map model regression now checks an
+      active 2200 ms journey and exact arrival.
 - [ ] Subjective tuning on a 2048-square map.
 
 ## Retrofit and compatibility
@@ -273,5 +275,33 @@ cannot establish subjective smoothness. No game error dialogs were found.
       including custom infrastructure, animated sprites, articulated vehicles and trams.
 - [ ] Multiplayer with matching patched revisions and per-client camera settings.
 - [ ] Classify and validate multiplayer Game Script camera redirects; currently
-      these use the combined town/map category rather than the script category.
+      source now routes these through the script category; runtime checks remain open.
 - [ ] Validate any chosen engine patch pack after source integration.
+
+## Repeated navigation and ready-to-use demo
+
+- [x] Reproduce the reported town sequence: a long third route hit the automatic
+      >2500 ms cut after earlier animated trips. Keep all enabled trips animated,
+      accelerating longer routes to the 2200 ms cap; regression covers that sequence.
+- [x] Release build and 13,649 assertions in 131 cases pass.
+- [x] Check an industry trip visibly zooms out (66% captured during the arc).
+      Nearby same-zoom trips remain flat under the earlier no-bob rule.
+- [x] Check in a paused populated navigation save with base stations and nine
+      vehicles, plus a launcher staging matching assets and AI scripts. Enable
+      the main flight switch in its isolated demo config; all category defaults apply.
+- [ ] Optional small arcs for nearby industry hops; keep the current no-bob rule unless requested.
+
+## Current follow-up
+
+- [x] Validate 130% dragging: captured median update interval 109 -> 32 ms; no static-crop changes beyond 300 ms after release. Native pixel-scroll code remains unchanged.
+- [x] Paused follow camera retains stable land across captures 700 ms apart.
+- [x] Generated defaults regression and runtime bus centre-button flight/vehicle opt-out checks.
+- [x] Consecutive town trips retain 130% arrival zoom and all remain animated.
+- [x] Full final Release build: 13,700 assertions in 132 cases pass.
+- [x] Refresh Basic master / Expert override screenshots and consecutive-town animation.
+- [ ] Broader pan-performance checks at larger resolutions and with complex NewGRFs.
+
+## Long-term visual additions
+
+- [ ] Standalone optional clouds effect layer mod to make large fly-outs feel more realistic; investigate depth, transparency and a bounded rendering budget.
+- [ ] Smooth scaling for signs and labels, including readable text, positioning and click targets throughout fractional zoom.

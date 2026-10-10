@@ -17,13 +17,28 @@ The prepared launcher stages the matching language and base-set files and uses
 an isolated test configuration. Run this in PowerShell:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\chris\github\OpenTTD\build-smoothzoom\desktop.ps1 -Action Start -Blitter 32bpp-sse4-anim -VideoDriver win32
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\chris\github\OpenTTD\docs\validation\launch-prototype.ps1
 ```
 
-Keep the terminal open while playing. The launcher starts a generated test map
-with sound and music disabled. These paths and the ignored `build-smoothzoom`
-launcher are specific to this prepared development machine; this is not a
-standalone installation package.
+Keep the terminal open while playing. The checked-in launcher opens
+`docs/validation/zoom-navigation.sav`, a populated, paused test world with base
+stations, a bus, truck, four train types, ship, aircraft and helicopter, plus
+infrastructure and industries. All flight categories
+and smooth wheel zoom are enabled in its isolated demo configuration. Ordinary
+installation defaults remain opt-in. Unpause to move the vehicles.
+
+Use the toolbar's station and vehicle company menus to select the fixture
+company: the initial human company has no fleet. Vehicle lists contain names
+such as **Zoom bus** and **Zoom truck**. Click a vehicle to open its window, then
+use its location control; double-click that control to follow. Stations can
+also be opened by clicking them directly on the map.
+
+The launcher stages the matching language, base metadata and NoAI fixture files.
+It accepts `-Executable` for another Windows build, `-GraphicsArchive` for an
+installed `opengfx-8.0.tar`, `-Savegame` for your own world, or `-NewMap` for an
+empty generated map. Audio is disabled. It requires a compiled game and OpenGFX;
+this is not a standalone installation package. The older local `desktop.ps1`
+helper also defaults to the populated map.
 
 ## Existing saves, rollback and mod compatibility
 
@@ -75,7 +90,7 @@ has been exercised. No specific third-party NewGRF set is certified yet.
 | 32-bit / extra-zoom NewGRFs | Expected to load normally, without format or asset conversion. Different artwork at native sprite zoom levels can visibly change during a transition. Large sprites and high-resolution packs can increase redraw cost. These sets still need visual tests. |
 | Vehicle, industry/cargo, house, object, station, track, road/tram and bridge NewGRFs | No deliberate content restriction or changes to their simulation rules. Custom sprite bounds, transparency, company colours, animation, articulated vehicles and trams remain important coverage gaps. Base infrastructure and representative base vehicles have been exercised; that does not validate every custom set. |
 | Palette animation / translucency | Implemented in the supported rendering paths with remapping, alpha and dirty-region tests. Complex animated NewGRF scenes still need runtime validation. |
-| AIs and Game Scripts | No AI/API format change is required. Script-triggered camera movement can animate when its flight option is enabled, changing presentation timing. Disable flights to preserve ordinary navigation behaviour. Local script navigation has a separate switch; multiplayer script redirects remain unvalidated and currently use the combined town/map switch. |
+| AIs and Game Scripts | No AI/API format change is required. Script-triggered camera movement can animate when its flight option is enabled, changing presentation timing. Disable flights to preserve ordinary navigation behaviour. Local script navigation has a separate switch; multiplayer script redirects use the script switch; their runtime validation remains open. |
 | Scenarios and heightmaps | Ordinary load/version/content requirements apply. A loaded scenario can use the camera options; an imported heightmap creates a world through the ordinary generator. |
 | Sound/music packs | No audio format or playback changes are introduced by this patch. |
 | Supported software 32bpp blitters | Fractional rendering is implemented in simple, optimized, SSE and animation families. Most runtime checks used `32bpp-anim` with the Windows `win32` video driver; other variants have differing runtime coverage. |
@@ -153,9 +168,13 @@ smooth wheel controls, use `set gui.smooth_zoom 0`.
 ## Fly to a location
 
 Flight navigation is a separate, opt-in feature. In **Game Options > Advanced**,
-select **Expert / all settings**, search for **fly**, and enable **Fly navigation**.
-Then enable the destination categories you want. **Fly to towns and other map destinations** defaults to
-on beneath the disabled master switch; all additional categories default to off.
+search for **fly** and enable **Fly-to navigation**. The master switch is visible
+at Basic settings level; Expert settings expose the category overrides.
+All destination categories default to on beneath the disabled master switch.
+Use Expert settings only to opt out particular categories. Existing saved
+configuration values remain in effect: enable any category you previously disabled.
+![Main Fly-to switch at Basic settings level](images/smooth-zoom/flight-master-settings.png)
+
 Alternatively, enter `set gui.fly_navigation 1` in the console. It requires a
 supported 32bpp blitter; the mouse-wheel smooth-zoom setting is independent.
 
@@ -163,15 +182,16 @@ Click a town in the town directory, or use a town window's location button.
 The camera pans and zooms simultaneously along a continuous arc: it pulls back
 while approaching the town, then moves in while continuing to approach.
 Trips shorter than one starting viewport width avoid any extra pull-back.
+This also applies to nearby industries: an eased pan without zoom is intentional.
+For longer trips, no pull-back is possible when the extra zoom-out allowance is
+zero or the view is already at its configured zoom-out limit.
 Medium trips use the [van Wijk-Nuij zoom/pan model](https://vanwijk.win.tue.nl/zoompan.pdf),
 which derives height and duration from the perceptual path. Animated journeys
-last 300-2,200 ms; if the unbounded duration exceeds 2,500 ms, the camera jumps
-directly. Disabling the existing smooth-scrolling setting also disables flights.
+last 300-2,200 ms. Longer journeys accelerate to finish within that limit; they
+no longer silently switch to an instant jump after a previous town arrival. Disabling the existing smooth-scrolling setting also disables flights.
 Ordinary destinations retain the player's exact zoom, including fractional
-levels; they are not forced to a native level on landing. By default the town arrival
-uses a traditional zoom level chosen from the town's estimated size. Automatic
-fitting is approximate; choose a fixed **Town arrival zoom** if you prefer a
-consistent view. Your configured zoom-in and zoom-out limits always apply.
+levels, including towns. The Expert **Town arrival zoom** override optionally
+fits the town approximately or chooses a fixed level; its default is **Keep current zoom**. Your configured zoom-in and zoom-out limits always apply.
 
 The following options tune the experience. Search for **flight** to find the
 timing controls. Search for **arrival** to find the town zoom selector, or clear
@@ -179,25 +199,23 @@ the filter and expand **Graphics** to see all of these options together.
 
 | Option | Default | Effect |
 | --- | --- | --- |
-| Fly navigation | Off | Master switch for all navigation flights. |
-| Fly to towns and other map destinations | On, subject to master switch | Enables town-directory, town-location and uncategorised map-location flights, including console `scrollto`. Console setting: `gui.fly_towns`. |
+| Fly-to navigation | Off | Master switch for all navigation flights. |
+| Fly to map locations | On, subject to master switch | Enables town-directory, town-location and uncategorised map-location flights, including console `scrollto`. Console setting: `gui.fly_towns`. |
 | Flight speed | 120% | Perceptual path speed (1.2 by default); range 25-400%. Duration grows with path length rather than map distance. |
 | Flight duration scale | 100% | Scale the whole journey; range 25-200%. |
 | Flight curvature | 142 / 100 | Lower values give flatter flights, higher values pull back more; range 25-300 / 100. |
-| Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance; range 0ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ3. Zero removes the extra pull-back. |
-| Town arrival zoom | Fit town automatically | Choose automatic fitting or a fixed level from 400% to 12.5%. |
+| Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance; range 0-3. Zero removes the extra pull-back. |
+| Town arrival zoom | Keep current zoom | Optionally choose automatic fitting or a fixed level from 400% to 12.5%. |
 
 ![Flight speed, duration scale and curvature controls](images/smooth-zoom/flight-pacing-settings.png)
 
-![Flight speed, duration scale and curvature controls](images/smooth-zoom/flight-pacing-settings.png)
+Every category has an Expert override, enabled by default. All require **Fly-to navigation**;
+none requires **Fly to map locations** or another category to be enabled.
 
-Every additional category has its own switch. All require **Fly navigation**;
-none requires **Fly to towns and other map destinations** or another category to be enabled.
+Expert settings provide independent category overrides; scroll for the remaining
+options. All are enabled by default under the main switch.
 
-This example enables the master switch and the combined town/map option,
-with the other destination options off. Scroll to see the remaining categories.
-
-![Independent flight controls in Advanced settings](images/smooth-zoom/flight-target-settings.png)
+![Current independent flight controls](images/smooth-zoom/flight-target-settings.png)
 
 | Switch | Navigation covered | Console setting |
 | --- | --- | --- |
@@ -226,13 +244,15 @@ set gui.fly_stations 1
 The switch follows the action used: a vehicle referenced in a news item uses
 the news switch, while its own location button uses the vehicle switch. Order
 destinations use the order switch even when the destination is a station.
-**Fly to towns and other map destinations** combines town and uncategorised
+The Expert **Fly to map locations** override combines town and uncategorised
 map navigation; it does not override any other disabled category. The combined
 switch retains `gui.fly_towns` and its existing value. The former
 `gui.fly_other_navigation` setting is removed; use `gui.fly_towns` instead.
 
 Turning off a category cancels any active flight in that category at its
 currently displayed view. Turning off the master cancels every flight.
+The vehicle window's **Centre <vehicle name> on location** button uses the
+main switch by default; the Expert **Fly to vehicles** override can disable it.
 Vehicle location flights (including vehicle news references) blend toward the live vehicle position during the final
 20% of the journey, without extending the flight. A removed vehicle cancels the
 flight. Double-click following remains immediate and tracks it continuously.
@@ -275,6 +295,12 @@ paused; flight motion still runs. The looping WebP uses actual captured frames
 and timing, and is a demonstration rather than a performance benchmark.
 
 ![Town-directory flight: simultaneous zoom and pan](images/smooth-zoom/flight.webp)
+
+This recording selects three different towns in succession. All journeys stay
+animated, including the longer third route that previously jumped instantly.
+All three retain the starting 130% arrival zoom.
+
+![Three consecutive town-directory flights](images/smooth-zoom/repeat-town.webp)
 
 These recordings compare the same route with the perceptual flight model.
 The fast configuration uses 200% speed and 100% duration scale; the gentler
@@ -383,3 +409,18 @@ the zoom level and a screenshot when reporting a problem. Saving records a
 nearby integer zoom level; loading resets the viewport to integer zoom.
 
 See [the controls documentation](smooth_zoom_controls.md) for more behavior details.
+
+### Fractional panning
+
+Dragging and substantial eased panning use the faster motion sampler at fractional
+zoom levels. Eased pans return to settled filtering in the last eight screen pixels;
+dragging returns to settled filtering on the update after the gesture ends. This
+avoids using the expensive area filter throughout a whole-viewport pan. Native
+zoom levels retain their existing pixel-scroll path.
+
+In the 960x600 software-rendered fixture at 130%, the same posted drag/capture
+sequence observed a median interval between visible updates of 109 ms before
+this change and 32 ms afterwards (worst gaps 133 ms and 88 ms). The land crop
+remained unchanged beyond 300 ms after release. These are captured observations,
+not an isolated performance benchmark: the baseline ran during compilation.
+Larger resolutions, other renderers and complex NewGRFs need further checks.

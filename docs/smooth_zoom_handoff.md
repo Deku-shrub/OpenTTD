@@ -9,7 +9,7 @@ comes from distance and curvature (default rho 1.42); lower curvature respects
 zoom/extra-level limits without separate zoom/pan stages. A no-pull-back path
 handles short hops, pure zoom and zero extra allowance. Duration is perceptual
 path length / speed (default 1.2), times a configurable percent multiplier;
-animated duration is bounded to 300-2200 ms, and >2500 ms unbounded trips cut.
+animated duration is bounded to 300-2200 ms; longer trips accelerate to the cap.
 `fly_duration_scale` replaces obsolete `fly_zoom_duration`; `fly_curve` stores
 rho multiplied by 100. These preferences apply on the next journey.
 
@@ -343,3 +343,42 @@ client merely because its camera preferences are local. Matching-build multiplay
 NewGRF visual coverage, OpenGL/40bpp and patch-pack integration remain open.
 ScriptViewport::ScrollTo uses Script; CmdScrollViewport (multiplayer-directed
 script redirects) still defaults to Other. Documented as a category/validation gap.
+
+## Repeated town navigation correction - 10 October 2026
+
+A reproduced first/second/third town sequence planned 1438, 2200 and 0 ms under
+old timing policy. The 0 ms was the automatic long-trip cut, not an exhausted
+flag. Enabled long journeys now accelerate to the 2200 ms cap rather than cut;
+manual instant requests and disabled-flight fallback still work. This supersedes
+the prior >2500 ms direct-jump policy described earlier. The full Release suite
+passes 13,649 assertions / 131 cases. A longer industry navigation captured 66%
+during its arc; nearby flat hops retain the no-bob rule while user preference is
+pending. `docs/validation/zoom-navigation.sav` is a paused fleet/infrastructure
+fixture. The checked-in launch-prototype.ps1 defaults to it, stages NoAI content
+and matching graphics/language metadata, and enables relevant local demo flags.
+The ignored desktop.ps1 also defaults to this populated fixture. AI-owned assets
+are accessible through the toolbar company dropdowns or direct map clicks.
+
+## Main Fly-to switch and fractional pan follow-up
+
+All category defaults are now enabled under the opt-in master, which is visible
+at Basic settings level. Per-category overrides are Expert settings. Towns retain
+current zoom by default; fitting or fixed town arrival is an Expert override.
+Existing configuration values are preserved, including previously disabled categories.
+Vehicle centre already routes through Vehicle; its default override now permits flight.
+Multiplayer Game Script redirects now use Script rather than generic map permissions.
+Fractional dragging and substantial ordinary eased pans use motion sampling; the
+last eight pixels of eased pans use settled filtering. Gesture release restores
+quality on the next update. Native pixel scrolling is unchanged. Runtime validation
+of the new pan path passed on the software fixture. Clouds layer and continuous label scaling are TODOs.
+
+Final validation: Release build and 13,700 assertions in 132 cases passed.
+At confirmed 130%, the same MapRMB posted-input/capture sequence changed median
+visible update interval from 109.16 to 31.94 ms (max 132.83 to 88.16 ms). No
+static-crop changes occurred beyond 300 ms after release. Baseline compiled
+concurrently, so this is observational rather than a controlled benchmark.
+Paused follow land was identical across captures 700 ms apart. Default bus centre
+started target=1, arrived at 1.3000x after 2209 ms; disabling fly_vehicles prevented
+a repeat flight. Basic/Expert settings screenshots were refreshed. Three town
+trips all arrived at 1.3000x in the new recording: 1731, 2247 and 2217 ms actual
+elapsed (1706, 2200, 2200 ms planned). Updated clip has 191 captures / 10.14 s.

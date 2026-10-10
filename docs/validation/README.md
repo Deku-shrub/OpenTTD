@@ -1,5 +1,21 @@
 # Smooth zoom validation fixtures
 
+## Quick navigation demo
+
+Run `launch-prototype.ps1` with a compiled Windows game and installed OpenGFX
+(the default executable is `C:\ottd-build\Release\openttd.exe`). It loads
+`zoom-navigation.sav`, the existing fleet fixture including stations and all
+base vehicle categories. The paused world is ready for directory and location
+button tests; unpause for live vehicle approaches. Select the fixture company
+in toolbar station/vehicle menus rather than the empty human company.
+
+The launcher enables the main flight switch and smooth zoom in a separate
+`navigation-demo.cfg`. Use `-NewMap` for a fresh map or `-Savegame` for another
+world. The NoAI scripts below are copied into the isolated runtime directory so
+loading does not require rebuilding the fixture. Keep the terminal open.
+
+## Rebuilding the fixtures
+
 `ZoomStatic` is a NoAI fixture for a disposable test game. It builds infrastructure
 without constructing vehicles. Copy its directory into that game's `ai` search
 directory, then run `rescan_ai`, `debug_level script=5`, and `start_ai ZoomStatic`
@@ -30,3 +46,15 @@ The isolated local worlds and raw captures live under ignored `build-smoothzoom`
 The checked-in demonstration animations are linked from
 [the user guide](../smooth_zoom_readme.md). They preserve captured timing and
 are demonstrations, not capture-free frame-time measurements.
+
+## Latest checks, 10 October 2026
+
+Final Release build: 13,700 assertions in 132 cases passed. GUI checks covered
+Basic master visibility, default-on Expert categories, bus centre flight and
+vehicle opt-out, consecutive town navigation retaining 130%, and stable land
+when a moving fractional follow camera was paused. At 130% in the 960x600
+32bpp-anim / win32:no_threads fixture, captured pan update intervals improved
+from 109 ms median to 32 ms. Baseline compilation load was present; this is an
+observational comparison. No land-crop changes occurred beyond 300 ms after
+release. Raw timings/captures are in ignored build-smoothzoom/pan-*.json and
+followed-paused-*.png. Larger-resolution and NewGRF performance checks remain open.

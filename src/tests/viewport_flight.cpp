@@ -139,7 +139,9 @@ TEST_CASE("Perceptual flights have logarithmic distance growth and a bounded dur
 	CHECK(medium.GetDuration() >= 300);
 	CHECK(medium.GetDuration() <= 2200);
 	ViewportFlight cross_map({0, 0, 1}, {10000000, 0, 1}, 1, 32, 640, 120, 100, 0);
-	CHECK(cross_map.GetDuration() == 0);
+	CHECK(cross_map.GetDuration() == 2200);
+	CHECK(cross_map.IsActive());
+	cross_map.Advance(2200);
 	CHECK_FALSE(cross_map.IsActive());
 	CHECK(cross_map.GetPose().x == 10000000);
 	CHECK(cross_map.GetPose().step == 1);
@@ -217,4 +219,22 @@ TEST_CASE("Perceptual flight agrees with the published d3 zoom interpolation exa
 	CHECK(flight.GetPose().x == Approx(72));
 	CHECK(flight.GetPose().y == Approx(52));
 	CHECK(flight.GetPose().step == Approx(126.04761005270991));
+}
+
+TEST_CASE("Successive town destinations retain animated flights after arrival", "[smoothzoom][flight]")
+{
+	ViewportFlight::Pose pose{0, 10112, 4};
+	for (const auto destination : {ViewportFlight::Pose{-5760, 8736, 4}, {-5632, 23424, 4}, {1408, 6560, 4}}) {
+		ViewportFlight flight(pose, destination, 1, 32, 960, 120, 100, 2);
+		REQUIRE(flight.IsActive());
+		CHECK(flight.GetDuration() <= 2200);
+		flight.Advance(static_cast<unsigned int>(flight.GetDuration() / 2));
+		CHECK(flight.GetPose().x != destination.x);
+		CHECK(flight.GetPose().step > 4);
+		flight.Advance(3000);
+		pose = flight.GetPose();
+		CHECK(pose.x == destination.x);
+		CHECK(pose.y == destination.y);
+		CHECK(pose.step == 4);
+	}
 }

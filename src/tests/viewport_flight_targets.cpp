@@ -9,6 +9,7 @@
 #include "../stdafx.h"
 #include "../3rdparty/catch2/catch.hpp"
 #include "../settings_type.h"
+#include "../settings_internal.h"
 #include "../core/viewport_flight_targets.hpp"
 
 #include "../safeguards.h"
@@ -53,4 +54,43 @@ TEST_CASE("Flight categories remain independent under the master switch", "[smoo
 	CHECK_FALSE(IsViewportFlightEnabled(settings, ViewportFlightTarget::News));
 	CHECK(IsViewportFlightEnabled(settings, ViewportFlightTarget::Vehicle));
 	CHECK(IsViewportFlightEnabled(settings, ViewportFlightTarget::Other));
+}
+
+TEST_CASE("Enabling the main flight switch allows all default destination categories", "[smoothzoom][flight]")
+{
+	const auto default_value = [](std::string_view name) {
+		const SettingDesc *setting = GetSettingFromName(name);
+		REQUIRE(setting != nullptr);
+		REQUIRE(setting->IsIntSetting());
+		return static_cast<const IntSettingDesc *>(setting)->GetDefaultValue();
+	};
+	CHECK(default_value("gui.fly_navigation") == 0);
+	GUISettings settings{};
+	settings.fly_navigation = true;
+	settings.fly_towns = default_value("gui.fly_towns");
+	settings.fly_vehicles = default_value("gui.fly_vehicles");
+	settings.fly_stations = default_value("gui.fly_stations");
+	settings.fly_industries = default_value("gui.fly_industries");
+	settings.fly_news = default_value("gui.fly_news");
+	settings.fly_signs = default_value("gui.fly_signs");
+	settings.fly_smallmap = default_value("gui.fly_smallmap");
+	settings.fly_companies = default_value("gui.fly_companies");
+	settings.fly_depots = default_value("gui.fly_depots");
+	settings.fly_waypoints = default_value("gui.fly_waypoints");
+	settings.fly_orders = default_value("gui.fly_orders");
+	settings.fly_scenarios = default_value("gui.fly_scenarios");
+	settings.fly_subsidies = default_value("gui.fly_subsidies");
+	settings.fly_scripts = default_value("gui.fly_scripts");
+	for (auto target : {ViewportFlightTarget::Town, ViewportFlightTarget::Vehicle,
+			ViewportFlightTarget::Station, ViewportFlightTarget::Industry, ViewportFlightTarget::News,
+			ViewportFlightTarget::Sign, ViewportFlightTarget::SmallMap, ViewportFlightTarget::Company,
+			ViewportFlightTarget::Depot, ViewportFlightTarget::Waypoint, ViewportFlightTarget::Order,
+			ViewportFlightTarget::Scenario, ViewportFlightTarget::Subsidy, ViewportFlightTarget::Script,
+			ViewportFlightTarget::Other}) {
+		CHECK(IsViewportFlightEnabled(settings, target));
+	}
+	settings.fly_vehicles = false;
+	CHECK_FALSE(IsViewportFlightEnabled(settings, ViewportFlightTarget::Vehicle));
+	CHECK(IsViewportFlightEnabled(settings, ViewportFlightTarget::Town));
+	CHECK(default_value("gui.fly_town_zoom") == 7);
 }

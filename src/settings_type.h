@@ -264,7 +264,7 @@ struct GUISettings {
 	uint16_t fly_duration_scale; ///< perceptual flight duration multiplier, in percent
 	uint16_t fly_curve; ///< perceptual zoom/pan curvature, multiplied by 100
 	uint8_t fly_zoom_out; ///< maximum extra traditional zoom-out levels
-	uint8_t fly_town_zoom; ///< 0 = fit town; otherwise traditional zoom index plus one
+	uint8_t fly_town_zoom; ///< 0 = fit town, 7 = keep current zoom; otherwise traditional zoom index plus one
 	ZoomLevel sprite_zoom_min; ///< maximum zoom level at which higher-resolution alternative sprites will be used (if available) instead of scaling a lower resolution sprite
 	uint32_t autosave_interval; ///< how often should we do autosaves?
 	bool threaded_saves; ///< should we do threaded saves?

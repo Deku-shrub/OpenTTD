@@ -2777,7 +2777,7 @@ bool ScrollMainWindowToTown(const Town &town)
 {
 	Window *w = GetMainWindow();
 	if (w == nullptr || w->viewport == nullptr) return false;
-	if (!IsViewportFlightEnabled(_settings_client.gui, ViewportFlightTarget::Town) || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+	if (_settings_client.gui.fly_town_zoom == 7 || !IsViewportFlightEnabled(_settings_client.gui, ViewportFlightTarget::Town) || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
 		return ScrollMainWindowToTile(town.xy, false, ViewportFlightTarget::Town);
 	}
 	const Viewport &vp = *w->viewport;
@@ -3857,7 +3857,7 @@ CommandCost CmdScrollViewport(DoCommandFlags flags, TileIndex tile, ViewportScro
 
 	if (flags.Test(DoCommandFlag::Execute)) {
 		ResetObjectToPlace();
-		ScrollMainWindowToTile(tile);
+		ScrollMainWindowToTile(tile, false, ViewportFlightTarget::Script);
 	}
 	return CommandCost();
 }

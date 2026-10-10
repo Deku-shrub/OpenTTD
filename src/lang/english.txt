@@ -2092,10 +2092,10 @@ STR_CONFIG_SETTING_ZOOM_MAX                                     :Maximum zoom ou
 STR_CONFIG_SETTING_ZOOM_MAX_HELPTEXT                            :The maximum zoom-out level for viewports. Higher zoom-out levels might cause lag when used
 STR_CONFIG_SETTING_SMOOTH_ZOOM                                  :Smooth mouse-wheel zoom: {STRING2}
 STR_CONFIG_SETTING_SMOOTH_ZOOM_HELPTEXT                         :Use smaller zoom steps with the mouse wheel. Requires a supported 32bpp blitter and may reduce rendering performance
-STR_CONFIG_SETTING_FLY_NAVIGATION                             :Fly navigation: {STRING2}
-STR_CONFIG_SETTING_FLY_NAVIGATION_HELPTEXT                    :Master switch for simultaneous zoom-and-pan navigation. Enable each destination category separately. Requires a supported 32bpp blitter. Manual scrolling and zooming interrupt the flight
-STR_CONFIG_SETTING_FLY_TOWNS                                  :Fly to towns and other map destinations: {STRING2}
-STR_CONFIG_SETTING_FLY_TOWNS_HELPTEXT                         :Animate town navigation and uncategorised map locations, including console scrollto commands, when Fly navigation is enabled. Other destination toggles remain independent. Turning this option off cancels active flights to towns or uncategorised locations. Explicit instant jumps remain immediate
+STR_CONFIG_SETTING_FLY_NAVIGATION                             :Fly-to navigation: {STRING2}
+STR_CONFIG_SETTING_FLY_NAVIGATION_HELPTEXT                    :Master switch for simultaneous zoom-and-pan navigation to all destinations. Expert settings allow individual navigation categories to be disabled. Requires smooth scrolling and a supported 32bpp blitter. Manual scrolling and zooming interrupt the flight
+STR_CONFIG_SETTING_FLY_TOWNS                                  :Fly to map locations: {STRING2}
+STR_CONFIG_SETTING_FLY_TOWNS_HELPTEXT                         :Expert override for town and uncategorised map-location navigation, including console scrollto commands. Enabled by default under the main Fly-to navigation switch. Other categories remain independent
 STR_CONFIG_SETTING_FLY_VEHICLES                               :Fly to vehicles: {STRING2}
 STR_CONFIG_SETTING_FLY_STATIONS                               :Fly to stations: {STRING2}
 STR_CONFIG_SETTING_FLY_INDUSTRIES                             :Fly to industries: {STRING2}
@@ -2109,12 +2109,12 @@ STR_CONFIG_SETTING_FLY_ORDERS                                 :Fly to order dest
 STR_CONFIG_SETTING_FLY_SCENARIOS                              :Fly to scenario links: {STRING2}
 STR_CONFIG_SETTING_FLY_SUBSIDIES                              :Fly to subsidy destinations: {STRING2}
 STR_CONFIG_SETTING_FLY_SCRIPTS                                :Fly to script destinations: {STRING2}
-STR_CONFIG_SETTING_FLY_TARGET_HELPTEXT                        :Animate this navigation category when Fly navigation is enabled. Other categories remain independent. Turning this option off also cancels an active flight of this category. Vehicle following and explicit instant jumps remain immediate
+STR_CONFIG_SETTING_FLY_TARGET_HELPTEXT                        :Expert override for this navigation category. Enabled by default under the main Fly-to navigation switch. Turning it off cancels an active flight in this category. Vehicle following and explicit instant jumps remain immediate
 STR_CONFIG_SETTING_FLY_PAN_SPEED                               :Flight speed: {STRING2}
-STR_CONFIG_SETTING_FLY_PAN_SPEED_HELPTEXT                       :Perceptual path speed. Higher values shorten flights. Duration is bounded to 300-2200 ms; trips requiring more than 2500 ms jump directly. Applies to new flights
+STR_CONFIG_SETTING_FLY_PAN_SPEED_HELPTEXT                       :Perceptual path speed. Higher values shorten flights. Duration is bounded to 300-2200 ms; longer trips are accelerated to the time limit. Applies to new flights
 STR_CONFIG_SETTING_FLY_PAN_SPEED_VALUE                         :{NUM}% of a viewport per second
 STR_CONFIG_SETTING_FLY_DURATION_SCALE                           :Flight duration scale: {STRING2}
-STR_CONFIG_SETTING_FLY_DURATION_SCALE_HELPTEXT                   :Scale the duration of the whole simultaneous zoom-and-pan journey. Higher values give gentler flights. Trips requiring more than 2500 ms jump directly. Applies to new flights
+STR_CONFIG_SETTING_FLY_DURATION_SCALE_HELPTEXT                   :Scale the duration of the whole simultaneous zoom-and-pan journey. Higher values give gentler flights. Longer trips are accelerated to the time limit. Applies to new flights
 STR_CONFIG_SETTING_FLY_DURATION_SCALE_VALUE                     :{NUM}%
 STR_CONFIG_SETTING_FLY_CURVE                                  :Flight curvature: {STRING2}
 STR_CONFIG_SETTING_FLY_CURVE_HELPTEXT                         :Zoom/pan trade-off multiplied by 100. 142 is the standard curve; lower values give flatter flights, higher values pull back more. Short hops do not pull back. Curvature is reduced automatically to respect zoom limits
@@ -2123,7 +2123,7 @@ STR_CONFIG_SETTING_FLY_ZOOM_OUT                                :Maximum extra fl
 STR_CONFIG_SETTING_FLY_ZOOM_OUT_HELPTEXT                        :Maximum additional zoom-out beyond the wider of the departure and arrival views. Longer journeys automatically reveal more of the route. Zero disables the extra zoom-out. The configured viewport zoom limits are always respected
 STR_CONFIG_SETTING_FLY_ZOOM_OUT_VALUE                          :{NUM} levels
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM                               :Town arrival zoom: {STRING2}
-STR_CONFIG_SETTING_FLY_TOWN_ZOOM_HELPTEXT                       :Automatically choose a traditional zoom level using the town's estimated size, or always arrive at a fixed level. Automatic fitting is approximate and never zooms closer than 100%. Your viewport zoom limits take precedence
+STR_CONFIG_SETTING_FLY_TOWN_ZOOM_HELPTEXT                       :Retain the current zoom by default, as with other destinations. Optionally fit the town approximately or choose a fixed arrival level. Viewport zoom limits take precedence
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_AUTO                           :Fit town automatically
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_4X                             :400%
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_2X                             :200%
@@ -2131,6 +2131,7 @@ STR_CONFIG_SETTING_FLY_TOWN_ZOOM_NORMAL                         :100%
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_OUT2                           :50%
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_OUT4                           :25%
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_OUT8                           :12.5%
+STR_CONFIG_SETTING_FLY_TOWN_ZOOM_CURRENT                        :Keep current zoom
 STR_TOOLBAR_SMOOTH_ZOOM_LEVEL                                   :{BLACK}{NUM}%
 STR_TOOLBAR_SMOOTH_ZOOM_LEVEL_TOOLTIP                           :{BLACK}Current zoom: {NUM}%. Click to stop zooming and snap to the nearest traditional level: {NUM}%
 ###length 6

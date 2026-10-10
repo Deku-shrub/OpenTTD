@@ -254,7 +254,7 @@ bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale, Viewp
 		start_x, start_y, centre.x, centre.y, ZOOM_BASE / end_step, path.GetDuration(), static_cast<int>(target));
 	vp.zoom_animation = true;
 	w->SetDirty();
-	if (!path.IsActive()) UpdateViewportFlight(w, 0); // Long trips arrive immediately.
+	if (!path.IsActive()) UpdateViewportFlight(w, 0);
 	return true;
 }
 
@@ -312,13 +312,21 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 
 /** Advance on real time, including while the simulation is paused. */
 /** Moving follow cameras can use fast sampling; stopped and paused views retain settled quality. */
-static bool UseFastFollowSampling(const Window *w)
+static bool UseFastPanSampling(const Window *w)
 {
-	if (w->viewport == nullptr || w->viewport->zoom_step == 0 || _pause_mode.Any()) return false;
+	if (w->viewport == nullptr || w->viewport->zoom_step == 0) return false;
+	const ViewportData &vp = *w->viewport;
+	if (_scrolling_viewport && w == GetMainWindow()) return true;
+	/* Fractional panning redraws the entire viewport. Restore settled quality
+	 * within the visible easing tail, or on the update after dragging stops. */
+	if (vp.follow_vehicle == VehicleID::Invalid() && std::max(std::abs(vp.dest_scrollpos_x - vp.scrollpos_x),
+			std::abs(vp.dest_scrollpos_y - vp.scrollpos_y)) > 8 * vp.zoom_step) return true;
+	if (_pause_mode.Any()) return false;
 	const Vehicle *followed = Vehicle::GetIfValid(w->viewport->follow_vehicle);
 	return followed != nullptr && followed->cur_speed != 0;
 }
 
+/** Advance camera filtering and animation on real time, including while paused. */
 void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms)
 {
 	if (delta_ms == 0) return;
@@ -326,7 +334,7 @@ void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms)
 	auto it = _smooth_zoom_animations.find(w);
 	if (it == _smooth_zoom_animations.end()) {
 		if (w->viewport != nullptr && !_viewport_flights.contains(w)) {
-			const bool fast = UseFastFollowSampling(w);
+			const bool fast = UseFastPanSampling(w);
 			if (w->viewport->zoom_animation != fast) {
 				w->viewport->zoom_animation = fast;
 				/* Redraw immediately on stop/pause, even when the camera origin is
@@ -350,7 +358,7 @@ void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms)
 	animation.motion.Advance(delta_ms, screen_extent);
 	/* Change filtering before apparent rest, rather than after the invisible
 	 * easing tail. Keep the quality filter for the remaining final frames. */
-	vp.zoom_animation = animation.motion.UseFastSampling(screen_extent) || UseFastFollowSampling(w);
+	vp.zoom_animation = animation.motion.UseFastSampling(screen_extent) || UseFastPanSampling(w);
 	const double step = animation.motion.GetStep();
 	const int pending_scroll_x = vp.dest_scrollpos_x - vp.scrollpos_x;
 	const int pending_scroll_y = vp.dest_scrollpos_y - vp.scrollpos_y;
@@ -378,7 +386,7 @@ void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms)
 		CancelViewportSmoothZoomAnimation(w);
 		/* A moving follow camera has not come to rest when wheel easing ends.
 		 * Avoid a single quality-filtered frame followed by fast sampling again. */
-		vp.zoom_animation = UseFastFollowSampling(w);
+		vp.zoom_animation = UseFastPanSampling(w);
 	}
 }
 
@@ -718,6 +726,7 @@ struct MainWindow : Window
 		this->viewport->scrollpos_y += ViewportScale(*this->viewport, delta.y);
 		this->viewport->dest_scrollpos_x = this->viewport->scrollpos_x;
 		this->viewport->dest_scrollpos_y = this->viewport->scrollpos_y;
+		if (this->viewport->zoom_step > 0) this->viewport->zoom_animation = true;
 		this->refresh_timeout.Reset();
 	}
 
