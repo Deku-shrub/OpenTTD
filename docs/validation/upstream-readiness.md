@@ -2,6 +2,25 @@
 
 Reviewed 10 October 2026 against OpenTTD's contribution guide, coding style and checked-in CI workflows.
 
+## Repository lineage and comparisons
+
+`Deku-shrub/OpenTTD` is now a native public GitHub fork of `OpenTTD/OpenTTD`.
+All three existing branches were restored without rewriting their commit history.
+`upstream-base` records the original base `fab8089e6bed2be570b6b0a2cb9f19a5db16a7da`;
+`upstream-master` records the setup checkpoint `d48d693d7ff09b643846e23a5f033cf3582ab27f`.
+The original standalone repository remains at
+[OpenTTD-standalone-backup](https://github.com/Deku-shrub/OpenTTD-standalone-backup),
+including its historical CI runs. Repository-level run history is not copied to
+the native fork.
+
+- [Diff from original base](https://github.com/Deku-shrub/OpenTTD/compare/upstream-base...master)
+- [Comparison against current upstream](https://github.com/OpenTTD/OpenTTD/compare/master...Deku-shrub:master)
+
+Both comparison endpoints were verified. At migration, the fork was one commit
+behind current upstream (a Lithuanian translation fix), with the original base
+as their common ancestor. Migration did not silently merge or rebase new upstream
+changes, and no upstream pull request was created.
+
 ## Submission eligibility
 
 [OpenTTD's AI policy](https://github.com/OpenTTD/OpenTTD/blob/master/CONTRIBUTING.md#use-of-ai) prohibits submissions containing AI-generated code, including entire generated lines, and AI-written issues or PR descriptions. This fork contains such code. Passing tests or reviewing the code does not remove that restriction. This work is therefore not eligible for an upstream PR under the current policy. Do not conceal its provenance. Development and validation here are for the private fork.
@@ -39,7 +58,7 @@ The runner checks source descriptions, builds all default targets (including reg
 - First CI feedback: macOS Debug/Release cannot use floating-point `std::from_chars` at the supported deployment target. Replaced the console parser with a strict decimal, classic-locale stream parser and tests for malformed input and comma-decimal global locales. Dedicated builds do not link real blitters, so renderer tests now follow `NOT OPTION_DEDICATED`; pure camera/controls tests remain enabled. GPU renderer tests also follow `WITH_OPENGL`.
 - The shared vcpkg action uses a read/write GitHub Packages cache. Added explicit package-write permissions to build and CodeQL workflows after the logs showed nonfatal 403 cache-upload failures.
 - Local validation after these fixes: all **146 CTest tests passed** (25.18 seconds), including all four upstream regressions. Remote confirmation is pending.
-- The 10 October private Actions runs did not start: GitHub reported failed recent account payments or an insufficient spending limit. [Source-check run](https://github.com/Deku-shrub/OpenTTD/actions/runs/38082645949) and [build-matrix run](https://github.com/Deku-shrub/OpenTTD/actions/runs/38082646432) have no executed build steps. Account billing must be resolved before remote validation can provide evidence.
+- The initial 10 October private Actions runs did not start: GitHub reported failed recent account payments or an insufficient spending limit. [Source-check run](https://github.com/Deku-shrub/OpenTTD-standalone-backup/actions/runs/38082645949) and [build-matrix run](https://github.com/Deku-shrub/OpenTTD-standalone-backup/actions/runs/38082646432) have no executed build steps. Making the repository public subsequently allowed standard hosted jobs to start.
 - Local audit result: source-description check passed, full default-target Release build succeeded, and all **144 CTest tests passed**, including the four AI/GS regression suites (18.73 seconds). This closes the earlier missing-fixture failure.
 - Confirm results of the private remote build matrix and new Linux source checks; queued or configured jobs are not passing evidence.
 - Compare Doxygen warning sets with the unmodified upstream base.

@@ -56,6 +56,22 @@ for the tested scope and version limitations.
 
 ## Development and feedback
 
+### Compare with upstream
+
+This repository is a GitHub fork of `OpenTTD/OpenTTD`. The changes started from
+upstream revision `fab8089e6bed2be570b6b0a2cb9f19a5db16a7da`, preserved as the
+`upstream-base` branch.
+
+- [All fork changes from the original base](https://github.com/Deku-shrub/OpenTTD/compare/upstream-base...master)
+- [Compare with current upstream master](https://github.com/OpenTTD/OpenTTD/compare/master...Deku-shrub:master)
+
+`master` contains the fork's implementation. `upstream-master` preserves the
+upstream checkpoint taken during fork setup; it is not an automatically updated
+mirror. The original standalone repository and its CI history are retained at
+[OpenTTD-standalone-backup](https://github.com/Deku-shrub/OpenTTD-standalone-backup).
+
+### Status and reporting issues
+
 This is a work in progress. The [TODO list](docs/smooth_zoom_todo.md) distinguishes
 implemented work from remaining validation; the [test coverage
 notes](docs/validation/zoom-coverage.md) record graphics sets, renderers and
