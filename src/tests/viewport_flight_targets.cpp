@@ -92,5 +92,5 @@ TEST_CASE("Enabling the main flight switch allows all default destination catego
 	settings.fly_vehicles = false;
 	CHECK_FALSE(IsViewportFlightEnabled(settings, ViewportFlightTarget::Vehicle));
 	CHECK(IsViewportFlightEnabled(settings, ViewportFlightTarget::Town));
-	CHECK(default_value("gui.fly_town_zoom") == 7);
+	CHECK(default_value("gui.fly_town_zoom") == 0);
 }

@@ -215,6 +215,23 @@ static void UpdateViewportFlight(Window *w, uint delta_ms);
 void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle)
 {
 	auto it = _viewport_flights.find(w);
+	if (it == _viewport_flights.end()) return;
+	const Vehicle *selected = Vehicle::GetIfValid(vehicle);
+	if (selected == nullptr) return;
+	const Vehicle *front = selected->GetMovingFront();
+	const Viewport &vp = *w->viewport;
+	const auto [width, height] = GetNavigationVehicleExtent(front, ZOOM_BASE, INVALID_COORD);
+	const double step = GetNavigationArrivalStep(width, height, vp.width, vp.height, ZOOM_BASE / 2.0,
+			ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
+	const auto destination = it->second.path.GetDestination();
+	const auto target = it->second.target;
+	/* The exact ID disambiguates overlapping vehicles and trains in shared depots.
+	 * This runs in the initiating click, before any flight frame is advanced. */
+	if (!TryStartViewportFlight(w, {static_cast<int>(destination.x), static_cast<int>(destination.y)}, ZOOM_BASE / step, target)) {
+		CancelViewportFlight(w);
+		return;
+	}
+	it = _viewport_flights.find(w);
 	if (it != _viewport_flights.end()) it->second.vehicle = vehicle;
 }
 

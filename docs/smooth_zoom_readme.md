@@ -191,9 +191,21 @@ Medium trips use the [van Wijk-Nuij zoom/pan model](https://vanwijk.win.tue.nl/z
 which derives height and duration from the perceptual path. Animated journeys
 last 300-2,200 ms. Longer journeys accelerate to finish within that limit; they
 no longer silently switch to an instant jump after a previous town arrival. Disabling the existing smooth-scrolling setting also disables flights.
-Ordinary destinations retain the player's exact zoom, including fractional
-levels, including towns. The Expert **Town arrival zoom** override optionally
-fits the town approximately or chooses a fixed level; its default is **Keep current zoom**. Your configured zoom-in and zoom-out limits always apply.
+Flights now choose an arrival zoom for the destination, independently of the
+departure zoom. Automatic fitting aims to keep the object within 80% of the
+viewport and stops at a traditional zoom level. Small objects arrive at up to
+200%; larger objects require a wider view. Your configured zoom limits apply.
+
+Stations use their full spread, industries their footprint, and vehicles their
+whole consist with surrounding context. Town fitting estimates their size from
+the town influence radius. Terrain height and a roof allowance help frame
+station and industry structures. Coordinate-only destinations use a normal
+100% context view. These are framing estimates rather than exact sprite outlines.
+
+The Expert **Town arrival zoom** override defaults to **Fit target automatically**;
+fixed zoom and **Keep current zoom** remain available. Existing configurations
+that selected Keep current zoom preserve that choice: select automatic fitting
+or run `set gui.fly_town_zoom 0` to use the new default.
 
 The following options tune the experience. Search for **flight** to find the
 timing controls. Search for **arrival** to find the town zoom selector, or clear
@@ -207,7 +219,7 @@ the filter and expand **Graphics** to see all of these options together.
 | Flight duration scale | 100% | Scale the whole journey; range 25-200%. |
 | Flight curvature | 142 / 100 | Lower values give flatter flights, higher values pull back more; range 25-300 / 100. |
 | Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance; range 0-3. Zero removes the extra pull-back. |
-| Town arrival zoom | Keep current zoom | Optionally choose automatic fitting or a fixed level from 400% to 12.5%. |
+| Town arrival zoom | Fit target automatically | Override automatic fitting with a fixed level from 400% to 12.5%, or Keep current zoom. |
 
 ![Flight speed, duration scale and curvature controls](images/smooth-zoom/flight-pacing-settings.png)
 
@@ -271,9 +283,9 @@ interrupt a flight and take control at the currently displayed position and
 zoom. A drag cancels on gesture start, before its first movement. The cancelled
 flight does not resume or jump to its former destination. The percentage button also stops
 the flight and snaps to a traditional level. Selecting another destination
-starts a new journey from the displayed view. For other destinations, changing
-the target mid-flight retains the intended arrival zoom rather than the
-temporarily widened travel view. Ctrl-clicking a town still opens an extra
+starts a new journey from the displayed view and fits the new destination.
+With the explicit Keep current zoom override, retargeting preserves the intended
+arrival zoom rather than the temporarily widened travel view. Ctrl-clicking a town still opens an extra
 viewport, and explicit instant jumps and vehicle following stay immediate.
 Disabling the master or the active flight's category, or changing the viewport
 zoom limits, stops that flight at the current view, subject to those limits.
@@ -300,9 +312,16 @@ and timing, and is a demonstration rather than a performance benchmark.
 
 This recording selects three different towns in succession. All journeys stay
 animated, including the longer third route that previously jumped instantly.
-All three retain the starting 130% arrival zoom.
+Starting at 25%, all three fit their destination at 100% in this viewport.
 
 ![Three consecutive town-directory flights](images/smooth-zoom/repeat-town.webp)
+
+The vehicle centre button also fits its destination: this bus flight starts
+at 25% and arrives at 200%. In the same 960 × 600 test viewport, an airport
+station arrived at 100%, a small road station at 200%, and a coal mine at 200%.
+These values depend on object size and viewport dimensions.
+
+![Vehicle flight from 25 percent to a fitted 200 percent arrival](images/smooth-zoom/target-fit-vehicle.webp)
 
 These recordings compare the same route with the perceptual flight model.
 The fast configuration uses 200% speed and 100% duration scale; the gentler

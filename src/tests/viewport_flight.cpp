@@ -116,7 +116,7 @@ TEST_CASE("Flight pan and zoom timing can be tuned independently", "[smoothzoom]
 	CHECK(partitioned.GetPose().step == normal.GetPose().step);
 }
 
-TEST_CASE("Flight town fitting selects traditional levels and honours limits", "[smoothzoom][flight]")
+TEST_CASE("Flight destination fitting selects traditional levels and honours limits", "[smoothzoom][flight]")
 {
 	CHECK(GetNavigationArrivalStep(1600, 800, 1000, 600, 4, 1, 32) == 4);
 	CHECK(GetNavigationArrivalStep(4000, 800, 1000, 600, 4, 1, 32) == 8);
@@ -237,4 +237,43 @@ TEST_CASE("Successive town destinations retain animated flights after arrival", 
 		CHECK(pose.y == destination.y);
 		CHECK(pose.step == 4);
 	}
+}
+
+TEST_CASE("Destination fitting depends on object bounds rather than departure zoom", "[smoothzoom][flight]")
+{
+	for (const auto dimensions : {std::pair{1024.0, 640.0}, {4096.0, 1536.0}, {16384.0, 640.0}}) {
+		const double arrival = GetNavigationArrivalStep(dimensions.first, dimensions.second, 1280, 800, 2, 1, 32);
+		for (double start : {1.0, 3.076923, 16.0, 32.0}) {
+			ViewportFlight flight({0, 0, start}, {6000, 3000, arrival}, 1, 32, 1280, 120, 100, 2);
+			flight.Advance(3000);
+			CHECK(flight.GetPose().step == arrival);
+		}
+	}
+	CHECK(GetNavigationArrivalStep(1024, 640, 1280, 800, 2, 1, 32) == 2);
+	CHECK(GetNavigationArrivalStep(4096, 1536, 1280, 800, 2, 1, 32) == 4);
+	CHECK(GetNavigationArrivalStep(16384, 640, 1280, 800, 2, 1, 32) == 16);
+	CHECK(GetNavigationArrivalStep(4096, 1536, 1280, 300, 2, 1, 32) == 8);
+}
+
+TEST_CASE("Vehicle fitting includes off-screen consist positions without sprite bounds", "[smoothzoom][flight]")
+{
+	struct Part {
+		int x_pos, y_pos, z_pos;
+		struct { int left, top, right, bottom; } coord;
+		const Part *first = nullptr, *next = nullptr;
+		const Part *First() const { return first; }
+		const Part *Next() const { return next; }
+	};
+	Part front{100, 100, 0, {-1, 0, 0, 0}};
+	Part tail{100, 600, 0, {-1, 0, 0, 0}};
+	front.first = &front; front.next = &tail; tail.first = &front;
+	const auto [width, height] = GetNavigationVehicleExtent(&front, 4, -1);
+	CHECK(width == 8256);
+	CHECK(height == 4320);
+	CHECK(GetNavigationArrivalStep(width, height, 1280, 800, 2, 1, 32) == 16);
+	front.next = nullptr;
+	const auto [single_width, single_height] = GetNavigationVehicleExtent(&front, 4, -1);
+	CHECK(single_width == 1024);
+	CHECK(single_height == 640);
+	CHECK(GetNavigationArrivalStep(single_width, single_height, 1280, 800, 2, 1, 32) == 2);
 }

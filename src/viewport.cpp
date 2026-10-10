@@ -63,6 +63,9 @@
 #include "stdafx.h"
 #include "core/backup_type.hpp"
 #include "core/viewport_flight.hpp"
+#include "industry.h"
+#include "industry_map.h"
+#include "depot_map.h"
 #include "landscape.h"
 #include "viewport_func.h"
 #include "station_base.h"
@@ -2709,6 +2712,80 @@ void RebuildViewportOverlay(Window *w)
 	}
 }
 
+/** Fit a destination once when navigation starts; no per-frame scans or image caches. */
+static double GetDestinationArrivalScale(int &x, int &y, int &z, const Viewport &vp, ViewportFlightTarget target, bool vehicle_reference)
+{
+	const auto fit = [&](double width, double height, double closest_step) {
+		return ZOOM_BASE / GetNavigationArrivalStep(width, height, vp.width, vp.height, closest_step,
+				ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
+	};
+	if (vehicle_reference) {
+		for (const Vehicle *candidate : Vehicle::Iterate()) {
+			if (!IsCompanyBuildableVehicleType(candidate)) continue;
+			const Vehicle *front = candidate->GetMovingFront();
+			if (front->x_pos != x || front->y_pos != y || front->z_pos != z) continue;
+			const auto [width, height] = GetNavigationVehicleExtent(front, ZOOM_BASE, INVALID_COORD);
+			return fit(width, height, ZOOM_BASE / 2.0);
+		}
+		return fit(256 * ZOOM_BASE, 160 * ZOOM_BASE, ZOOM_BASE / 2.0);
+	}
+	if (x < 0 || y < 0 || x >= static_cast<int>(Map::SizeX() * TILE_SIZE) || y >= static_cast<int>(Map::SizeY() * TILE_SIZE)) {
+		return fit(0, 0, ZOOM_BASE);
+	}
+	const TileIndex tile = TileVirtXY(x, y);
+	const Town *town = nullptr;
+	TileArea area;
+	if (target == ViewportFlightTarget::Town) {
+		town = ClosestTownFromTile(tile, UINT_MAX);
+	} else if (target == ViewportFlightTarget::Industry) {
+		/* The requested industry's centre or north corner may be a hole occupied
+		 * by another tile type. Prefer its footprint over the tile underneath. */
+		for (const Industry *industry : Industry::Iterate()) {
+			if (industry->location.Contains(tile)) { area = industry->location; break; }
+		}
+	} else if (IsTileType(tile, TileType::Station)) {
+		area = BaseStation::GetByTile(tile)->spread;
+	} else if (IsTileType(tile, TileType::Industry)) {
+		area = Industry::Get(GetIndustryIndex(tile))->location;
+	} else if (IsDepotTile(tile) || target == ViewportFlightTarget::Company) {
+		area = TileArea(tile, 2, 2);
+	} else {
+		/* Town references in news, subsidies and scripts still use their own permission category. */
+		for (const Town *candidate : Town::Iterate()) {
+			if (candidate->xy == tile) { town = candidate; break; }
+		}
+	}
+	if (town != nullptr) {
+		if (_settings_client.gui.fly_town_zoom == 7) return -1;
+		if (_settings_client.gui.fly_town_zoom != 0) return static_cast<double>(ZOOM_BASE) /
+				ScaleByZoom(1, static_cast<ZoomLevel>(_settings_client.gui.fly_town_zoom - 1));
+		const double radius = std::max(3.0, std::sqrt(static_cast<double>(*std::max_element(
+				town->cache.squared_town_zone_radius.begin(), town->cache.squared_town_zone_radius.end()))));
+		const double width = 2 * std::sqrt(2.0) * radius * TILE_PIXELS * ZOOM_BASE;
+		return fit(width, width * 0.5 + 80 * ZOOM_BASE, ZOOM_BASE / 2.0);
+	}
+	if (area.tile != INVALID_TILE && area.w != 0 && area.h != 0) {
+		x = TileX(area.tile) * TILE_SIZE + area.w * TILE_SIZE / 2;
+		y = TileY(area.tile) * TILE_SIZE + area.h * TILE_SIZE / 2;
+		x = std::min(x, static_cast<int>(Map::SizeX() * TILE_SIZE - 1));
+		y = std::min(y, static_cast<int>(Map::SizeY() * TILE_SIZE - 1));
+		z = GetSlopePixelZ(x, y);
+		const Point centre = RemapCoords(x, y, z);
+		double half_height = 0;
+		for (uint dx : {0U, static_cast<uint>(area.w * TILE_SIZE - 1)}) {
+			for (uint dy : {0U, static_cast<uint>(area.h * TILE_SIZE - 1)}) {
+				const int cx = std::min(static_cast<int>(TileX(area.tile) * TILE_SIZE + dx), static_cast<int>(Map::SizeX() * TILE_SIZE - 1));
+				const int cy = std::min(static_cast<int>(TileY(area.tile) * TILE_SIZE + dy), static_cast<int>(Map::SizeY() * TILE_SIZE - 1));
+				half_height = std::max(half_height, std::abs(static_cast<double>(RemapCoords2(cx, cy).y) - centre.y));
+			}
+		}
+		return fit(std::max(128.0 * ZOOM_BASE, static_cast<double>(area.w + area.h) * TILE_PIXELS * ZOOM_BASE),
+				2 * half_height + 80 * ZOOM_BASE, ZOOM_BASE / 2.0);
+	}
+	/* Coordinate-only destinations have no object bounds to optimise: use a normal context view. */
+	return fit(0, 0, ZOOM_BASE);
+}
+
 /**
  * Scrolls the viewport in a window to a given location.
  * @param x       Desired x location of the map to scroll to (world coordinate).
@@ -2720,6 +2797,7 @@ void RebuildViewportOverlay(Window *w)
  */
 bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival_scale, ViewportFlightTarget target)
 {
+	const bool vehicle_reference = target == ViewportFlightTarget::Vehicle || (target == ViewportFlightTarget::News && z != -1);
 	/* The slope cannot be acquired outside of the map, so make sure we are always within the map. */
 	if (z == -1) {
 		if ( x >= 0 && x <= (int)Map::SizeX() * (int)TILE_SIZE - 1
@@ -2730,6 +2808,10 @@ bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival
 		}
 	}
 
+	if (!instant && arrival_scale == 0 && w == GetMainWindow() && _settings_client.gui.smooth_scroll &&
+			IsViewportFlightEnabled(_settings_client.gui, target) && BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+		arrival_scale = GetDestinationArrivalScale(x, y, z, *w->viewport, target, vehicle_reference);
+	}
 	Point pt = MapXYZToViewport(*w->viewport, x, y, z);
 	w->viewport->CancelFollow(*w);
 	if (!instant && TryStartViewportFlight(w,
@@ -2772,28 +2854,12 @@ bool ScrollMainWindowToTile(TileIndex tile, bool instant, ViewportFlightTarget t
 	return ScrollMainWindowTo(TileX(tile) * TILE_SIZE + TILE_SIZE / 2, TileY(tile) * TILE_SIZE + TILE_SIZE / 2, -1, instant, target);
 }
 
-/** Town navigation can choose a fixed level or conservatively fit the town's cached influence radius. */
+/** Towns use the shared destination fit and the same navigation policy as other objects. */
 bool ScrollMainWindowToTown(const Town &town)
 {
 	Window *w = GetMainWindow();
 	if (w == nullptr || w->viewport == nullptr) return false;
-	if (_settings_client.gui.fly_town_zoom == 7 || !IsViewportFlightEnabled(_settings_client.gui, ViewportFlightTarget::Town) || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
-		return ScrollMainWindowToTile(town.xy, false, ViewportFlightTarget::Town);
-	}
-	const Viewport &vp = *w->viewport;
-	double step;
-	if (_settings_client.gui.fly_town_zoom != 0) {
-		step = ScaleByZoom(1, static_cast<ZoomLevel>(_settings_client.gui.fly_town_zoom - 1));
-	} else {
-		const double radius = std::max(3.0, std::sqrt(static_cast<double>(*std::max_element(
-				town.cache.squared_town_zone_radius.begin(), town.cache.squared_town_zone_radius.end()))));
-		const double width = 2 * std::sqrt(2.0) * radius * TILE_PIXELS * ZOOM_BASE;
-		const double height = width * 0.5 + 80 * ZOOM_BASE;
-		step = GetNavigationArrivalStep(width, height, vp.width, vp.height, ZOOM_BASE,
-				ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
-	}
-	return ScrollWindowTo(TileX(town.xy) * TILE_SIZE + TILE_SIZE / 2,
-			TileY(town.xy) * TILE_SIZE + TILE_SIZE / 2, -1, w, false, ZOOM_BASE / step, ViewportFlightTarget::Town);
+	return ScrollMainWindowToTile(town.xy, false, ViewportFlightTarget::Town);
 }
 
 /**

@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 /** Choose a traditional level that fits an estimated destination within 80% of the viewport. */
 inline double GetNavigationArrivalStep(double virtual_width, double virtual_height, double width, double height,
@@ -18,6 +19,26 @@ inline double GetNavigationArrivalStep(double virtual_width, double virtual_heig
 {
 	const double required = std::max({normal_step, virtual_width / (width * 0.8), virtual_height / (height * 0.8)});
 	return std::clamp(std::exp2(std::ceil(std::log2(required))), min_step, max_step);
+}
+
+/** Include every vehicle part, using world positions even if sprite bounds are not cached yet. */
+template <typename VehicleType>
+std::pair<double, double> GetNavigationVehicleExtent(const VehicleType *front, double zoom_base, int invalid_coord)
+{
+	double half_width = 0, half_height = 0;
+	const double centre_x = (static_cast<double>(front->y_pos) - front->x_pos) * 2 * zoom_base;
+	const double centre_y = (static_cast<double>(front->x_pos) + front->y_pos - front->z_pos) * zoom_base;
+	for (const auto *part = front->First(); part != nullptr; part = part->Next()) {
+		const double px = (static_cast<double>(part->y_pos) - part->x_pos) * 2 * zoom_base;
+		const double py = (static_cast<double>(part->x_pos) + part->y_pos - part->z_pos) * zoom_base;
+		half_width = std::max(half_width, std::abs(px - centre_x));
+		half_height = std::max(half_height, std::abs(py - centre_y));
+		if (part->coord.left == invalid_coord) continue;
+		half_width = std::max({half_width, std::abs(part->coord.left - centre_x), std::abs(part->coord.right - centre_x)});
+		half_height = std::max({half_height, std::abs(part->coord.top - centre_y), std::abs(part->coord.bottom - centre_y)});
+	}
+	return {std::max(256 * zoom_base, 2 * half_width + 64 * zoom_base),
+			std::max(160 * zoom_base, 2 * half_height + 80 * zoom_base)};
 }
 
 /** Finite camera flight, sampled by elapsed real time rather than accumulated frame deltas. */

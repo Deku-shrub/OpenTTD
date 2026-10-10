@@ -2123,8 +2123,8 @@ STR_CONFIG_SETTING_FLY_ZOOM_OUT                                :Maximum extra fl
 STR_CONFIG_SETTING_FLY_ZOOM_OUT_HELPTEXT                        :Maximum additional zoom-out beyond the wider of the departure and arrival views. Longer journeys automatically reveal more of the route. Zero disables the extra zoom-out. The configured viewport zoom limits are always respected
 STR_CONFIG_SETTING_FLY_ZOOM_OUT_VALUE                          :{NUM} levels
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM                               :Town arrival zoom: {STRING2}
-STR_CONFIG_SETTING_FLY_TOWN_ZOOM_HELPTEXT                       :Retain the current zoom by default, as with other destinations. Optionally fit the town approximately or choose a fixed arrival level. Viewport zoom limits take precedence
-STR_CONFIG_SETTING_FLY_TOWN_ZOOM_AUTO                           :Fit town automatically
+STR_CONFIG_SETTING_FLY_TOWN_ZOOM_HELPTEXT                       :Fit the destination automatically by default, as with other objects. Optionally choose a fixed town arrival zoom or explicitly keep the current zoom. Viewport zoom limits take precedence
+STR_CONFIG_SETTING_FLY_TOWN_ZOOM_AUTO                           :Fit target automatically
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_4X                             :400%
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_2X                             :200%
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_NORMAL                         :100%

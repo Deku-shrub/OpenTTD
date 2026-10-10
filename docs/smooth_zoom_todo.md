@@ -310,3 +310,12 @@ cannot establish subjective smoothness. No game error dialogs were found.
 
 - [ ] Standalone optional clouds effect layer mod to make large fly-outs feel more realistic; investigate depth, transparency and a bounded rendering budget.
 - [ ] Smooth scaling for signs and labels, including readable text, positioning and click targets throughout fractional zoom.
+
+## Destination arrival fitting — 10 October 2026
+
+- [x] Choose arrival zoom from destination size rather than departure zoom; fit within 80% of the viewport, use native levels and respect zoom limits.
+- [x] Fit station spreads, industry footprints, estimated town extents and complete vehicle consists, including offscreen parts.
+- [x] Preserve explicit town fixed/Keep current zoom overrides and per-object flight switches.
+- [x] Release build and all 13,722 assertions in 134 cases pass.
+- [x] GUI checks: airport 100%, small road station/bus/coal mine 200%; refresh town and vehicle animations. This supersedes the earlier default zoom-retention behaviour.
+- [ ] Validate long, reversing and overlapping NewGRF vehicles, irregular industry footprints, dispersed towns and unusually tall sprites across larger viewports.

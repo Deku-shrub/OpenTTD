@@ -400,3 +400,13 @@ land throughout the remaining one-second observation. Native snap showed 100%;
 wheel-settled land was identical across captures 700 ms apart. Release build and
 13,700 assertions in 132 cases passed. Raw evidence: pan-consistent-land.json and
 stable-filter-wheel-*.png in ignored build-smoothzoom.
+
+## Automatic destination fitting — 10 October 2026
+
+The shared navigation path now calculates target arrival scale before starting a flight. This supersedes the prior default of retaining departure zoom. Identified objects fit within 80% of the viewport, at a traditional zoom level no closer than 200%, subject to user zoom limits. Coordinate-only destinations default to 100%.
+
+Stations use their complete spread; industries use their footprint and are centred on it, with terrain and roof allowance. Town size is estimated from influence radius. Vehicle framing includes the entire consist's physical positions and available sprite bounds, including offscreen parts; the centre-button path refines the estimate using the actual vehicle ID. Category permissions remain independent of detected object type. Bounds are computed once per navigation, with no persistent cache or savegame change. Disabled flights and instant navigation preserve their existing behaviour.
+
+Town arrival defaults to automatic fitting (setting value 0). Existing saved value 7 still means Keep current zoom, and fixed overrides remain supported. Retargeting fits the new object; explicit Keep current zoom retains the intended arrival zoom.
+
+Final Release checks: 13,722 assertions / 134 cases (`build-smoothzoom/validation-target-fit.txt`); build log `build-smoothzoom/build-target-fit-final.log`. GUI: departures at 25% arrived at fitted 100% for towns and an airport, 200% for a road stop, bus and coal mine. New vehicle and refreshed repeat-town WebPs are linked in the user guide. Complex NewGRF framing and overlapping targets remain on the TODO list.
