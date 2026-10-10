@@ -2,6 +2,10 @@ name: Docs checker
 
 on:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,12 +23,17 @@ jobs:
         fetch-depth: 4
 
     - name: Get pull-request commits
+      if: github.event_name == 'pull_request'
       uses: OpenTTD/actions/checkout-pull-request@v7
+
+    - name: Fetch original fork base for manual comparison
+      if: github.event_name == 'workflow_dispatch'
+      run: git fetch --no-tags --depth=1 origin upstream-base:refs/remotes/origin/upstream-base
 
     - name: Install Doxygen
       uses: ./.github/install-doxygen
 
-    - name: Build docs for PR
+    - name: Build docs for candidate revision
       run: |
         mkdir build
 
@@ -50,8 +59,10 @@ jobs:
         rm -r build
 
     - name: Build docs for base branch
+      env:
+        BASE_REF: ${{ github.event_name == 'pull_request' && 'HEAD^' || 'origin/upstream-base' }}
       run: |
-        git checkout HEAD^
+        git checkout "$BASE_REF"
         mkdir build
 
         echo "::group::CMake"
@@ -86,3 +97,12 @@ jobs:
         if [ $FAIL ]; then
             exit 1;
         fi
+
+    - name: Preserve warning comparison
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: doxygen-warning-comparison
+        path: doxygen*warnings.*
+        if-no-files-found: ignore
+        retention-days: 7
