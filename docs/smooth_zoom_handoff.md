@@ -410,3 +410,11 @@ Stations use their complete spread; industries use their footprint and are centr
 Town arrival defaults to automatic fitting (setting value 0). Existing saved value 7 still means Keep current zoom, and fixed overrides remain supported. Retargeting fits the new object; explicit Keep current zoom retains the intended arrival zoom.
 
 Final Release checks: 13,722 assertions / 134 cases (`build-smoothzoom/validation-target-fit.txt`); build log `build-smoothzoom/build-target-fit-final.log`. GUI: departures at 25% arrived at fitted 100% for towns and an airport, 200% for a road stop, bus and coal mine. New vehicle and refreshed repeat-town WebPs are linked in the user guide. Complex NewGRF framing and overlapping targets remain on the TODO list.
+
+## Fractional landing jitter follow-up
+
+The pan-only fix did not remove the sampler switch near wheel/flight endings. `GfxBlitterFractional` now always uses mipmap-backed centre sampling, so camera filtering state cannot introduce an area-filter redraw at fractional rest. Area filtering remains implemented and tested in the blitter, but fractional viewport rendering no longer selects it. This trades averaged resting textures for stable fine detail and avoids a slower resting redraw. No cache or save/config field is added.
+
+`ViewportFlight::Advance` optionally accepts viewport extent and finishes after the halfway point when combined pan distance and scale residual are at most one screen pixel. Main-camera updates supply the larger viewport dimension. The endpoint is exact and remains stable; vehicle live endpoint blending is retained.
+
+Release logs: `build-smoothzoom/build-fractional-landing.log`, `validation-fractional-landing.txt`: 16,024 assertions / 135 cases pass. Captures at 960 x 600: last static crop change at 565 ms / capture ends 3,016 ms for wheel; 1,974 ms / ends 5,022 ms for explicit 130% town flight. Fractional right drag at 130% has no crop changes beyond 300 ms after release. New WebPs are linked in the user guide. Broader dynamic/NewGRF scenes remain pending.

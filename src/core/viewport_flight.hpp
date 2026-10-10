@@ -130,7 +130,16 @@ public:
 		this->duration_ms = std::clamp(raw_ms, 300.0, 2200.0);
 	}
 
-	void Advance(unsigned int delta_ms) { this->elapsed_ms = std::min(this->elapsed_ms + delta_ms, this->GetDuration()); }
+	/** Finish the invisible landing tail when combined pan/zoom error is below a pixel. */
+	void Advance(unsigned int delta_ms, double screen_extent = 0)
+	{
+		this->elapsed_ms = std::min(this->elapsed_ms + delta_ms, this->GetDuration());
+		if (screen_extent <= 0 || this->GetProgress() <= 0.5 || !this->IsActive()) return;
+		const Pose pose = this->GetPose();
+		const double pan_pixels = std::hypot(this->destination.x - pose.x, this->destination.y - pose.y) / pose.step;
+		const double zoom_pixels = screen_extent * std::abs(this->destination.step / pose.step - 1);
+		if (pan_pixels + zoom_pixels <= 1) this->elapsed_ms = this->GetDuration();
+	}
 	double GetDuration() const { return this->duration_ms; }
 	double GetPathLength() const { return this->path_length; }
 	double GetProgress() const { return this->duration_ms == 0 ? 1 : this->elapsed_ms / this->duration_ms; }

@@ -1319,7 +1319,11 @@ static void GfxBlitterFractional(const Sprite *sprite, int x, int y, BlitterMode
 	bp.clip_bottom = sprite->height - sb;
 	bp.src_y = dpi->virtual_top + dy0 * step - y;
 	bp.step = step;
-	bp.nearest = dpi->zoom_animation;
+	/* Use one sampler throughout fractional camera motion and rest. Switching
+	 * to area filtering in the easing tail changes fine detail at apparent
+	 * arrival, and subsequent partial redraws can make that look like jitter.
+	 * The encoded sprite mipmap still supplies the appropriate source detail. */
+	bp.nearest = true;
 	bp.width = dx1 - dx0;
 	bp.height = dy1 - dy0;
 	bp.dst = blitter->MoveTo(dpi->dst_ptr, dx0, dy0);

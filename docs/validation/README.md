@@ -64,3 +64,9 @@ followed-paused-*.png. Larger-resolution and NewGRF performance checks remain op
 Release build passed 13,722 assertions in 134 cases, including departure-independent fitting, viewport size limits and offscreen vehicle consist extent. Logs: `build-smoothzoom/build-target-fit-final.log` and `build-smoothzoom/validation-target-fit.txt` (local ignored artifacts).
 
 The paused fixture was exercised at 960 × 600: town directory trips from 25% arrived at 100%, an airport at 100%, and a road station, bus centre-button destination and coal mine at 200%. The same station category produces different arrival levels based on its extent. Refreshed [town flights](../images/smooth-zoom/repeat-town.webp) and new [vehicle fitting](../images/smooth-zoom/target-fit-vehicle.webp) preserve actual captured frames and timing. Settings and savegame compatibility remain as described in the user guide; saved Keep current zoom overrides must be changed to automatic fitting to adopt the new behaviour.
+
+## Fractional landing jitter follow-up
+
+All 16,024 assertions in 135 cases pass after the consistent-sampler and subpixel flight-tail changes. Coverage adds 130%/84% redraw partitions and landing-tail bounds at 640, 1280 and 3840 pixel viewport extents.
+
+Paused 960 x 600 fixture recordings: [wheel landing](../images/smooth-zoom/fractional-wheel-landing.webp) last static crop change 565 ms, captures through 3,016 ms; [130% flight landing](../images/smooth-zoom/fractional-flight-landing.webp) last change 1,974 ms, captures through 5,022 ms. The latter deliberately uses `gui.fly_town_zoom 7` to land at a fractional level; the default automatic fit was restored afterwards. A 130% right-drag check found no changes beyond 300 ms after release. Local raw timing JSON and frames use the `demo-fractional-*-landing` prefix in ignored build-smoothzoom.

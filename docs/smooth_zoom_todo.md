@@ -319,3 +319,11 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [x] Release build and all 13,722 assertions in 134 cases pass.
 - [x] GUI checks: airport 100%, small road station/bus/coal mine 200%; refresh town and vehicle animations. This supersedes the earlier default zoom-retention behaviour.
 - [ ] Validate long, reversing and overlapping NewGRF vehicles, irregular industry footprints, dispersed towns and unusually tall sprites across larger viewports.
+
+## Fractional landing jitter follow-up
+
+- [x] Remove the late motion-to-area sampler handoff for every fractional viewport, including wheel and flight arrival. Native rendering is unchanged; fine detail stays centre-sampled with the selected sprite mipmap. This supersedes earlier notes about restoring area filtering.
+- [x] End the flight subpixel tail when combined remaining pan and scale error is at most one pixel.
+- [x] Regression coverage for 130%/84% redraw partitioning and bounded fractional flight landing at multiple viewport sizes. Release: 16,024 assertions / 135 cases pass.
+- [x] Record fractional wheel and 130% flight landings: static land remains unchanged for 2.4 and 3 seconds respectively after its final movement. Fractional drag also shows no changes beyond 300 ms after release.
+- [ ] Extend settling checks to complex NewGRFs, higher resolutions and unpaused scenes, distinguishing camera changes from animated world content.

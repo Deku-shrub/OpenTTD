@@ -277,3 +277,31 @@ TEST_CASE("Vehicle fitting includes off-screen consist positions without sprite 
 	CHECK(single_height == 640);
 	CHECK(GetNavigationArrivalStep(single_width, single_height, 1280, 800, 2, 1, 32) == 2);
 }
+
+TEST_CASE("Fractional flight lands before an invisible tail and stays at its endpoint", "[smoothzoom][flight]")
+{
+	const double extent = GENERATE(640.0, 1280.0, 3840.0);
+	const double arrival = GENERATE(4.0 / 1.3, 4.0 / 0.84);
+	ViewportFlight flight({0, 0, 4}, {48000, 16000, arrival}, 1, 32, extent, 120, 100, 2);
+	unsigned int elapsed = 0;
+	while (flight.IsActive()) {
+		auto uncompacted = flight;
+		uncompacted.Advance(8);
+		const auto previous = uncompacted.GetPose();
+		elapsed += 8;
+		flight.Advance(8, extent);
+		if (!flight.IsActive()) {
+			/* The omitted tail, excluding this frame's normal movement, is subpixel. */
+			const double pan = std::hypot(48000 - previous.x, 16000 - previous.y) / previous.step;
+			const double zoom = extent * std::abs(arrival / previous.step - 1);
+			CHECK(pan + zoom <= 1);
+		}
+	}
+	CHECK(elapsed < flight.GetDuration());
+	CHECK(flight.GetPose().x == 48000);
+	CHECK(flight.GetPose().y == 16000);
+	CHECK(flight.GetPose().step == arrival);
+	flight.Advance(1000, extent);
+	CHECK(flight.GetPose().x == 48000);
+	CHECK(flight.GetPose().step == arrival);
+}

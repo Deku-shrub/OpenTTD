@@ -289,7 +289,7 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 	flight.elapsed_ms += delta_ms;
 	flight.frames++;
 	flight.longest_frame_ms = std::max(flight.longest_frame_ms, delta_ms);
-	flight.path.Advance(delta_ms);
+	flight.path.Advance(delta_ms, std::max(vp.width, vp.height));
 	auto pose = flight.path.GetPose();
 	if (flight.vehicle != VehicleID::Invalid()) {
 		const Vehicle *vehicle = Vehicle::GetIfValid(flight.vehicle);

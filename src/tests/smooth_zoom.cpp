@@ -172,7 +172,7 @@ TEST_CASE("Fractional rendering is independent of dirty rectangle partitioning",
 	}
 	std::array<Colour, 96> full;
 	const double origin = GENERATE(-5.15, -0.35, 0.0, 0.7, 3.25);
-	const double step = GENERATE(1.01, 1.7, 1.9999, 2.0001, 3.9999, 4.0001);
+	const double step = GENERATE(1.01, 1.7, 1.9999, 2.0001, 3.9999, 4.0001, static_cast<double>(4.0f / 1.3f), static_cast<double>(4.0f / 0.84f));
 	CAPTURE(origin, step);
 	full.fill(Colour(20, 30, 40));
 	auto split = full;

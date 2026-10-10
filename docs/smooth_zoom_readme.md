@@ -134,17 +134,14 @@ double or halve the magnification. The updated controller eases into the target
 and keeps its motion when further notches arrive. Zoom buttons continue to
 select integer levels.
 
-Wheel motion uses a faster pixel-centre sampler. Higher-quality area filtering
-returns during the final visible movement, before the map comes to rest. The
-nearly invisible easing tail ends once residual scale displacement is at most
-one pixel across the viewport. Texture detail may
-change slightly during zooming; it should not sharpen again after a pause at rest.
-
-Following a moving vehicle uses the same fast sampler, including in its separate
-vehicle window. Panning and following retain that sampler when movement stops
-or the simulation pauses, avoiding a later change in fine details. A subsequent
-zoom transition chooses its filter before settling. Native zoom levels continue
-to use the original integer renderer.
+Fractional views now use the same mipmap-based pixel-centre sampler during
+wheel zooming, flying, panning, following and rest. This removes the late
+switch to area filtering that could change fine detail around apparent arrival.
+Fine textures remain slightly sharper at rest rather than being averaged again.
+The nearly invisible wheel easing tail ends once residual scale displacement is
+at most one pixel across the viewport. Flights also finish once their combined
+remaining pan and scale displacement is below one pixel. Native zoom levels
+continue to use the original integer renderer.
 
 The updated main toolbar displays a compact percentage button, such as **84%**.
 Its tooltip shows the nearest traditional level. Click it to stop the transition
@@ -433,12 +430,9 @@ See [the controls documentation](smooth_zoom_controls.md) for more behavior deta
 
 ### Fractional panning
 
-Dragging and substantial eased panning use the faster motion sampler at fractional
-zoom levels. That sampler now remains in use after the pan stops: the resting
-view keeps the same fine-detail filtering seen during movement. There is no
-delayed redraw to refine it with the area filter. Changing zoom can select a
-different filter during that transition. Native zoom levels retain their existing
-pixel-scroll path. This uses the existing viewport flag and adds no image cache.
+Fractional views use the same fast sampler throughout camera movement and rest,
+including wheel zoom and flight arrivals. There is no late area-filter handoff.
+Native zoom levels retain their existing pixel-scroll path. No image cache is added.
 
 For the earlier pan-performance fix, in the 960x600 software-rendered fixture at
 130%, the same posted drag/capture
@@ -453,3 +447,21 @@ refine land after release. With consistent sampling, the static land crop's last
 change was 87 ms after posting release, while final input/frame updates completed;
 it then remained identical for the rest of the one-second observation. A native
 snap and a subsequent wheel transition also passed the settling check.
+
+### Fractional landing stability
+
+The latest fix also removes the sampler change during wheel and flight endings,
+not just after ordinary panning. These paused-fixture captures deliberately end
+at fractional levels. The wheel example starts at 130%; the flight uses the
+explicit Keep current zoom override and lands at 130%.
+
+![Fractional wheel landing with consistent sampling](images/smooth-zoom/fractional-wheel-landing.webp)
+
+![Flight landing at 130 percent without a late filter change](images/smooth-zoom/fractional-flight-landing.webp)
+
+At 960 x 600, the recorded static-land crop's last change occurred at 565 ms
+in the wheel example, followed by about 2.4 seconds unchanged. The flight crop's
+last change occurred at 1,974 ms, followed by about 3 seconds unchanged.
+These observations cover this paused fixture, rather than every mod or moving
+scene. Release checks passed 16,024 assertions in 135 cases, including fractional
+landing-tail bounds and redraw partitioning at 130% and 84%.
