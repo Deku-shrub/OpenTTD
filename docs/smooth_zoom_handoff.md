@@ -41,9 +41,16 @@ single-scene result, not a guarantee.
 The user superseded the earlier no-commit instruction and authorized checkpoint
 and regular development commits. Keep `origin` pointed at the private repository
 `https://github.com/Deku-shrub/OpenTTD.git`, with the official
-`https://github.com/OpenTTD/OpenTTD.git` as `upstream`. Develop on
-`feature/smooth-zoom`, which is the GitHub default branch; `main` starts at the
-existing upstream base revision. Initial checkpoints: `42d6302fea` (code) and
+`https://github.com/OpenTTD/OpenTTD.git` as `upstream`. The user authorized
+`master` as the private repository's default development branch provided the
+build remains stable. Local `master` tracks `origin/master`; use `upstream/master`
+to inspect official changes. Promote code to `master` after a successful Release
+build, relevant tests and runtime checks; keep unvalidated experiments on feature
+branches. The promoted prototype passed 48,600 assertions in 124 test cases and
+representative runtime navigation checks. Open visual and coverage issues remain
+tracked in the TODO list. `feature/smooth-zoom` retains the initial checkpoints,
+and `main` retains the original upstream base revision.
+Initial checkpoints: `42d6302fea` (code) and
 `0e02fa7152` (guide, recordings and validation fixtures).
 The user explicitly chose to retain a private Git repository with shared upstream
 history rather than a public GitHub-native fork. Do not change its visibility.
