@@ -17,6 +17,7 @@
 #include "progress.h"
 #include "transparency_gui.h"
 #include "map_func.h"
+#include "landscape.h"
 #include "sound_func.h"
 #include "transparency.h"
 #include "zoom_func.h"
@@ -176,6 +177,7 @@ static std::map<Window *, SmoothZoomAnimation> _smooth_zoom_animations;
 struct CameraFlight {
 	ViewportFlight path;
 	ViewportFlightTarget target;
+	VehicleID vehicle = VehicleID::Invalid();
 	uint elapsed_ms = 0;
 	uint frames = 0;
 	uint longest_frame_ms = 0;
@@ -207,10 +209,19 @@ void CancelViewportSmoothZoomAnimation(Window *w)
 	_smooth_zoom_animations.erase(w);
 }
 
+static void UpdateViewportFlight(Window *w, uint delta_ms);
+
+/** Attach a moving vehicle endpoint without changing the navigation category. */
+void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle)
+{
+	auto it = _viewport_flights.find(w);
+	if (it != _viewport_flights.end()) it->second.vehicle = vehicle;
+}
+
 /** Start an opt-in main-viewport flight; zero arrival scale preserves the current zoom. */
 bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale, ViewportFlightTarget target)
 {
-	if (!IsViewportFlightEnabled(_settings_client.gui, target) || w == nullptr || w != GetMainWindow() || w->viewport == nullptr ||
+	if (!_settings_client.gui.smooth_scroll || !IsViewportFlightEnabled(_settings_client.gui, target) || w == nullptr || w != GetMainWindow() || w->viewport == nullptr ||
 			_game_mode == GameMode::Menu || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) return false;
 	ViewportData &vp = *w->viewport;
 	if (vp.width <= 0 || vp.height <= 0) return false;
@@ -236,13 +247,14 @@ bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale, Viewp
 	vp.dest_scrollpos_x = vp.scrollpos_x;
 	vp.dest_scrollpos_y = vp.scrollpos_y;
 	ViewportFlight path({start_x, start_y, start_step}, {static_cast<double>(centre.x), static_cast<double>(centre.y), end_step},
-			min_step, max_step, std::max(vp.width, vp.height), _settings_client.gui.fly_pan_speed,
-			_settings_client.gui.fly_zoom_duration, _settings_client.gui.fly_zoom_out);
+			min_step, max_step, vp.width, _settings_client.gui.fly_pan_speed,
+			_settings_client.gui.fly_duration_scale, _settings_client.gui.fly_zoom_out, _settings_client.gui.fly_curve / 100.0);
 	_viewport_flights.insert_or_assign(w, CameraFlight{path, target});
 	Debug(Facility::Misc, Severity::Debug1, "Camera flight start: {},{} to {},{}, {:.4f}x arrival, {:.0f} ms planned, target={}",
 		start_x, start_y, centre.x, centre.y, ZOOM_BASE / end_step, path.GetDuration(), static_cast<int>(target));
 	vp.zoom_animation = true;
 	w->SetDirty();
+	if (!path.IsActive()) UpdateViewportFlight(w, 0); // Long trips arrive immediately.
 	return true;
 }
 
@@ -250,7 +262,7 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 {
 	auto it = _viewport_flights.find(w);
 	if (it == _viewport_flights.end()) return;
-	if (w->viewport == nullptr || !IsViewportFlightEnabled(_settings_client.gui, it->second.target) ||
+	if (w->viewport == nullptr || !_settings_client.gui.smooth_scroll || !IsViewportFlightEnabled(_settings_client.gui, it->second.target) ||
 			!BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() || w->viewport->follow_vehicle != VehicleID::Invalid()) {
 		CancelViewportFlight(w);
 		return;
@@ -261,7 +273,14 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 	flight.frames++;
 	flight.longest_frame_ms = std::max(flight.longest_frame_ms, delta_ms);
 	flight.path.Advance(delta_ms);
-	const auto pose = flight.path.GetPose();
+	auto pose = flight.path.GetPose();
+	if (flight.vehicle != VehicleID::Invalid()) {
+		const Vehicle *vehicle = Vehicle::GetIfValid(flight.vehicle);
+		if (vehicle == nullptr) { CancelViewportFlight(w); return; }
+		const Vehicle *front = vehicle->GetMovingFront();
+		const Point live = RemapCoords(front->x_pos, front->y_pos, front->z_pos);
+		pose = flight.path.GetPoseTowards(live.x, live.y);
+	}
 	const bool zoom_changed = SetViewportSmoothZoom(w, static_cast<float>(ZOOM_BASE / pose.step), false);
 	if (!zoom_changed && vp.zoom_step == 0) {
 		flight.native_pan_frames++;

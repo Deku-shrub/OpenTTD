@@ -1,15 +1,35 @@
 # Smooth zoom development handoff
 
-## Latest correction — 10 October 2026
+## Latest flight timing and height update - 10 October 2026
 
-The user clarified that parabola navigation must zoom and pan simultaneously.
-`ViewportFlight` now shares quintic progress between position and one quadratic
-Bezier in log zoom, with an exact bounded peak even for unequal endpoint zooms.
-There is no separate zoom-out/pan/zoom-in sequence or native-mip
-travel plateau. Previous native-pan performance figures describe the superseded
-path; measure fractional full-redraw flights again before assessing performance.
-Pan speed and zoom timing still contribute to total duration, with bounded
-pull-back, short-trip handling and exact arrival retained.
+The current flight uses the van Wijk-Nuij perceptual path rather than the earlier
+quadratic Bezier. Virtual distance is normalised by viewport width; `asinh`
+keeps path construction stable. Pan and zoom share eased path progress. Height
+comes from distance and curvature (default rho 1.42); lower curvature respects
+zoom/extra-level limits without separate zoom/pan stages. A no-pull-back path
+handles short hops, pure zoom and zero extra allowance. Duration is perceptual
+path length / speed (default 1.2), times a configurable percent multiplier;
+animated duration is bounded to 300-2200 ms, and >2500 ms unbounded trips cut.
+`fly_duration_scale` replaces obsolete `fly_zoom_duration`; `fly_curve` stores
+rho multiplied by 100. These preferences apply on the next journey.
+
+The existing smooth-scroll preference gates flights. Any actual key press
+cancels a flight before its normal action; mouse navigation can still retarget.
+Vehicle location flights blend toward the live moving front during the final
+20% without extending duration; removal cancels. Fractional arrival zoom is
+preserved except where a target explicitly requests a different scale.
+Four town-flight recordings are refreshed for the perceptual model. Default
+paused town travel took about 1472 ms; fast travel 892 ms; a nearby no-bob hop
+took 305 ms. Long travel cut at 0 ms. Smooth-scroll off and key/wheel cancellation
+passed. Cancelled land stayed pixel-identical past the old flight duration;
+recorded land had no later changes after arrival. A moving bus flight took
+1222 ms and preserved 130% arrival. Full Release suite: 13,627 assertions /
+130 cases (fewer per-frame assertions because flights are much shorter).
+The 2048-square generated world also passed an immediate cross-map cut from
+(10,10) to (2000,2000). Actual game checks used win32:no_threads / 32bpp-anim
+for reliable window capture; OpenGL timing remains separately unvalidated.
+Older performance figures below describe superseded paths.
+Source: https://vanwijk.win.tue.nl/zoompan.pdf
 
 The wheel easing tail now finishes when remaining scale displacement and the
 nominal frame displacement are at most one pixel across the viewport span.
@@ -17,7 +37,8 @@ Final area filtering starts earlier (16 pixels remaining / 8 pixels nominal
 movement). This targets rounded-edge changes after apparent rest. Continuously
 moving follow cameras use fast sampling; stopping or pausing changes sampling
 state and immediately dirties the viewport, even if its origin is unchanged.
-The Release build passes 48,327 assertions in 123 test cases, including overlap
+Before the perceptual-flight update, the Release build passed 48,327 assertions
+in 123 test cases, including overlap
 of pan and zoom on both sides of the apex. Further visual settling assessment
 is required; do not claim all temporal artefacts are eliminated.
 
@@ -75,11 +96,11 @@ The former `fly_other_navigation` setting has been removed. Uncategorized map
 locations and console commands now share `fly_towns`; all other category switches
 remain independent. Existing `fly_towns` configurations retain their value. Explicit instant navigation,
 Ctrl-click extra viewports and continuous vehicle following remain immediate.
-Vehicle location flights target the selected position, not a moving endpoint.
+Vehicle location flights blend toward the moving endpoint near arrival.
 
 Independent permissions have a full one-enabled-category matrix regression
-using real GUISettings fields. The Release build passes 48,600 assertions in
-124 cases. Runtime town/station/industry/vehicle controls passed independent
+using real GUISettings fields. Before the perceptual-flight update, the Release
+build passed 48,600 assertions in 124 cases. Runtime town/station/industry/vehicle controls passed independent
 on/off checks. Disabling an active station category left its land crop
 pixel-identical nine seconds later, past the planned eight-second duration.
 Vehicle following interrupted a vehicle-target flight. The Expert settings UI
@@ -198,7 +219,10 @@ vehicle picking; resizing; save/load; and 8bpp fallback.
 
 ## This Windows environment
 
-### Fly-to navigation
+### Initial fly-to navigation (historical validation)
+
+This section records the earlier quadratic path. Use the latest update at the
+top of this document and the user README for current curve and timing behaviour.
 
 The latest request adds opt-in parabolic zoom-and-pan destination navigation.
 Source implementation uses `ViewportFlight` in `src/core/viewport_flight.hpp`

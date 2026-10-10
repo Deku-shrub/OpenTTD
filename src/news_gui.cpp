@@ -593,6 +593,7 @@ struct NewsWindow : Window {
 				if (std::holds_alternative<VehicleID>(ni->ref1)) {
 					const Vehicle *v = Vehicle::Get(std::get<VehicleID>(this->ni->ref1))->GetMovingFront();
 					ScrollMainWindowTo(v->x_pos, v->y_pos, v->z_pos, false, ViewportFlightTarget::News);
+					SetViewportFlightVehicleTarget(GetMainWindow(), v->index);
 				} else {
 					TileIndex tile1 = GetReferenceTile(this->ni->ref1);
 					TileIndex tile2 = GetReferenceTile(this->ni->ref2);

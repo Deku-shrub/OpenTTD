@@ -27,7 +27,7 @@ standalone installation package.
 
 ## Enable smooth mouse-wheel zoom
 
-Open **Game Options → Advanced** (the settings page), rather than the Graphics tab.
+Open **Game Options ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Advanced** (the settings page), rather than the Graphics tab.
 Select **Expert / all settings** in the settings filter, search for **smooth**,
 and enable **Smooth mouse-wheel zoom**.
 
@@ -75,7 +75,7 @@ smooth wheel controls, use `set gui.smooth_zoom 0`.
 
 ## Fly to a location
 
-Flight navigation is a separate, opt-in feature. In **Game Options → Advanced**,
+Flight navigation is a separate, opt-in feature. In **Game Options ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Advanced**,
 select **Expert / all settings**, search for **fly**, and enable **Fly navigation**.
 Then enable the destination categories you want. **Fly to towns and other map destinations** defaults to
 on beneath the disabled master switch; all additional categories default to off.
@@ -85,7 +85,13 @@ supported 32bpp blitter; the mouse-wheel smooth-zoom setting is independent.
 Click a town in the town directory, or use a town window's location button.
 The camera pans and zooms simultaneously along a continuous arc: it pulls back
 while approaching the town, then moves in while continuing to approach.
-Nearby trips avoid an unnecessary pull-back. By default the arrival
+Trips shorter than one starting viewport width avoid any extra pull-back.
+Medium trips use the [van Wijk-Nuij zoom/pan model](https://vanwijk.win.tue.nl/zoompan.pdf),
+which derives height and duration from the perceptual path. Animated journeys
+last 300-2,200 ms; if the unbounded duration exceeds 2,500 ms, the camera jumps
+directly. Disabling the existing smooth-scrolling setting also disables flights.
+Ordinary destinations retain the player's exact zoom, including fractional
+levels; they are not forced to a native level on landing. By default the town arrival
 uses a traditional zoom level chosen from the town's estimated size. Automatic
 fitting is approximate; choose a fixed **Town arrival zoom** if you prefer a
 consistent view. Your configured zoom-in and zoom-out limits always apply.
@@ -98,10 +104,15 @@ the filter and expand **Graphics** to see all of these options together.
 | --- | --- | --- |
 | Fly navigation | Off | Master switch for all navigation flights. |
 | Fly to towns and other map destinations | On, subject to master switch | Enables town-directory, town-location and uncategorised map-location flights, including console `scrollto`. Console setting: `gui.fly_towns`. |
-| Flight pan speed | 100% of a viewport per second | Higher values shorten the journey; range 25–400%. Very short and long journeys have bounded durations. |
-| Flight zoom timing | 350 ms at each end | Higher values give gentler departure and arrival; range 100–2,000 ms. |
-| Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance; range 0–3. Zero removes the extra pull-back. |
+| Flight speed | 120% | Perceptual path speed (1.2 by default); range 25-400%. Duration grows with path length rather than map distance. |
+| Flight duration scale | 100% | Scale the whole journey; range 25-200%. |
+| Flight curvature | 142 / 100 | Lower values give flatter flights, higher values pull back more; range 25-300 / 100. |
+| Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance; range 0ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ3. Zero removes the extra pull-back. |
 | Town arrival zoom | Fit town automatically | Choose automatic fitting or a fixed level from 400% to 12.5%. |
+
+![Flight speed, duration scale and curvature controls](images/smooth-zoom/flight-pacing-settings.png)
+
+![Flight speed, duration scale and curvature controls](images/smooth-zoom/flight-pacing-settings.png)
 
 Every additional category has its own switch. All require **Fly navigation**;
 none requires **Fly to towns and other map destinations** or another category to be enabled.
@@ -145,14 +156,18 @@ switch retains `gui.fly_towns` and its existing value. The former
 
 Turning off a category cancels any active flight in that category at its
 currently displayed view. Turning off the master cancels every flight.
-Vehicle location flights select the vehicle's position at the time of clicking;
-double-click following remains immediate and tracks it continuously.
+Vehicle location flights (including vehicle news references) blend toward the live vehicle position during the final
+20% of the journey, without extending the flight. A removed vehicle cancels the
+flight. Double-click following remains immediate and tracks it continuously.
 
-Pan speed, zoom timing and the maximum pull-back apply to all enabled flights;
-changed values take effect on the next journey. For a quicker experience, try
-200% pan speed and 200 ms zoom timing. For gentler travel, try 75% and 500 ms.
+Flight speed, duration scale, curvature and maximum pull-back apply to all enabled
+flights; changed values take effect on the next journey. Start with 120% speed,
+100% duration and curvature 142. Faster speed or a smaller duration scale gives
+quicker travel. Curvature is reduced automatically to fit zoom limits, while pan
+and zoom stay simultaneous. The old `gui.fly_zoom_duration` setting is replaced
+by `gui.fly_duration_scale` (percent). `gui.fly_curve` is curvature multiplied by 100.
 
-Begin a viewport drag, use the arrow keys, scroll the wheel or press Escape to
+Begin a viewport drag, scroll the wheel or press any key to
 interrupt a flight and take control at the currently displayed position and
 zoom. A drag cancels on gesture start, before its first movement. The cancelled
 flight does not resume or jump to its former destination. The percentage button also stops
@@ -172,7 +187,8 @@ set gui.fly_towns 1
 scrollto 50 50
 ```
 
-`scrollto instant 50 50` bypasses the flight. Disable the feature with
+Leave the console open while that flight runs: closing it is a key press and
+therefore interrupts the flight. `scrollto instant 50 50` bypasses the flight. Disable the feature with
 `set gui.fly_navigation 0`. Flights are local display effects and do not change
 the savegame format; loading cancels a pending journey.
 
@@ -183,18 +199,19 @@ and timing, and is a demonstration rather than a performance benchmark.
 
 ![Town-directory flight: simultaneous zoom and pan](images/smooth-zoom/flight.webp)
 
-These additional recordings compare configurable navigation on 10 October 2026.
-The first two take the same route from tile (180, 180) to Bendhattan, arriving
-at 100%. The fast configuration uses 200% pan speed and 200 ms zoom timing;
-the gentle configuration uses 75% and 500 ms. Their measured journeys took
-different lengths, excluding the still frames at either end. Pan speed and zoom
-timing contribute to the total duration; the motions overlap throughout.
+These recordings compare the same route with the perceptual flight model.
+The fast configuration uses 200% speed and 100% duration scale; the gentler
+configuration uses 120% speed and 100% duration scale. Curvature is 142 in both.
+The default journey completed in about 1.47 seconds and the faster one in about
+0.89 seconds in this paused fixture. The motions overlap throughout, with still
+frames at either end of each clip. The recorded static land crop had no changes
+after arrival; this is representative evidence, not exhaustive artefact coverage.
 
 ![Fast town navigation](images/smooth-zoom/flight-fast.webp)
 
 ![Gentle town navigation along the same route](images/smooth-zoom/flight-gentle.webp)
 
-The following example selects Hanpool Bridge with a fixed 50% arrival zoom,
+The following example selects Barringhill with a fixed 50% arrival zoom,
 using the fast configuration.
 
 ![Town navigation with a fixed 50 percent arrival](images/smooth-zoom/flight-wide-arrival.webp)

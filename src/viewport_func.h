@@ -39,6 +39,7 @@ bool TrySmoothZoomWindow(bool in, Window *w, bool to_cursor, uint notches = 1);
 void CancelViewportSmoothZoomAnimation(Window *w);
 void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms);
 void CancelViewportFlight(Window *w);
+void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle);
 bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale = 0, ViewportFlightTarget target = ViewportFlightTarget::Other);
 void ConstrainAllViewportsZoom();
 Point GetTileZoomCenterWindow(bool in, Window * w);

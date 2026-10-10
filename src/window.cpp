@@ -2696,6 +2696,9 @@ void HandleKeypress(uint keycode, char32_t key)
 	 */
 	if (key == 0 && keycode == 0) return;
 
+	/* A deliberate key press gives control back before its normal action runs. */
+	CancelViewportFlight(GetMainWindow());
+
 	/* Check if the focused window has a focused editbox */
 	if (EditBoxInGlobalFocus()) {
 		/* All input will in this case go to the focused editbox */

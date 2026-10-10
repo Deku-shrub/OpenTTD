@@ -607,7 +607,8 @@ SettingsContainer &GetSettingsTree()
 			graphics->Add(new SettingEntry("gui.fly_subsidies"));
 			graphics->Add(new SettingEntry("gui.fly_scripts"));
 			graphics->Add(new SettingEntry("gui.fly_pan_speed"));
-			graphics->Add(new SettingEntry("gui.fly_zoom_duration"));
+			graphics->Add(new SettingEntry("gui.fly_duration_scale"));
+			graphics->Add(new SettingEntry("gui.fly_curve"));
 			graphics->Add(new SettingEntry("gui.fly_zoom_out"));
 			graphics->Add(new SettingEntry("gui.fly_town_zoom"));
 			graphics->Add(new SettingEntry("gui.sprite_zoom_min"));

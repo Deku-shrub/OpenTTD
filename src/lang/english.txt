@@ -2110,12 +2110,15 @@ STR_CONFIG_SETTING_FLY_SCENARIOS                              :Fly to scenario l
 STR_CONFIG_SETTING_FLY_SUBSIDIES                              :Fly to subsidy destinations: {STRING2}
 STR_CONFIG_SETTING_FLY_SCRIPTS                                :Fly to script destinations: {STRING2}
 STR_CONFIG_SETTING_FLY_TARGET_HELPTEXT                        :Animate this navigation category when Fly navigation is enabled. Other categories remain independent. Turning this option off also cancels an active flight of this category. Vehicle following and explicit instant jumps remain immediate
-STR_CONFIG_SETTING_FLY_PAN_SPEED                               :Flight pan speed: {STRING2}
-STR_CONFIG_SETTING_FLY_PAN_SPEED_HELPTEXT                       :Approximate travel speed in viewport widths per second at the widest flight zoom. Higher values make travel faster. Very short and very long trips have bounded durations. Applies to new flights
+STR_CONFIG_SETTING_FLY_PAN_SPEED                               :Flight speed: {STRING2}
+STR_CONFIG_SETTING_FLY_PAN_SPEED_HELPTEXT                       :Perceptual path speed. Higher values shorten flights. Duration is bounded to 300-2200 ms; trips requiring more than 2500 ms jump directly. Applies to new flights
 STR_CONFIG_SETTING_FLY_PAN_SPEED_VALUE                         :{NUM}% of a viewport per second
-STR_CONFIG_SETTING_FLY_ZOOM_DURATION                           :Flight zoom timing: {STRING2}
-STR_CONFIG_SETTING_FLY_ZOOM_DURATION_HELPTEXT                   :Time allowed for zooming at each end of the journey. Higher values give a gentler departure and arrival. Applies to new flights
-STR_CONFIG_SETTING_FLY_ZOOM_DURATION_VALUE                     :{NUM} ms at each end
+STR_CONFIG_SETTING_FLY_DURATION_SCALE                           :Flight duration scale: {STRING2}
+STR_CONFIG_SETTING_FLY_DURATION_SCALE_HELPTEXT                   :Scale the duration of the whole simultaneous zoom-and-pan journey. Higher values give gentler flights. Trips requiring more than 2500 ms jump directly. Applies to new flights
+STR_CONFIG_SETTING_FLY_DURATION_SCALE_VALUE                     :{NUM}%
+STR_CONFIG_SETTING_FLY_CURVE                                  :Flight curvature: {STRING2}
+STR_CONFIG_SETTING_FLY_CURVE_HELPTEXT                         :Zoom/pan trade-off multiplied by 100. 142 is the standard curve; lower values give flatter flights, higher values pull back more. Short hops do not pull back. Curvature is reduced automatically to respect zoom limits
+STR_CONFIG_SETTING_FLY_CURVE_VALUE                            :{NUM} / 100
 STR_CONFIG_SETTING_FLY_ZOOM_OUT                                :Maximum extra flight zoom-out: {STRING2}
 STR_CONFIG_SETTING_FLY_ZOOM_OUT_HELPTEXT                        :Maximum additional zoom-out beyond the wider of the departure and arrival views. Longer journeys automatically reveal more of the route. Zero disables the extra zoom-out. The configured viewport zoom limits are always respected
 STR_CONFIG_SETTING_FLY_ZOOM_OUT_VALUE                          :{NUM} levels

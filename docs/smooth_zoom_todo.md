@@ -82,7 +82,8 @@ subjective smoothness.
 - [x] Feature flag off by default; a separate option enables other destinations.
 - [x] Town directory, town location button and newly founded town integration.
 - [x] Automatic town-size estimate or fixed traditional arrival zoom.
-- [x] Configurable pan speed, zoom timing and maximum extra zoom-out.
+- [x] Configurable flight speed, whole-flight duration scale, curvature and
+      maximum extra zoom-out (replacing the initial per-end zoom timing).
 - [x] Manual wheel, drag, arrows, edge scrolling, Escape and snap interrupt flights.
 - [x] New destinations retarget from the displayed view; instant jumps bypass flights.
 - [x] Lifecycle cancellation on close, load, feature disable and vehicle following.
@@ -239,3 +240,26 @@ coastal four-notch run had 21 updates in 573 ms (maximum gap 35 ms). Moving-imag
 centre sampling is about 3–4 times faster than settled area filtering in the
 synthetic benchmark. Captures confirm filtering returns after settling; they
 cannot establish subjective smoothness. No game error dialogs were found.
+
+## Perceptual flight update
+
+- [x] Replace distance-based timing with van Wijk-Nuij perceptual path length.
+- [x] Derive height from distance and configurable curvature; flatten to zoom limits.
+- [x] Avoid extra pull-back within one starting viewport width.
+- [x] Bound animated duration to 300-2200 ms; cut if unbounded duration exceeds 2500 ms.
+- [x] Preserve fractional arrival zoom for ordinary destinations.
+- [x] Respect smooth scrolling and cancel on any actual key press.
+- [x] Blend vehicle location flights toward the live position in the final 20%.
+- [x] Standalone numerical regression: 3,273 assertions in 13 cases, including the published d3 example.
+- [x] Full Release rebuild and integrated tests: 13,627 assertions in 130 cases.
+- [x] Runtime 305 ms short hop with native pan, approximately 1.47 s default
+      town arc, 0.89 s fast arc, fixed 50% arrival and immediate long-trip cut.
+      Smooth-scroll off prevented flights; key/wheel takeover cancelled them.
+      Keyboard-cancelled land remained pixel-identical beyond planned arrival.
+- [x] Refresh four real town-flight recordings and capture pacing controls;
+      no recorded land-crop changes after arrival in these paused fixtures.
+- [x] Moving bus flight completed in 1.22 s and retained 130% arrival zoom.
+- [ ] Runtime moving vehicle news references and all other vehicle approaches.
+- [x] Generate an isolated 2048-square map and verify the (10,10) to
+      (2000,2000) journey arrives immediately without an active flight.
+- [ ] Subjective tuning on a 2048-square map.

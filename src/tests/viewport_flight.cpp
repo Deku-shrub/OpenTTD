@@ -14,7 +14,7 @@
 
 TEST_CASE("Camera flight pans and zooms together and arrives exactly", "[smoothzoom][flight]")
 {
-	ViewportFlight flight({100, 200, 4}, {12100, -5800, 4}, 1, 32, 1000, 100, 350, 2);
+	ViewportFlight flight({100, 200, 4}, {12100, -5800, 4}, 1, 32, 1000, 200, 100, 2);
 	CHECK(flight.GetPose().x == 100);
 	CHECK(flight.GetPose().y == 200);
 	CHECK(flight.GetPose().step == 4);
@@ -23,7 +23,7 @@ TEST_CASE("Camera flight pans and zooms together and arrives exactly", "[smoothz
 	CHECK(flight.GetPose().x < 12100);
 	CHECK(flight.GetPose().y < 200);
 	CHECK(flight.GetPose().step > 4);
-	flight.Advance(600);
+	flight.Advance(100);
 	CHECK(flight.GetPose().x > 100);
 	CHECK(flight.GetPose().x < 12100);
 	CHECK(flight.GetPose().step > 4);
@@ -39,7 +39,7 @@ TEST_CASE("Camera flight respects zoom bounds and extra zoom-out limits", "[smoo
 	const double extra = GENERATE(0.0, 1.0, 2.0);
 	const double start = GENERATE(1.0, 4.0, 16.0);
 	const double arrival = GENERATE(1.0, 4.0, 32.0);
-	ViewportFlight flight({0, 0, start}, {90000, 30000, arrival}, 1, 32, 640, 100, 350, extra);
+	ViewportFlight flight({0, 0, start}, {90000, 30000, arrival}, 1, 32, 640, 100000, 100, extra);
 	bool quality_tail = false;
 	while (flight.IsActive()) {
 		flight.Advance(16);
@@ -58,7 +58,7 @@ TEST_CASE("Camera flight respects zoom bounds and extra zoom-out limits", "[smoo
 
 TEST_CASE("Flight continues panning on both sides of the zoom apex", "[smoothzoom][flight]")
 {
-	ViewportFlight flight({0, 0, 4}, {12000, 6000, 8}, 1, 32, 1000, 100, 350, 2);
+	ViewportFlight flight({0, 0, 4}, {12000, 6000, 8}, 1, 32, 1000, 200, 100, 2);
 	const auto quarter = static_cast<unsigned int>(flight.GetDuration() / 4);
 	flight.Advance(quarter);
 	const auto departure = flight.GetPose();
@@ -79,8 +79,8 @@ TEST_CASE("Flight continues panning on both sides of the zoom apex", "[smoothzoo
 
 TEST_CASE("Nearby camera navigation avoids unnecessary zoom-out", "[smoothzoom][flight]")
 {
-	ViewportFlight flight({0, 0, 4}, {200, 100, 4}, 1, 32, 1280, 100, 350, 2);
-	CHECK(flight.GetDuration() == 150);
+	ViewportFlight flight({0, 0, 4}, {200, 100, 4}, 1, 32, 1280, 200, 100, 2);
+	CHECK(flight.GetDuration() == 300);
 	while (flight.IsActive()) {
 		flight.Advance(16);
 		CHECK(flight.GetPose().step == 4);
@@ -89,7 +89,7 @@ TEST_CASE("Nearby camera navigation avoids unnecessary zoom-out", "[smoothzoom][
 
 TEST_CASE("Unequal flight endpoints zoom throughout without extra pull-back", "[smoothzoom][flight]")
 {
-	ViewportFlight flight({0, 0, 4}, {12000, 6000, 8}, 1, 32, 1000, 100, 350, 0);
+	ViewportFlight flight({0, 0, 4}, {12000, 6000, 8}, 1, 32, 1000, 1000, 100, 0);
 	const auto quarter = static_cast<unsigned int>(flight.GetDuration() / 4);
 	double previous = 4;
 	for (int i = 0; i < 3; ++i) {
@@ -103,11 +103,11 @@ TEST_CASE("Unequal flight endpoints zoom throughout without extra pull-back", "[
 TEST_CASE("Flight pan and zoom timing can be tuned independently", "[smoothzoom][flight]")
 {
 	const ViewportFlight::Pose start{0, 0, 4}, end{12000, 3000, 4};
-	ViewportFlight normal(start, end, 1, 32, 1280, 100, 350, 2);
-	ViewportFlight fast_pan(start, end, 1, 32, 1280, 200, 350, 2);
-	ViewportFlight slow_zoom(start, end, 1, 32, 1280, 100, 700, 2);
+	ViewportFlight normal(start, end, 1, 32, 1280, 200, 100, 2);
+	ViewportFlight fast_pan(start, end, 1, 32, 1280, 400, 100, 2);
+	ViewportFlight slow_zoom(start, end, 1, 32, 1280, 200, 125, 2);
 	CHECK(fast_pan.GetDuration() < normal.GetDuration());
-	CHECK(slow_zoom.GetDuration() == Approx(normal.GetDuration() + 700));
+	CHECK(slow_zoom.GetDuration() == Approx(normal.GetDuration() * 1.25));
 	ViewportFlight partitioned = normal;
 	normal.Advance(320);
 	for (int i = 0; i < 20; ++i) partitioned.Advance(16);
@@ -123,8 +123,98 @@ TEST_CASE("Flight town fitting selects traditional levels and honours limits", "
 	CHECK(GetNavigationArrivalStep(800, 5000, 1000, 600, 4, 1, 32) == 16);
 	CHECK(GetNavigationArrivalStep(100000, 100000, 1000, 600, 4, 1, 16) == 16);
 	CHECK(GetNavigationArrivalStep(1600, 800, 1000, 600, 4, 8, 32) == 8);
-	ViewportFlight restricted({0, 0, 0.5}, {3000, 1000, 64}, 2, 16, 640, 100, 350, 2);
+	ViewportFlight restricted({0, 0, 0.5}, {3000, 1000, 64}, 2, 16, 640, 200, 100, 2);
 	CHECK(restricted.GetPose().step == 2);
 	restricted.Advance(10000);
 	CHECK(restricted.GetPose().step == 16);
+}
+
+TEST_CASE("Perceptual flights have logarithmic distance growth and a bounded duration", "[smoothzoom][flight]")
+{
+	ViewportFlight medium({0, 0, 4}, {6000, 0, 4}, 1, 128, 1000, 120, 100, 5);
+	ViewportFlight farther({0, 0, 4}, {12000, 0, 4}, 1, 128, 1000, 120, 100, 5);
+	CHECK(medium.GetPathLength() > 0);
+	CHECK(farther.GetPathLength() > medium.GetPathLength());
+	CHECK(farther.GetPathLength() < medium.GetPathLength() * 2);
+	CHECK(medium.GetDuration() >= 300);
+	CHECK(medium.GetDuration() <= 2200);
+	ViewportFlight cross_map({0, 0, 1}, {10000000, 0, 1}, 1, 32, 640, 120, 100, 0);
+	CHECK(cross_map.GetDuration() == 0);
+	CHECK_FALSE(cross_map.IsActive());
+	CHECK(cross_map.GetPose().x == 10000000);
+	CHECK(cross_map.GetPose().step == 1);
+}
+
+TEST_CASE("Pure zoom and identical flight states remain finite and preserve fractional arrival", "[smoothzoom][flight]")
+{
+	for (double arrival : {1.0, 3.3, 8.0}) {
+		ViewportFlight flight({100, 200, 4}, {100, 200, arrival}, 1, 32, 960, 120, 100, 2);
+		while (flight.IsActive()) {
+			flight.Advance(17);
+			const auto pose = flight.GetPose();
+			CHECK(pose.x == 100);
+			CHECK(pose.y == 200);
+			CHECK(std::isfinite(pose.step));
+			CHECK(pose.step >= std::min(4.0, arrival));
+			CHECK(pose.step <= std::max(4.0, arrival));
+		}
+		CHECK(flight.GetPose().step == arrival);
+	}
+}
+
+TEST_CASE("Short hops avoid bobbing across the full visible screen", "[smoothzoom][flight]")
+{
+	ViewportFlight flight({0, 0, 4}, {3900, 0, 4}, 1, 32, 1000, 120, 100, 2);
+	while (flight.IsActive()) {
+		flight.Advance(16);
+		CHECK(flight.GetPose().step == 4);
+	}
+}
+
+TEST_CASE("Curvature controls flight height and the cap flattens without a travel plateau", "[smoothzoom][flight]")
+{
+	ViewportFlight flat({0, 0, 4}, {8000, 0, 4}, 1, 32, 1000, 400, 100, 2, 0.7);
+	ViewportFlight high({0, 0, 4}, {8000, 0, 4}, 1, 32, 1000, 400, 100, 2, 2.0);
+	flat.Advance(static_cast<unsigned int>(flat.GetDuration() / 2));
+	high.Advance(static_cast<unsigned int>(high.GetDuration() / 2));
+	CHECK(high.GetPose().step > flat.GetPose().step);
+	ViewportFlight capped({0, 0, 4}, {20000, 0, 4}, 1, 8, 1000, 400, 100, 2);
+	const auto quarter = static_cast<unsigned int>(capped.GetDuration() / 4);
+	capped.Advance(quarter);
+	const auto first = capped.GetPose();
+	capped.Advance(quarter);
+	const auto apex = capped.GetPose();
+	capped.Advance(quarter);
+	const auto last = capped.GetPose();
+	CHECK(first.x < apex.x);
+	CHECK(apex.x < last.x);
+	CHECK(first.step < apex.step);
+	CHECK(last.step < apex.step);
+	CHECK(apex.step <= 8);
+}
+
+TEST_CASE("Moving vehicle arrival blends only in the final fifth without extending duration", "[smoothzoom][flight]")
+{
+	ViewportFlight flight({0, 0, 4}, {8000, 0, 4}, 1, 32, 1000, 200, 100, 2);
+	flight.Advance(static_cast<unsigned int>(flight.GetDuration() * 0.75));
+	CHECK(flight.GetPoseTowards(8100, 200).x == flight.GetPose().x);
+	CHECK(flight.GetPoseTowards(8100, 200).y == 0);
+	flight.Advance(static_cast<unsigned int>(flight.GetDuration() * 0.15));
+	CHECK(flight.GetPoseTowards(8100, 200).x > flight.GetPose().x);
+	CHECK(flight.GetPoseTowards(8100, 200).y > 0);
+	CHECK(flight.GetPoseTowards(8100, 200).y < 200);
+	flight.Advance(10000);
+	CHECK(flight.GetPoseTowards(8100, 200).x == 8100);
+	CHECK(flight.GetPoseTowards(8100, 200).y == 200);
+	CHECK(flight.GetPoseTowards(8100, 200).step == 4);
+}
+
+TEST_CASE("Perceptual flight agrees with the published d3 zoom interpolation example", "[smoothzoom][flight]")
+{
+	ViewportFlight flight({30, 30, 40}, {135, 85, 60}, 1, 512, 1, 1000, 100, 4, std::sqrt(2.0));
+	REQUIRE(flight.GetDuration() == 300);
+	flight.Advance(150);
+	CHECK(flight.GetPose().x == Approx(72));
+	CHECK(flight.GetPose().y == Approx(52));
+	CHECK(flight.GetPose().step == Approx(126.04761005270991));
 }

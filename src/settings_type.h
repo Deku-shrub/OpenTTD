@@ -261,7 +261,8 @@ struct GUISettings {
 	bool fly_subsidies; ///< allow flights to subsidy destinations
 	bool fly_scripts; ///< allow flights to script destinations
 	uint16_t fly_pan_speed; ///< pan speed as a percentage of viewport widths per second
-	uint16_t fly_zoom_duration; ///< zoom timing at departure and arrival, in milliseconds
+	uint16_t fly_duration_scale; ///< perceptual flight duration multiplier, in percent
+	uint16_t fly_curve; ///< perceptual zoom/pan curvature, multiplied by 100
 	uint8_t fly_zoom_out; ///< maximum extra traditional zoom-out levels
 	uint8_t fly_town_zoom; ///< 0 = fit town; otherwise traditional zoom index plus one
 	ZoomLevel sprite_zoom_min; ///< maximum zoom level at which higher-resolution alternative sprites will be used (if available) instead of scaling a lower resolution sprite
