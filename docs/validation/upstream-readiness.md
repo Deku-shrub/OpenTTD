@@ -1,0 +1,41 @@
+# Upstream requirements and fork validation
+
+Reviewed 10 October 2026 against OpenTTD's contribution guide, coding style and checked-in CI workflows.
+
+## Submission eligibility
+
+[OpenTTD's AI policy](https://github.com/OpenTTD/OpenTTD/blob/master/CONTRIBUTING.md#use-of-ai) prohibits submissions containing AI-generated code, including entire generated lines, and AI-written issues or PR descriptions. This fork contains such code. Passing tests or reviewing the code does not remove that restriction. This work is therefore not eligible for an upstream PR under the current policy. Do not conceal its provenance. Development and validation here are for the private fork.
+
+The [contribution guide](https://github.com/OpenTTD/OpenTTD/blob/master/CONTRIBUTING.md#pull-requests) also asks contributors to discuss significant features first, keep each PR focused, use logical commits and a topic branch based on current upstream master, and accept the project's GPL v2 license and contributor privacy terms. These are submission requirements, not evidence that maintainers have agreed to accept smooth zoom.
+
+## Technical requirements and evidence
+
+| Requirement | Fork status |
+| --- | --- |
+| Complete build followed by CTest, with a 120-second per-test timeout | Previously only the game and unit executable were built. Regression fixtures are now staged and all four upstream AI/GS regression tests pass. The local runner builds all default targets before CTest. |
+| Meaningful automated tests | Smooth rendering, palette tracking, pixel phase, controls, flight paths and target fitting are registered in the existing Catch suite; 140 cases, 68,807 assertions passed before this audit. |
+| Source file descriptions | Run the upstream checker with explicit forward-slash paths on Windows; its default directory walker assumes Linux separators. |
+| Source/build inventory | Registered all six new core headers in `src/core/CMakeLists.txt`; headers were previously compilable through includes but absent from the project inventory. |
+| English strings and translations | New settings use English source strings. Translation changes belong in [Eints](https://github.com/OpenTTD/OpenTTD/blob/master/docs/eints.md), rather than invented translations. The unused-string checker needs GNU C++ preprocessing. Its unmodified Windows path handling gives false cargo-string errors; run it on Linux. |
+| Source checks on private master | Added `fork-source-checks.yml` for pushes and manual runs. Upstream source-description/string workflows otherwise run only on PRs. Existing build CI already runs on master pushes. |
+| Commit formatting | [Coding style](https://github.com/OpenTTD/OpenTTD/blob/master/CODINGSTYLE.md#commit-message) requires prefixes such as `Fix:`, `Feature:`, `Codefix:` and `Doc:`. Earlier exploratory fork commits do not consistently comply. Future commits use the format; published private history has not been rewritten. |
+| Documentation validation | Upstream compares Doxygen warnings against the PR base, including source, AI and GS docs. That comparison has not been run locally; file descriptions are a separate check. |
+| Cross-platform CI | [Build matrix](https://github.com/OpenTTD/OpenTTD/blob/master/.github/workflows/ci-build.yml): Linux Clang/GCC/SDL2 and dedicated/no-PCH, macOS arm64 Debug/Release, Windows x86/x64, Emscripten. Local evidence is Windows x64 only. Other jobs must pass before claiming platform coverage. |
+| Compatibility and performance | See [graphics coverage](zoom-coverage.md), including three graphics sets, renderer variants, save round trips and fractional-pan timings. GUI evidence supplements CTest; it cannot replace platform builds. |
+
+## Repeat the local check
+
+Configure the build as described in [COMPILING.md](../../COMPILING.md), provide an installed OpenGFX base set, and close any prototype using that build's executable before linking. Then run:
+
+```powershell
+py -3 docs/validation/run-upstream-checks.py --build-dir C:/ottd-build --cmake 'C:/Program Files/CMake/bin/cmake.exe'
+```
+
+The runner checks source descriptions, builds all default targets (including regression fixtures), and runs the complete CTest suite. It exits on any failure. It does not install dependencies or silently skip regression tests. On Linux, additionally run `python3 .github/unused-strings.py` with GNU C++ installed, as the private source-check workflow does.
+
+## Remaining verification
+
+- Confirm results of the private remote build matrix and new Linux source checks; queued or configured jobs are not passing evidence.
+- Compare Doxygen warning sets with the unmodified upstream base.
+- Complete multiplayer/client compatibility testing and remaining platform-specific GUI checks listed in the [TODO](../smooth_zoom_todo.md).
+- Keep fork implementation history and large demonstration assets separate from any future independently authored, policy-compliant contribution. No upstream issue or PR has been submitted by this audit.

@@ -358,3 +358,11 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [x] GUI checks at 12.5%, 84%, 130%, 200%, 400%; station edge click, custom sign editor and town window pass. Settled labels stay unchanged across 700 ms captures.
 - [x] Add station/sign and town scaling animations to the user guide.
 - [ ] Broader multilingual/RTL, unusual fonts, high interface scales, dense NewGRF station names and waypoint-specific visual checks.
+# Upstream requirements audit — 10 October 2026
+
+- [x] Research contribution policy, coding style and CI requirements; record [submission limits and technical checks](validation/upstream-readiness.md).
+- [x] Register six new core headers in the CMake source inventory.
+- [x] Add a repeatable full-build/source-description/CTest runner; all 144 local tests pass, including four upstream regressions.
+- [x] Enable source-description and unused-string checks on private master pushes.
+- [ ] Verify remote platform matrix and Linux string-check results; compare Doxygen warnings with upstream base.
+

@@ -24,6 +24,8 @@ add_files(
     pool_type.hpp
     random_func.cpp
     random_func.hpp
+    smooth_zoom_motion.hpp
+    smooth_zoom_palette.hpp
     string_builder.cpp
     string_builder.hpp
     string_consumer.cpp
@@ -33,4 +35,8 @@ add_files(
     strong_typedef_type.hpp
     utf8.cpp
     utf8.hpp
+    viewport_flight.hpp
+    viewport_flight_targets.hpp
+    viewport_label_scale.hpp
+    viewport_pixel_phase.hpp
 )

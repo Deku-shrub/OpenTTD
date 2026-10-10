@@ -1,0 +1,19 @@
+name: Fork source checks
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check source file descriptions
+        run: python3 .github/file-descriptions.py
+      - name: Check English string references
+        run: python3 .github/unused-strings.py
