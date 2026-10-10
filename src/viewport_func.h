@@ -11,6 +11,7 @@
 #define VIEWPORT_FUNC_H
 
 #include "gfx_type.h"
+#include "core/viewport_flight_targets.hpp"
 #include "sprite.h"
 #include "viewport_type.h"
 #include "window_type.h"
@@ -38,7 +39,7 @@ bool TrySmoothZoomWindow(bool in, Window *w, bool to_cursor, uint notches = 1);
 void CancelViewportSmoothZoomAnimation(Window *w);
 void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms);
 void CancelViewportFlight(Window *w);
-bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale = 0);
+bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale = 0, ViewportFlightTarget target = ViewportFlightTarget::Other);
 void ConstrainAllViewportsZoom();
 Point GetTileZoomCenterWindow(bool in, Window * w);
 void FixTitleGameZoom(int zoom_adjust = 0);
@@ -80,12 +81,12 @@ void ViewportDoDraw(const Viewport &vp, int left, int top, int right, int bottom
 bool SetViewportSmoothZoom(Window *w, float scale, bool cancel_animation = true);
 
 bool ScrollWindowToTile(TileIndex tile, Window *w, bool instant = false);
-bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant = false, double arrival_scale = 0);
+bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant = false, double arrival_scale = 0, ViewportFlightTarget target = ViewportFlightTarget::Other);
 
 void RebuildViewportOverlay(Window *w);
 
-bool ScrollMainWindowToTile(TileIndex tile, bool instant = false);
-bool ScrollMainWindowTo(int x, int y, int z = -1, bool instant = false);
+bool ScrollMainWindowToTile(TileIndex tile, bool instant = false, ViewportFlightTarget target = ViewportFlightTarget::Other);
+bool ScrollMainWindowTo(int x, int y, int z = -1, bool instant = false, ViewportFlightTarget target = ViewportFlightTarget::Other);
 
 void UpdateAllVirtCoords();
 void ClearAllCachedNames();

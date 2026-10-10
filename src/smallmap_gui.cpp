@@ -1712,7 +1712,7 @@ public:
 				Window *w = GetMainWindow();
 				int sub;
 				pt = this->PixelToTile(pt.x - wid->pos_x, pt.y - wid->pos_y, &sub);
-				ScrollWindowTo(this->scroll_x + pt.x * TILE_SIZE, this->scroll_y + pt.y * TILE_SIZE, -1, w);
+				ScrollWindowTo(this->scroll_x + pt.x * TILE_SIZE, this->scroll_y + pt.y * TILE_SIZE, -1, w, false, 0, ViewportFlightTarget::SmallMap);
 
 				this->SetDirty();
 				break;
@@ -2164,9 +2164,9 @@ void ShowSmallMap()
  * @param instant scroll instantly (meaningful only when smooth_scrolling is active)
  * @return did the viewport position change?
  */
-bool ScrollMainWindowTo(int x, int y, int z, bool instant)
+bool ScrollMainWindowTo(int x, int y, int z, bool instant, ViewportFlightTarget target)
 {
-	bool res = ScrollWindowTo(x, y, z, GetMainWindow(), instant);
+	bool res = ScrollWindowTo(x, y, z, GetMainWindow(), instant, 0, target);
 
 	/* If a user scrolls to a tile (via what way what so ever) and already is on
 	 * that tile (e.g.: pressed twice), move the smallmap to that location,

@@ -42,11 +42,40 @@ The user superseded the earlier no-commit instruction and authorized checkpoint
 and regular development commits. Keep `origin` pointed at the private repository
 `https://github.com/Deku-shrub/OpenTTD.git`, with the official
 `https://github.com/OpenTTD/OpenTTD.git` as `upstream`. Develop on
-`feature/smooth-zoom`; `main` starts at the existing upstream base revision.
+`feature/smooth-zoom`, which is the GitHub default branch; `main` starts at the
+existing upstream base revision. Initial checkpoints: `42d6302fea` (code) and
+`0e02fa7152` (guide, recordings and validation fixtures).
 The user explicitly chose to retain a private Git repository with shared upstream
 history rather than a public GitHub-native fork. Do not change its visibility.
 Make focused commits after validation; avoid rebasing published work. Build
 outputs, isolated configurations, saved games and runtime logs stay ignored.
+
+## Per-target flight controls
+
+`gui.fly_navigation` is now the master switch; `gui.fly_towns` independently
+controls towns. Towns default on beneath the disabled master switch; additional
+categories default off. `ViewportFlightTarget` and `IsViewportFlightEnabled`
+carry typed permissions through viewport navigation. Active flights retain
+their category and cancel if that category or the master is disabled.
+
+Additional controls cover vehicles, stations, industries, news/events, signs,
+smallmap, company headquarters, depots, waypoints, order destinations, scenario
+links (stories/goals/league tables), subsidies, game-script locations and other
+locations. News references use News even for a vehicle; order destinations use
+Order even for a station. Generic Other does not override disabled categories.
+The earlier blanket `fly_other_navigation` flag now applies only to otherwise
+uncategorised map locations and console commands. Explicit instant navigation,
+Ctrl-click extra viewports and continuous vehicle following remain immediate.
+Vehicle location flights target the selected position, not a moving endpoint.
+
+Independent permissions have a full one-enabled-category matrix regression
+using real GUISettings fields. The Release build passes 48,600 assertions in
+124 cases. Runtime town/station/industry/vehicle controls passed independent
+on/off checks. Disabling an active station category left its land crop
+pixel-identical nine seconds later, past the planned eight-second duration.
+Vehicle following interrupted a vehicle-target flight. The Expert settings UI
+displays each toggle's On/Off state; its screenshot is in the guide. News-item
+and remaining secondary-control runtime checks are still open.
 
 ## Scope and decisions
 
@@ -166,9 +195,10 @@ The latest request adds opt-in parabolic zoom-and-pan destination navigation.
 Source implementation uses `ViewportFlight` in `src/core/viewport_flight.hpp`
 and a transient per-window map in `main_gui.cpp`. It is independent of the
 wheel smooth-zoom flag but requires a supported blitter. Town directory/location
-buttons call `ScrollMainWindowToTown`; other `ScrollWindowTo` callers use it only
-with the additional general-navigation flag. Explicit instant jumps bypass it.
-Defaults: master off, general destinations off, pan 100% viewport/second, zoom
+buttons call `ScrollMainWindowToTown`; other `ScrollWindowTo` callers supply an
+independently enabled navigation category. Explicit instant jumps bypass it.
+Defaults: master off, towns on beneath the master, additional destinations off,
+pan 100% viewport/second, zoom
 timing 350 ms per end, two extra zoom-out levels, automatic traditional town fit.
 Town fitting uses the cached zone radius and building-height allowance; it is
 approximate. Other destinations preserve departure zoom. No persistent caches

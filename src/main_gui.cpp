@@ -175,7 +175,7 @@ static std::map<Window *, SmoothZoomAnimation> _smooth_zoom_animations;
 
 struct CameraFlight {
 	ViewportFlight path;
-	bool town_destination;
+	ViewportFlightTarget target;
 	uint elapsed_ms = 0;
 	uint frames = 0;
 	uint longest_frame_ms = 0;
@@ -208,11 +208,10 @@ void CancelViewportSmoothZoomAnimation(Window *w)
 }
 
 /** Start an opt-in main-viewport flight; zero arrival scale preserves the current zoom. */
-bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale)
+bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale, ViewportFlightTarget target)
 {
-	if (!_settings_client.gui.fly_navigation || w == nullptr || w != GetMainWindow() || w->viewport == nullptr ||
-			_game_mode == GameMode::Menu || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ||
-			(arrival_scale == 0 && !_settings_client.gui.fly_other_navigation)) return false;
+	if (!IsViewportFlightEnabled(_settings_client.gui, target) || w == nullptr || w != GetMainWindow() || w->viewport == nullptr ||
+			_game_mode == GameMode::Menu || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) return false;
 	ViewportData &vp = *w->viewport;
 	if (vp.width <= 0 || vp.height <= 0) return false;
 	const double min_step = ScaleByZoom(1, _settings_client.gui.zoom_min);
@@ -225,7 +224,7 @@ bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale)
 	const double end_step = std::clamp(arrival_scale > 0 ? ZOOM_BASE / arrival_scale : retained_step, min_step, max_step);
 	if (existing != _viewport_flights.end()) {
 		const auto &destination = existing->second.path.GetDestination();
-		if (destination.x == centre.x && destination.y == centre.y && existing->second.town_destination == (arrival_scale > 0) &&
+		if (destination.x == centre.x && destination.y == centre.y && existing->second.target == target &&
 				(arrival_scale == 0 || std::abs(destination.step - end_step) < 0.000001)) return true;
 	}
 	const double start_x = vp.scrollpos_x + vp.virtual_width / 2;
@@ -239,9 +238,9 @@ bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale)
 	ViewportFlight path({start_x, start_y, start_step}, {static_cast<double>(centre.x), static_cast<double>(centre.y), end_step},
 			min_step, max_step, std::max(vp.width, vp.height), _settings_client.gui.fly_pan_speed,
 			_settings_client.gui.fly_zoom_duration, _settings_client.gui.fly_zoom_out);
-	_viewport_flights.insert_or_assign(w, CameraFlight{path, arrival_scale > 0});
-	Debug(Facility::Misc, Severity::Debug1, "Camera flight start: {},{} to {},{}, {:.4f}x arrival, {:.0f} ms planned, town={}",
-		start_x, start_y, centre.x, centre.y, ZOOM_BASE / end_step, path.GetDuration(), arrival_scale > 0);
+	_viewport_flights.insert_or_assign(w, CameraFlight{path, target});
+	Debug(Facility::Misc, Severity::Debug1, "Camera flight start: {},{} to {},{}, {:.4f}x arrival, {:.0f} ms planned, target={}",
+		start_x, start_y, centre.x, centre.y, ZOOM_BASE / end_step, path.GetDuration(), static_cast<int>(target));
 	vp.zoom_animation = true;
 	w->SetDirty();
 	return true;
@@ -251,8 +250,7 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 {
 	auto it = _viewport_flights.find(w);
 	if (it == _viewport_flights.end()) return;
-	if (w->viewport == nullptr || !_settings_client.gui.fly_navigation ||
-			(!it->second.town_destination && !_settings_client.gui.fly_other_navigation) ||
+	if (w->viewport == nullptr || !IsViewportFlightEnabled(_settings_client.gui, it->second.target) ||
 			!BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() || w->viewport->follow_vehicle != VehicleID::Invalid()) {
 		CancelViewportFlight(w);
 		return;

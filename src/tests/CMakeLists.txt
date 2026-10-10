@@ -14,6 +14,7 @@ add_test_files(
     smooth_zoom_benchmark.cpp
     smooth_zoom_controls.cpp
     viewport_flight.cpp
+    viewport_flight_targets.cpp
     string_builder.cpp
     string_consumer.cpp
     string_inplace.cpp

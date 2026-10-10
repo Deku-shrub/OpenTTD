@@ -76,7 +76,9 @@ smooth wheel controls, use `set gui.smooth_zoom 0`.
 ## Fly to a location
 
 Flight navigation is a separate, opt-in feature. In **Game Options → Advanced**,
-select **Expert / all settings**, search for **fly**, and enable **Fly to towns**.
+select **Expert / all settings**, search for **fly**, and enable **Fly navigation**.
+Then enable the destination categories you want. **Fly to towns** defaults to
+on beneath the disabled master switch; all additional categories default to off.
 Alternatively, enter `set gui.fly_navigation 1` in the console. It requires a
 supported 32bpp blitter; the mouse-wheel smooth-zoom setting is independent.
 
@@ -94,12 +96,57 @@ the filter and expand **Graphics** to see all of these options together.
 
 | Option | Default | Effect |
 | --- | --- | --- |
-| Fly to towns | Off | Enables town-directory and town-location flights. |
-| Fly to other map destinations | Off | Also animates the smallmap and other location buttons; these trips retain the current zoom at arrival. Requires Fly to towns. |
+| Fly navigation | Off | Master switch for all navigation flights. |
+| Fly to towns | On, subject to master switch | Enables town-directory and town-location flights. |
 | Flight pan speed | 100% of a viewport per second | Higher values shorten the journey; range 25–400%. Very short and long journeys have bounded durations. |
 | Flight zoom timing | 350 ms at each end | Higher values give gentler departure and arrival; range 100–2,000 ms. |
 | Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance; range 0–3. Zero removes the extra pull-back. |
 | Town arrival zoom | Fit town automatically | Choose automatic fitting or a fixed level from 400% to 12.5%. |
+
+Every additional category has its own switch. All require **Fly navigation**;
+none requires **Fly to towns** or another category to be enabled.
+
+This configured example selects industry flights while the master switch is
+off. Scroll the list to see the remaining categories.
+
+![Independent flight controls in Advanced settings](images/smooth-zoom/flight-target-settings.png)
+
+| Switch | Navigation covered | Console setting |
+| --- | --- | --- |
+| Fly to vehicles | Vehicle window's location button | `gui.fly_vehicles` |
+| Fly to stations | Station list and station location controls | `gui.fly_stations` |
+| Fly to industries | Industry directory and industry location button | `gui.fly_industries` |
+| Fly to news and events | News-item locations, including vehicle references | `gui.fly_news` |
+| Fly to signs | Sign list and sign location controls | `gui.fly_signs` |
+| Fly to smallmap destinations | Clicking a location on the smallmap | `gui.fly_smallmap` |
+| Fly to company headquarters | Company's headquarters location control | `gui.fly_companies` |
+| Fly to depots | Depot location controls | `gui.fly_depots` |
+| Fly to waypoints | Waypoint location controls | `gui.fly_waypoints` |
+| Fly to order destinations | Order-list and current-order destination controls | `gui.fly_orders` |
+| Fly to scenario links | Story-page, goal and league-table location links | `gui.fly_scenarios` |
+| Fly to subsidy destinations | Subsidy-list source/destination locations | `gui.fly_subsidies` |
+| Fly to script destinations | Navigation requested by a game script | `gui.fly_scripts` |
+| Fly to other locations | Remaining map-location actions and console `scrollto` | `gui.fly_other_navigation` |
+
+For example, enable station flights without town flights:
+
+```text
+set gui.fly_navigation 1
+set gui.fly_towns 0
+set gui.fly_stations 1
+```
+
+The switch follows the action used: a vehicle referenced in a news item uses
+the news switch, while its own location button uses the vehicle switch. Order
+destinations use the order switch even when the destination is a station.
+**Fly to other locations** does not override any disabled category. It replaces
+the earlier **Fly to other map destinations** blanket switch; enable individual
+categories when upgrading that prototype configuration.
+
+Turning off a category cancels any active flight in that category at its
+currently displayed view. Turning off the master cancels every flight.
+Vehicle location flights select the vehicle's position at the time of clicking;
+double-click following remains immediate and tracks it continuously.
 
 Pan speed, zoom timing and the maximum pull-back apply to all enabled flights;
 changed values take effect on the next journey. For a quicker experience, try
@@ -114,8 +161,8 @@ starts a new journey from the displayed view. For other destinations, changing
 the target mid-flight retains the intended arrival zoom rather than the
 temporarily widened travel view. Ctrl-clicking a town still opens an extra
 viewport, and explicit instant jumps and vehicle following stay immediate.
-Disabling Fly to towns or changing the viewport zoom limits stops an active
-flight at the current view, subject to those limits.
+Disabling the master or the active flight's category, or changing the viewport
+zoom limits, stops that flight at the current view, subject to those limits.
 
 To try other destinations from the console:
 
@@ -163,6 +210,8 @@ or NewGRF coverage. Vehicle movies use WebP compression, so use raw game
 screenshots when assessing individual pixel artefacts.
 
 ![Road vehicles during zoom](images/smooth-zoom/vehicles-road.webp)
+
+![Following a bus while zooming, with a separate vehicle viewport](images/smooth-zoom/vehicle-follow.webp)
 
 ![Trains during zoom](images/smooth-zoom/vehicles-train.webp)
 

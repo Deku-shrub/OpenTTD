@@ -144,7 +144,7 @@ struct GoalListWindow : public Window {
 		if (_ctrl_pressed) {
 			ShowExtraViewportWindow(xy);
 		} else {
-			ScrollMainWindowToTile(xy);
+			ScrollMainWindowToTile(xy, false, ViewportFlightTarget::Scenario);
 		}
 	}
 

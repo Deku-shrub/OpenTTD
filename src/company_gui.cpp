@@ -2193,7 +2193,7 @@ struct CompanyWindow : Window
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(tile);
 				} else {
-					ScrollMainWindowToTile(tile);
+					ScrollMainWindowToTile(tile, false, ViewportFlightTarget::Company);
 				}
 				break;
 			}

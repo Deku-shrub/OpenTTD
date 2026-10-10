@@ -163,8 +163,11 @@ subjective smoothness.
       Exact picking/follow checks and redraw comparisons are in progress.
 - [x] Bus picking at 330% and helicopter picking at 130%; independent fractional
       vehicle viewport zoom, and main follow-camera wheel zoom while moving.
-- [ ] Validate motion sampling for continuously moving follow cameras after rebuild;
-      paused and stopped views restore area filtering without a settling timer.
+- [x] Validate motion sampling for continuously moving follow cameras after rebuild;
+      paused views restore area filtering without a settling timer. A bus-follow
+      recording was refreshed; a paused land crop matches an exposed-area redraw.
+      Four-notch updates measured 22–24 ms average intervals, maximum 37–39 ms,
+      during capture. This is representative coverage, not every vehicle state.
 - [ ] Other dynamic sprites: animated industries, buildings and effects.
 - [ ] Bridges, foundations, steep slopes and clipped source sprites in-game.
 - [ ] Partial-alpha silhouettes and mip artwork changes during animated zoom.
@@ -199,8 +202,17 @@ animation and interaction are finished.
 - [x] Preserve the prototype uncommitted until the user authorizes checkpoints.
       Superseded on 10 October: commit and push to the private origin, retaining
       the official repository as upstream. Do not change repository visibility.
-- [ ] Add independent fly-target toggles for towns, vehicles, stations,
+- [x] Add independent fly-target toggles for towns, vehicles, stations,
       industries, news/events and the remaining navigation entry points.
+      Fifteen categories, gated by the master switch. Additional categories
+      default off; enabling Other cannot override a disabled category.
+- [x] Rebuild and test permission isolation: 48,600 assertions in 124 cases.
+- [x] Inspect per-target On/Off settings in the Expert UI; screenshot in guide.
+- [x] Runtime town, station, industry and vehicle category checks, including
+      category off while Other is on, and category on while Other is off.
+      Disabling an active station category preserves the view past its former
+      duration; vehicle following interrupts a vehicle-target flight.
+- [ ] Runtime news-item clicks and remaining secondary navigation controls.
 
 User instructions: [prototype setup](smooth_zoom_readme.md).
 Control details: [smooth zoom controls](smooth_zoom_controls.md).

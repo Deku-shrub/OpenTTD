@@ -2718,7 +2718,7 @@ void RebuildViewportOverlay(Window *w)
  * @param instant Jump to the location instead of slowly moving to it.
  * @return Destination of the viewport was changed (to activate other actions when the viewport is already at the desired position).
  */
-bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival_scale)
+bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival_scale, ViewportFlightTarget target)
 {
 	/* The slope cannot be acquired outside of the map, so make sure we are always within the map. */
 	if (z == -1) {
@@ -2733,7 +2733,7 @@ bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival
 	Point pt = MapXYZToViewport(*w->viewport, x, y, z);
 	w->viewport->CancelFollow(*w);
 	if (!instant && TryStartViewportFlight(w,
-			{pt.x + w->viewport->virtual_width / 2, pt.y + w->viewport->virtual_height / 2}, arrival_scale)) return true;
+			{pt.x + w->viewport->virtual_width / 2, pt.y + w->viewport->virtual_height / 2}, arrival_scale, target)) return true;
 	CancelViewportSmoothZoomAnimation(w);
 
 	if (w->viewport->dest_scrollpos_x == pt.x && w->viewport->dest_scrollpos_y == pt.y) return false;
@@ -2767,9 +2767,9 @@ bool ScrollWindowToTile(TileIndex tile, Window *w, bool instant)
  * @param instant Jump to the location instead of slowly moving to it.
  * @return Destination of the viewport was changed (to activate other actions when the viewport is already at the desired position).
  */
-bool ScrollMainWindowToTile(TileIndex tile, bool instant)
+bool ScrollMainWindowToTile(TileIndex tile, bool instant, ViewportFlightTarget target)
 {
-	return ScrollMainWindowTo(TileX(tile) * TILE_SIZE + TILE_SIZE / 2, TileY(tile) * TILE_SIZE + TILE_SIZE / 2, -1, instant);
+	return ScrollMainWindowTo(TileX(tile) * TILE_SIZE + TILE_SIZE / 2, TileY(tile) * TILE_SIZE + TILE_SIZE / 2, -1, instant, target);
 }
 
 /** Town navigation can choose a fixed level or conservatively fit the town's cached influence radius. */
@@ -2777,8 +2777,8 @@ bool ScrollMainWindowToTown(const Town &town)
 {
 	Window *w = GetMainWindow();
 	if (w == nullptr || w->viewport == nullptr) return false;
-	if (!_settings_client.gui.fly_navigation || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
-		return ScrollMainWindowToTile(town.xy);
+	if (!IsViewportFlightEnabled(_settings_client.gui, ViewportFlightTarget::Town) || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+		return ScrollMainWindowToTile(town.xy, false, ViewportFlightTarget::Town);
 	}
 	const Viewport &vp = *w->viewport;
 	double step;
@@ -2793,7 +2793,7 @@ bool ScrollMainWindowToTown(const Town &town)
 				ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
 	}
 	return ScrollWindowTo(TileX(town.xy) * TILE_SIZE + TILE_SIZE / 2,
-			TileY(town.xy) * TILE_SIZE + TILE_SIZE / 2, -1, w, false, ZOOM_BASE / step);
+			TileY(town.xy) * TILE_SIZE + TILE_SIZE / 2, -1, w, false, ZOOM_BASE / step, ViewportFlightTarget::Town);
 }
 
 /**

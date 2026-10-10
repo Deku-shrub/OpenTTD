@@ -238,7 +238,7 @@ struct SignListWindow : Window, SignList {
 				if (it == this->signs.end()) return;
 
 				const Sign *si = *it;
-				ScrollMainWindowToTile(TileVirtXY(si->x, si->y));
+				ScrollMainWindowToTile(TileVirtXY(si->x, si->y), false, ViewportFlightTarget::Sign);
 				break;
 			}
 
@@ -523,7 +523,7 @@ struct SignWindow : Window, SignList {
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(tile);
 				} else {
-					ScrollMainWindowToTile(tile);
+					ScrollMainWindowToTile(tile, false, ViewportFlightTarget::Sign);
 				}
 				break;
 			}
@@ -539,7 +539,7 @@ struct SignWindow : Window, SignList {
 				this->SortSignsList();
 
 				/* Scroll to sign and reopen window */
-				ScrollMainWindowToTile(TileVirtXY(si->x, si->y));
+				ScrollMainWindowToTile(TileVirtXY(si->x, si->y), false, ViewportFlightTarget::Sign);
 				UpdateSignEditWindow(si);
 				break;
 			}

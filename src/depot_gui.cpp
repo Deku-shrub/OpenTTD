@@ -834,7 +834,7 @@ struct DepotWindow : Window {
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(TileIndex(this->window_number));
 				} else {
-					ScrollMainWindowToTile(TileIndex(this->window_number));
+					ScrollMainWindowToTile(TileIndex(this->window_number), false, ViewportFlightTarget::Depot);
 				}
 				break;
 

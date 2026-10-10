@@ -2092,10 +2092,25 @@ STR_CONFIG_SETTING_ZOOM_MAX                                     :Maximum zoom ou
 STR_CONFIG_SETTING_ZOOM_MAX_HELPTEXT                            :The maximum zoom-out level for viewports. Higher zoom-out levels might cause lag when used
 STR_CONFIG_SETTING_SMOOTH_ZOOM                                  :Smooth mouse-wheel zoom: {STRING2}
 STR_CONFIG_SETTING_SMOOTH_ZOOM_HELPTEXT                         :Use smaller zoom steps with the mouse wheel. Requires a supported 32bpp blitter and may reduce rendering performance
-STR_CONFIG_SETTING_FLY_NAVIGATION                              :Fly to towns: {STRING2}
-STR_CONFIG_SETTING_FLY_NAVIGATION_HELPTEXT                      :Pan and zoom simultaneously along an arc to the selected town when using the town directory or a town's location button. Requires a supported 32bpp blitter. Manual scrolling and zooming interrupt the flight
-STR_CONFIG_SETTING_FLY_OTHER_NAVIGATION                        :Fly to other map destinations: {STRING2}
-STR_CONFIG_SETTING_FLY_OTHER_NAVIGATION_HELPTEXT                :Also animate navigation from the smallmap, location buttons, signs, news and other map destinations. Requires Fly to towns to be enabled. These trips retain the current arrival zoom. Explicit instant jumps and vehicle following remain immediate
+STR_CONFIG_SETTING_FLY_NAVIGATION                             :Fly navigation: {STRING2}
+STR_CONFIG_SETTING_FLY_NAVIGATION_HELPTEXT                    :Master switch for simultaneous zoom-and-pan navigation. Enable each destination category separately. Requires a supported 32bpp blitter. Manual scrolling and zooming interrupt the flight
+STR_CONFIG_SETTING_FLY_OTHER_NAVIGATION                       :Fly to other locations: {STRING2}
+STR_CONFIG_SETTING_FLY_OTHER_NAVIGATION_HELPTEXT              :Animate uncategorised navigation, including direct map locations and console scrollto commands. Requires Fly navigation. Does not override other destination toggles. Explicit instant jumps remain immediate
+STR_CONFIG_SETTING_FLY_TOWNS                                  :Fly to towns: {STRING2}
+STR_CONFIG_SETTING_FLY_VEHICLES                               :Fly to vehicles: {STRING2}
+STR_CONFIG_SETTING_FLY_STATIONS                               :Fly to stations: {STRING2}
+STR_CONFIG_SETTING_FLY_INDUSTRIES                             :Fly to industries: {STRING2}
+STR_CONFIG_SETTING_FLY_NEWS                                   :Fly to news and events: {STRING2}
+STR_CONFIG_SETTING_FLY_SIGNS                                  :Fly to signs: {STRING2}
+STR_CONFIG_SETTING_FLY_SMALLMAP                               :Fly to smallmap destinations: {STRING2}
+STR_CONFIG_SETTING_FLY_COMPANIES                              :Fly to company headquarters: {STRING2}
+STR_CONFIG_SETTING_FLY_DEPOTS                                 :Fly to depots: {STRING2}
+STR_CONFIG_SETTING_FLY_WAYPOINTS                              :Fly to waypoints: {STRING2}
+STR_CONFIG_SETTING_FLY_ORDERS                                 :Fly to order destinations: {STRING2}
+STR_CONFIG_SETTING_FLY_SCENARIOS                              :Fly to scenario links: {STRING2}
+STR_CONFIG_SETTING_FLY_SUBSIDIES                              :Fly to subsidy destinations: {STRING2}
+STR_CONFIG_SETTING_FLY_SCRIPTS                                :Fly to script destinations: {STRING2}
+STR_CONFIG_SETTING_FLY_TARGET_HELPTEXT                        :Animate this navigation category when Fly navigation is enabled. Other categories remain independent. Turning this option off also cancels an active flight of this category. Vehicle following and explicit instant jumps remain immediate
 STR_CONFIG_SETTING_FLY_PAN_SPEED                               :Flight pan speed: {STRING2}
 STR_CONFIG_SETTING_FLY_PAN_SPEED_HELPTEXT                       :Approximate travel speed in viewport widths per second at the widest flight zoom. Higher values make travel faster. Very short and very long trips have bounded durations. Applies to new flights
 STR_CONFIG_SETTING_FLY_PAN_SPEED_VALUE                         :{NUM}% of a viewport per second
