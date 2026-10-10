@@ -263,3 +263,15 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [x] Generate an isolated 2048-square map and verify the (10,10) to
       (2000,2000) journey arrives immediately without an active flight.
 - [ ] Subjective tuning on a 2048-square map.
+
+## Retrofit and compatibility
+
+- [x] Document existing-save retrofit, local-only options, integer camera save/load,
+      rollback version limits, renderer requirements and mod-type expectations.
+- [ ] Stock-created save -> patched save -> matching stock build round trip.
+- [ ] Representative 8-bit and 32-bit / extra-zoom NewGRF runtime coverage,
+      including custom infrastructure, animated sprites, articulated vehicles and trams.
+- [ ] Multiplayer with matching patched revisions and per-client camera settings.
+- [ ] Classify and validate multiplayer Game Script camera redirects; currently
+      these use the combined town/map category rather than the script category.
+- [ ] Validate any chosen engine patch pack after source integration.

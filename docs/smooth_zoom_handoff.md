@@ -328,3 +328,18 @@ back to integer. `screenshot viewport no_con <name>` captures the actual viewpor
 and therefore fractional drawing. Normal/big/world screenshots use temporary
 integer viewports. Send screenshots on separate rendered frames rather than
 batching several scale changes and asynchronous screenshots into one script.
+
+## Retrofit compatibility audit - 10 October 2026
+
+The user guide now documents existing-save use and content/engine boundaries.
+Flight/zoom preferences are NotInSave + NoNetworkSync; camera state stays transient.
+SaveViewportBeforeSaveGame stores the existing integer camera fields with a centre
+adjustment, and ResetViewportAfterLoadGame cancels motion and clears fractional zoom.
+No save schema/version or NewGRF/vehicle simulation serialization was changed.
+Stock rollback is conditional on matching upstream save version and dependencies;
+a stock -> patched -> stock round trip is still open. Network revision checks
+remain unchanged, so a different private commit is not a stock-server-compatible
+client merely because its camera preferences are local. Matching-build multiplayer,
+NewGRF visual coverage, OpenGL/40bpp and patch-pack integration remain open.
+ScriptViewport::ScrollTo uses Script; CmdScrollViewport (multiplayer-directed
+script redirects) still defaults to Other. Documented as a category/validation gap.

@@ -25,9 +25,86 @@ with sound and music disabled. These paths and the ignored `build-smoothzoom`
 launcher are specific to this prepared development machine; this is not a
 standalone installation package.
 
+## Existing saves, rollback and mod compatibility
+
+This is an OpenTTD engine patch, not a NewGRF or a downloadable content pack.
+Use the patched executable and its matching language files; enabling a NewGRF
+in an ordinary OpenTTD installation cannot add these camera controls.
+
+### Retrofit an existing game
+
+An existing save or scenario can use smooth zoom and fly navigation immediately
+if the underlying OpenTTD version can already load that file. No new game,
+map conversion, rebuilding of infrastructure or NewGRF-list change is required.
+Load the game normally and enable the local options in Advanced settings. With
+the prepared development launcher, add `-Savegame "C:\path\to\your-game.sav"`
+to the launch command above instead of generating a test map.
+
+Keep the save's existing NewGRF files, versions, order and parameters. This
+patch does not relax ordinary content dependencies or NewGRF incompatibilities.
+Changing a running game's NewGRF list is a separate operation and is unnecessary
+for this feature; see the [official NewGRF guide](https://wiki.openttd.org/en/Manual/NewGRF).
+
+Camera options are local configuration settings (`NotInSave`, `NoNetworkSync`),
+not game-world settings. A save sent to another player does not enable the
+feature for them. Flight progress and fractional zoom are transient: saving
+stores the current camera position with a traditional zoom level and adjusts
+the origin to preserve the viewed centre. Loading restores that integer level
+and cancels any pending flight. The exact fractional percentage, destination
+and remaining flight time are not preserved.
+
+The patch adds no savegame fields, chunks or savegame-version bump. A game saved
+here should therefore remain readable by an **unmodified build that understands
+the same upstream savegame version**, provided its content dependencies are
+available. This is a source-level compatibility expectation, not a tested stock
+save/load round trip. An older OpenTTD release, a newer-format save, or a save
+from a patch pack with its own format extensions may still be incompatible.
+To retain the option of returning to an older installation, keep the original
+save and save prototype sessions under a different filename. Turning the camera
+options off requires no game-data cleanup or uninstall operation inside the save.
+
+### Content and renderer compatibility
+
+The expectations below come from the code boundaries; only the stated coverage
+has been exercised. No specific third-party NewGRF set is certified yet.
+
+| Content or environment | Retrofit implications and current limits |
+| --- | --- |
+| OpenGFX / ordinary base graphics | OpenGFX 8.0 is the tested base set. Other supported base sets should use the same sprite pipeline, but have not been checked visually. |
+| 8-bit NewGRF artwork | Expected to work through a supported 32bpp blitter, including palette remapping. **8-bit artwork is not the same as an 8bpp renderer**; switching the blitter does not require replacing those NewGRFs. |
+| 32-bit / extra-zoom NewGRFs | Expected to load normally, without format or asset conversion. Different artwork at native sprite zoom levels can visibly change during a transition. Large sprites and high-resolution packs can increase redraw cost. These sets still need visual tests. |
+| Vehicle, industry/cargo, house, object, station, track, road/tram and bridge NewGRFs | No deliberate content restriction or changes to their simulation rules. Custom sprite bounds, transparency, company colours, animation, articulated vehicles and trams remain important coverage gaps. Base infrastructure and representative base vehicles have been exercised; that does not validate every custom set. |
+| Palette animation / translucency | Implemented in the supported rendering paths with remapping, alpha and dirty-region tests. Complex animated NewGRF scenes still need runtime validation. |
+| AIs and Game Scripts | No AI/API format change is required. Script-triggered camera movement can animate when its flight option is enabled, changing presentation timing. Disable flights to preserve ordinary navigation behaviour. Local script navigation has a separate switch; multiplayer script redirects remain unvalidated and currently use the combined town/map switch. |
+| Scenarios and heightmaps | Ordinary load/version/content requirements apply. A loaded scenario can use the camera options; an imported heightmap creates a world through the ordinary generator. |
+| Sound/music packs | No audio format or playback changes are introduced by this patch. |
+| Supported software 32bpp blitters | Fractional rendering is implemented in simple, optimized, SSE and animation families. Most runtime checks used `32bpp-anim` with the Windows `win32` video driver; other variants have differing runtime coverage. |
+| 8bpp or null/headless blitters | Smooth zoom and animated flights are unavailable; normal navigation remains. A dedicated server does not need to render the effect. |
+| OpenGL / `40bpp-anim` | Rendering support exists in the code, but full runtime and visual validation remains open. Do not infer support quality from the software-driver recordings. |
+| Multiplayer | Camera preferences are per client, but normal executable-revision and NewGRF compatibility checks still apply. This private build has a different revision from stock OpenTTD and ordinarily cannot join a stock server. Use matching builds and content for server/clients; multiplayer testing is still open. See the [official multiplayer guide](https://wiki.openttd.org/en/Manual/Multiplayer). |
+| Other engine patches / patch packs | Not a plug-in for another executable. Port the source changes and rebuild. Changes to viewports, blitters, zoom, toolbar/window input or settings may conflict; patches with custom save formats add separate compatibility constraints. No patch-pack integration has been validated. |
+
+### Current evidence and remaining checks
+
+Existing saved validation worlds have been loaded repeatedly, including loading
+during a flight. Infrastructure, representative moving vehicles and camera
+cancellation have been checked. Save-format declarations and the savegame
+version remain unchanged; the only save/load adaptation converts the camera
+view to the existing integer representation. The latest full Release suite
+passes 13,627 assertions across 130 cases. Source references:
+[camera save/load](../src/saveload/misc_sl.cpp),
+[local settings](../src/table/settings/gui_settings.ini), and
+[network revision checks](../src/network/core/network_game_info.cpp).
+
+Still required: a stock-created save loaded here and saved back into a matching
+stock build, representative NewGRF packs (including extra zoom and trams),
+multiplayer with matching builds, multiplayer script redirects, and integration
+with any intended patch pack. Keep these separate from the validated base-game
+coverage in the [TODO list](smooth_zoom_todo.md).
+
 ## Enable smooth mouse-wheel zoom
 
-Open **Game Options ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Advanced** (the settings page), rather than the Graphics tab.
+Open **Game Options > Advanced** (the settings page), rather than the Graphics tab.
 Select **Expert / all settings** in the settings filter, search for **smooth**,
 and enable **Smooth mouse-wheel zoom**.
 
@@ -75,7 +152,7 @@ smooth wheel controls, use `set gui.smooth_zoom 0`.
 
 ## Fly to a location
 
-Flight navigation is a separate, opt-in feature. In **Game Options ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Advanced**,
+Flight navigation is a separate, opt-in feature. In **Game Options > Advanced**,
 select **Expert / all settings**, search for **fly**, and enable **Fly navigation**.
 Then enable the destination categories you want. **Fly to towns and other map destinations** defaults to
 on beneath the disabled master switch; all additional categories default to off.
