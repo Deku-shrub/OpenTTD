@@ -35,6 +35,8 @@ The runner checks source descriptions, builds all default targets (including reg
 
 ## Remaining verification
 
+- The 10 October private Actions runs did not start: GitHub reported failed recent account payments or an insufficient spending limit. [Source-check run](https://github.com/Deku-shrub/OpenTTD/actions/runs/38082645949) and [build-matrix run](https://github.com/Deku-shrub/OpenTTD/actions/runs/38082646432) have no executed build steps. Account billing must be resolved before remote validation can provide evidence.
+- Local audit result: source-description check passed, full default-target Release build succeeded, and all **144 CTest tests passed**, including the four AI/GS regression suites (18.73 seconds). This closes the earlier missing-fixture failure.
 - Confirm results of the private remote build matrix and new Linux source checks; queued or configured jobs are not passing evidence.
 - Compare Doxygen warning sets with the unmodified upstream base.
 - Complete multiplayer/client compatibility testing and remaining platform-specific GUI checks listed in the [TODO](../smooth_zoom_todo.md).
