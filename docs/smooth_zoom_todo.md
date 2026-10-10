@@ -204,14 +204,19 @@ animation and interaction are finished.
       the official repository as upstream. Do not change repository visibility.
 - [x] Add independent fly-target toggles for towns, vehicles, stations,
       industries, news/events and the remaining navigation entry points.
-      Fifteen categories, gated by the master switch. Additional categories
-      default off; enabling Other cannot override a disabled category.
+      Fifteen destination categories, gated by the master switch; towns and
+      uncategorised map destinations now share one option. All other options
+      default off; the shared option cannot override a disabled category.
 - [x] Rebuild and test permission isolation: 48,600 assertions in 124 cases.
 - [x] Inspect per-target On/Off settings in the Expert UI; screenshot in guide.
 - [x] Runtime town, station, industry and vehicle category checks, including
       category off while Other is on, and category on while Other is off.
       Disabling an active station category preserves the view past its former
       duration; vehicle following interrupts a vehicle-target flight.
+- [x] Merge town and uncategorised map flights into one option, retaining
+      `gui.fly_towns`; other destination switches remain independent. Release
+      build and 48,600 assertions pass; shared-map on/off, mid-flight cancellation
+      and town-directory flight checked. Guide screenshot refreshed.
 - [ ] Runtime news-item clicks and remaining secondary navigation controls.
 
 User instructions: [prototype setup](smooth_zoom_readme.md).

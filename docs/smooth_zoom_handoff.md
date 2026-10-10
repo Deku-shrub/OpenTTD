@@ -59,8 +59,9 @@ outputs, isolated configurations, saved games and runtime logs stay ignored.
 
 ## Per-target flight controls
 
-`gui.fly_navigation` is now the master switch; `gui.fly_towns` independently
-controls towns. Towns default on beneath the disabled master switch; additional
+`gui.fly_navigation` is the master switch; `gui.fly_towns` now jointly
+controls towns and uncategorised map destinations. This combined option defaults
+on beneath the disabled master switch; additional
 categories default off. `ViewportFlightTarget` and `IsViewportFlightEnabled`
 carry typed permissions through viewport navigation. Active flights retain
 their category and cancel if that category or the master is disabled.
@@ -70,8 +71,9 @@ smallmap, company headquarters, depots, waypoints, order destinations, scenario
 links (stories/goals/league tables), subsidies, game-script locations and other
 locations. News references use News even for a vehicle; order destinations use
 Order even for a station. Generic Other does not override disabled categories.
-The earlier blanket `fly_other_navigation` flag now applies only to otherwise
-uncategorised map locations and console commands. Explicit instant navigation,
+The former `fly_other_navigation` setting has been removed. Uncategorized map
+locations and console commands now share `fly_towns`; all other category switches
+remain independent. Existing `fly_towns` configurations retain their value. Explicit instant navigation,
 Ctrl-click extra viewports and continuous vehicle following remain immediate.
 Vehicle location flights target the selected position, not a moving endpoint.
 

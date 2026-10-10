@@ -246,7 +246,7 @@ struct GUISettings {
 	ZoomLevel zoom_max; ///< maximum zoom out level
 	bool smooth_zoom; ///< allow fractional mouse-wheel zoom on supported blitters
 	bool fly_navigation; ///< master switch for opt-in zoom-and-pan navigation
-	bool fly_towns; ///< allow flights to towns
+	bool fly_towns; ///< allow flights to towns and otherwise uncategorised map destinations
 	bool fly_vehicles; ///< allow flights to vehicles
 	bool fly_stations; ///< allow flights to stations
 	bool fly_industries; ///< allow flights to industries
@@ -260,7 +260,6 @@ struct GUISettings {
 	bool fly_scenarios; ///< allow flights to scenario links
 	bool fly_subsidies; ///< allow flights to subsidy destinations
 	bool fly_scripts; ///< allow flights to script destinations
-	bool fly_other_navigation; ///< allow flights to otherwise uncategorised destinations
 	uint16_t fly_pan_speed; ///< pan speed as a percentage of viewport widths per second
 	uint16_t fly_zoom_duration; ///< zoom timing at departure and arrival, in milliseconds
 	uint8_t fly_zoom_out; ///< maximum extra traditional zoom-out levels

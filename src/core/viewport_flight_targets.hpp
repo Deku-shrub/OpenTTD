@@ -35,7 +35,7 @@ bool IsViewportFlightEnabled(const Settings &settings, ViewportFlightTarget targ
 		case ViewportFlightTarget::Scenario: return settings.fly_scenarios;
 		case ViewportFlightTarget::Subsidy: return settings.fly_subsidies;
 		case ViewportFlightTarget::Script: return settings.fly_scripts;
-		case ViewportFlightTarget::Other: return settings.fly_other_navigation;
+		case ViewportFlightTarget::Other: return settings.fly_towns;
 	}
 	return false;
 }

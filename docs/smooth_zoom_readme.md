@@ -77,7 +77,7 @@ smooth wheel controls, use `set gui.smooth_zoom 0`.
 
 Flight navigation is a separate, opt-in feature. In **Game Options → Advanced**,
 select **Expert / all settings**, search for **fly**, and enable **Fly navigation**.
-Then enable the destination categories you want. **Fly to towns** defaults to
+Then enable the destination categories you want. **Fly to towns and other map destinations** defaults to
 on beneath the disabled master switch; all additional categories default to off.
 Alternatively, enter `set gui.fly_navigation 1` in the console. It requires a
 supported 32bpp blitter; the mouse-wheel smooth-zoom setting is independent.
@@ -97,17 +97,17 @@ the filter and expand **Graphics** to see all of these options together.
 | Option | Default | Effect |
 | --- | --- | --- |
 | Fly navigation | Off | Master switch for all navigation flights. |
-| Fly to towns | On, subject to master switch | Enables town-directory and town-location flights. |
+| Fly to towns and other map destinations | On, subject to master switch | Enables town-directory, town-location and uncategorised map-location flights, including console `scrollto`. Console setting: `gui.fly_towns`. |
 | Flight pan speed | 100% of a viewport per second | Higher values shorten the journey; range 25–400%. Very short and long journeys have bounded durations. |
 | Flight zoom timing | 350 ms at each end | Higher values give gentler departure and arrival; range 100–2,000 ms. |
 | Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance; range 0–3. Zero removes the extra pull-back. |
 | Town arrival zoom | Fit town automatically | Choose automatic fitting or a fixed level from 400% to 12.5%. |
 
 Every additional category has its own switch. All require **Fly navigation**;
-none requires **Fly to towns** or another category to be enabled.
+none requires **Fly to towns and other map destinations** or another category to be enabled.
 
-This configured example selects industry flights while the master switch is
-off. Scroll the list to see the remaining categories.
+This example enables the master switch and the combined town/map option,
+with the other destination options off. Scroll to see the remaining categories.
 
 ![Independent flight controls in Advanced settings](images/smooth-zoom/flight-target-settings.png)
 
@@ -126,9 +126,8 @@ off. Scroll the list to see the remaining categories.
 | Fly to scenario links | Story-page, goal and league-table location links | `gui.fly_scenarios` |
 | Fly to subsidy destinations | Subsidy-list source/destination locations | `gui.fly_subsidies` |
 | Fly to script destinations | Navigation requested by a game script | `gui.fly_scripts` |
-| Fly to other locations | Remaining map-location actions and console `scrollto` | `gui.fly_other_navigation` |
 
-For example, enable station flights without town flights:
+For example, enable station flights without town or uncategorised map flights:
 
 ```text
 set gui.fly_navigation 1
@@ -139,9 +138,10 @@ set gui.fly_stations 1
 The switch follows the action used: a vehicle referenced in a news item uses
 the news switch, while its own location button uses the vehicle switch. Order
 destinations use the order switch even when the destination is a station.
-**Fly to other locations** does not override any disabled category. It replaces
-the earlier **Fly to other map destinations** blanket switch; enable individual
-categories when upgrading that prototype configuration.
+**Fly to towns and other map destinations** combines town and uncategorised
+map navigation; it does not override any other disabled category. The combined
+switch retains `gui.fly_towns` and its existing value. The former
+`gui.fly_other_navigation` setting is removed; use `gui.fly_towns` instead.
 
 Turning off a category cancels any active flight in that category at its
 currently displayed view. Turning off the master cancels every flight.
@@ -168,7 +168,7 @@ To try other destinations from the console:
 
 ```text
 set gui.fly_navigation 1
-set gui.fly_other_navigation 1
+set gui.fly_towns 1
 scrollto 50 50
 ```
 

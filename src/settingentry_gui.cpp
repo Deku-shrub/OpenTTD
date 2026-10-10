@@ -606,7 +606,6 @@ SettingsContainer &GetSettingsTree()
 			graphics->Add(new SettingEntry("gui.fly_scenarios"));
 			graphics->Add(new SettingEntry("gui.fly_subsidies"));
 			graphics->Add(new SettingEntry("gui.fly_scripts"));
-			graphics->Add(new SettingEntry("gui.fly_other_navigation"));
 			graphics->Add(new SettingEntry("gui.fly_pan_speed"));
 			graphics->Add(new SettingEntry("gui.fly_zoom_duration"));
 			graphics->Add(new SettingEntry("gui.fly_zoom_out"));

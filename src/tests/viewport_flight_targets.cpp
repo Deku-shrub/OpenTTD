@@ -30,14 +30,14 @@ TEST_CASE("Flight categories remain independent under the master switch", "[smoo
 		{ViewportFlightTarget::Scenario, &GUISettings::fly_scenarios},
 		{ViewportFlightTarget::Subsidy, &GUISettings::fly_subsidies},
 		{ViewportFlightTarget::Script, &GUISettings::fly_scripts},
-		{ViewportFlightTarget::Other, &GUISettings::fly_other_navigation},
+		{ViewportFlightTarget::Other, &GUISettings::fly_towns},
 	};
 	GUISettings settings{};
 	settings.fly_navigation = true;
 	for (const auto &[enabled_target, enabled_flag] : categories) {
 		settings.*enabled_flag = true;
 		for (const auto &[target, flag] : categories) {
-			CHECK(IsViewportFlightEnabled(settings, target) == (target == enabled_target));
+			CHECK(IsViewportFlightEnabled(settings, target) == (flag == enabled_flag));
 		}
 		settings.fly_navigation = false;
 		CHECK_FALSE(IsViewportFlightEnabled(settings, enabled_target));

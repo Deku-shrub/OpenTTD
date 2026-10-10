@@ -2094,9 +2094,8 @@ STR_CONFIG_SETTING_SMOOTH_ZOOM                                  :Smooth mouse-wh
 STR_CONFIG_SETTING_SMOOTH_ZOOM_HELPTEXT                         :Use smaller zoom steps with the mouse wheel. Requires a supported 32bpp blitter and may reduce rendering performance
 STR_CONFIG_SETTING_FLY_NAVIGATION                             :Fly navigation: {STRING2}
 STR_CONFIG_SETTING_FLY_NAVIGATION_HELPTEXT                    :Master switch for simultaneous zoom-and-pan navigation. Enable each destination category separately. Requires a supported 32bpp blitter. Manual scrolling and zooming interrupt the flight
-STR_CONFIG_SETTING_FLY_OTHER_NAVIGATION                       :Fly to other locations: {STRING2}
-STR_CONFIG_SETTING_FLY_OTHER_NAVIGATION_HELPTEXT              :Animate uncategorised navigation, including direct map locations and console scrollto commands. Requires Fly navigation. Does not override other destination toggles. Explicit instant jumps remain immediate
-STR_CONFIG_SETTING_FLY_TOWNS                                  :Fly to towns: {STRING2}
+STR_CONFIG_SETTING_FLY_TOWNS                                  :Fly to towns and other map destinations: {STRING2}
+STR_CONFIG_SETTING_FLY_TOWNS_HELPTEXT                         :Animate town navigation and uncategorised map locations, including console scrollto commands, when Fly navigation is enabled. Other destination toggles remain independent. Turning this option off cancels active flights to towns or uncategorised locations. Explicit instant jumps remain immediate
 STR_CONFIG_SETTING_FLY_VEHICLES                               :Fly to vehicles: {STRING2}
 STR_CONFIG_SETTING_FLY_STATIONS                               :Fly to stations: {STRING2}
 STR_CONFIG_SETTING_FLY_INDUSTRIES                             :Fly to industries: {STRING2}
