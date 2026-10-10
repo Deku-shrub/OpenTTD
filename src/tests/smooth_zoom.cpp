@@ -12,7 +12,9 @@
 #include "../blitter/32bpp_simple.hpp"
 #include "../blitter/32bpp_optimized.hpp"
 #include "../blitter/32bpp_sse2.hpp"
+#ifdef WITH_OPENGL
 #include "../blitter/40bpp_anim.hpp"
+#endif
 #include "../gfx_func.h"
 #include "../gfx_type.h"
 #include "../palette_func.h"
@@ -340,7 +342,9 @@ TEST_CASE("Fractional encoded sprite decoding agrees with integer blitting at ev
 	}
 	std::vector<std::unique_ptr<Blitter>> blitters;
 	blitters.push_back(std::make_unique<Blitter_32bppOptimized>());
+#ifdef WITH_OPENGL
 	blitters.push_back(std::make_unique<Blitter_40bppAnim>());
+#endif
 #ifdef WITH_SSE
 	blitters.push_back(std::make_unique<Blitter_32bppSSE2>());
 #endif
@@ -400,7 +404,9 @@ TEST_CASE("Unaligned encoded sub-sprite edges use a mipmap that preserves the cl
 	}
 	std::vector<std::unique_ptr<Blitter>> blitters;
 	blitters.push_back(std::make_unique<Blitter_32bppOptimized>());
+#ifdef WITH_OPENGL
 	blitters.push_back(std::make_unique<Blitter_40bppAnim>());
+#endif
 #ifdef WITH_SSE
 	blitters.push_back(std::make_unique<Blitter_32bppSSE2>());
 #endif

@@ -26,6 +26,7 @@ add_files(
     random_func.hpp
     smooth_zoom_motion.hpp
     smooth_zoom_palette.hpp
+    smooth_zoom_scale.hpp
     string_builder.cpp
     string_builder.hpp
     string_consumer.cpp

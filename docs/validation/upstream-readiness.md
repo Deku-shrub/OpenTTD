@@ -35,6 +35,10 @@ The runner checks source descriptions, builds all default targets (including reg
 
 ## Remaining verification
 
+- After the repository became public, the rerun started normally. Linux source-description/string checks and the rebase-label check passed. First-pass Emscripten, Linux Clang and Windows x86 passed; the remaining client builds and CodeQL were still running when the fixes below were prepared.
+- First CI feedback: macOS Debug/Release cannot use floating-point `std::from_chars` at the supported deployment target. Replaced the console parser with a strict decimal, classic-locale stream parser and tests for malformed input and comma-decimal global locales. Dedicated builds do not link real blitters, so renderer tests now follow `NOT OPTION_DEDICATED`; pure camera/controls tests remain enabled. GPU renderer tests also follow `WITH_OPENGL`.
+- The shared vcpkg action uses a read/write GitHub Packages cache. Added explicit package-write permissions to build and CodeQL workflows after the logs showed nonfatal 403 cache-upload failures.
+- Local validation after these fixes: all **146 CTest tests passed** (25.18 seconds), including all four upstream regressions. Remote confirmation is pending.
 - The 10 October private Actions runs did not start: GitHub reported failed recent account payments or an insufficient spending limit. [Source-check run](https://github.com/Deku-shrub/OpenTTD/actions/runs/38082645949) and [build-matrix run](https://github.com/Deku-shrub/OpenTTD/actions/runs/38082646432) have no executed build steps. Account billing must be resolved before remote validation can provide evidence.
 - Local audit result: source-description check passed, full default-target Release build succeeded, and all **144 CTest tests passed**, including the four AI/GS regression suites (18.73 seconds). This closes the earlier missing-fixture failure.
 - Confirm results of the private remote build matrix and new Linux source checks; queued or configured jobs are not passing evidence.

@@ -12,11 +12,44 @@
 #include "../zoom_func.h"
 #include "../core/smooth_zoom_palette.hpp"
 #include "../core/smooth_zoom_motion.hpp"
+#include "../core/smooth_zoom_scale.hpp"
 #include "../core/viewport_label_scale.hpp"
 #include "../core/viewport_pixel_phase.hpp"
 #include "../gfx_type.h"
 
 #include "../safeguards.h"
+
+TEST_CASE("Console zoom parses complete finite nonnegative decimal scales", "[smoothzoom]")
+{
+	for (const auto &[text, expected] : {std::pair{"0", 0.0f}, {"1.3", 1.3f}, {".84", .84f},
+			{"2.", 2.0f}, {"1e-2", .01f}, {"2E+1", 20.0f}}) {
+		CAPTURE(text);
+		const auto scale = ParseSmoothZoomScale(text);
+		REQUIRE(scale.has_value());
+		CHECK(*scale == Approx(expected));
+	}
+	for (const auto text : {"", "-1", "+1", " 1", "1 ", "1,3", "1.3junk", "0x1p0", "nan", "inf", "1e999"}) {
+		CAPTURE(text);
+		CHECK_FALSE(ParseSmoothZoomScale(text).has_value());
+	}
+	CHECK_FALSE(ParseSmoothZoomScale(std::string_view{"1\0junk", 6}).has_value());
+}
+
+TEST_CASE("Console zoom keeps decimal points under a comma-decimal global locale", "[smoothzoom]")
+{
+	struct CommaDecimal : std::numpunct<char> {
+		char do_decimal_point() const override { return ','; }
+	};
+	struct RestoreLocale {
+		std::locale previous = std::locale();
+		~RestoreLocale() { std::locale::global(this->previous); }
+	} restore_locale;
+	std::locale::global(std::locale(std::locale::classic(), new CommaDecimal));
+	const auto scale = ParseSmoothZoomScale("1.3");
+	REQUIRE(scale.has_value());
+	CHECK(*scale == Approx(1.3f));
+	CHECK_FALSE(ParseSmoothZoomScale("1,3").has_value());
+}
 
 TEST_CASE("Fractional pan retains its sampling phase and bounds camera error", "[smoothzoom]")
 {

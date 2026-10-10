@@ -10,8 +10,6 @@ add_test_files(
     mock_fontcache.h
     mock_spritecache.cpp
     mock_spritecache.h
-    smooth_zoom.cpp
-    smooth_zoom_benchmark.cpp
     smooth_zoom_controls.cpp
     viewport_flight.cpp
     viewport_flight_targets.cpp
@@ -25,4 +23,12 @@ add_test_files(
     test_window_desc.cpp
     tilearea.cpp
     utf8.cpp
+)
+
+# Dedicated builds intentionally link only the null blitter. Keep the pure
+# camera/controls tests above, but compile renderer tests only with renderers.
+add_test_files(
+    smooth_zoom.cpp
+    smooth_zoom_benchmark.cpp
+    CONDITION NOT OPTION_DEDICATED
 )

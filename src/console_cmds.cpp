@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "core/string_consumer.hpp"
+#include "core/smooth_zoom_scale.hpp"
 #include "console_internal.h"
 #include "debug.h"
 #include "engine_func.h"
@@ -387,9 +388,8 @@ static bool ConSmoothZoom(std::span<std::string_view> argv)
 	if (argv.size() != 2) return false;
 
 	std::string_view text = argv[1];
-	float scale = 0;
-	auto [ptr, ec] = std::from_chars(text.data(), text.data() + text.size(), scale);
-	if (ec != std::errc() || ptr != text.data() + text.size() || !std::isfinite(scale) || scale < 0) {
+	const auto scale = ParseSmoothZoomScale(text);
+	if (!scale.has_value()) {
 		IConsolePrint(CC_ERROR, "Invalid scale '{}'.", text);
 		return true;
 	}
@@ -397,10 +397,10 @@ static bool ConSmoothZoom(std::span<std::string_view> argv)
 	Window *w = GetMainWindow();
 	if (w == nullptr || w->viewport == nullptr) {
 		IConsolePrint(CC_ERROR, "There is no main viewport to zoom.");
-	} else if (scale > 0 && !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+	} else if (*scale > 0 && !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
 		IConsolePrint(CC_ERROR, "Smooth zoom is not supported by the current blitter. Use a supported 32bpp blitter.");
 	} else {
-		SetViewportSmoothZoom(w, scale);
+		SetViewportSmoothZoom(w, *scale);
 		w->InvalidateData();
 	}
 	return true;
