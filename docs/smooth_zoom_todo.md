@@ -11,6 +11,8 @@ entries for the same behaviour.
 
 ## Current coverage follow-up
 
+- [x] Show the smooth-zoom master switch in Basic settings alongside the flight master, so the default-enabled feature can be turned off without changing the filter.
+- [x] Verify the Basic switch in the Windows build: default On, Off snaps 119% to 100%, a classic wheel step reaches 200%, and re-enabling restores a fractional 168% step.
 - [x] Remove superseded documentation clips and per-vehicle movies; keep capture provenance and a small general-purpose gallery.
 - [x] Record 16 full-HD comparison and mixed-scene takes from a downloaded working network. Keep footage and individual vehicle stills in ignored local output; see [capture notes](validation/promotional-captures.md).
 - [ ] Select and compress current mixed-scene excerpts for the end-user gallery after reviewing the promotional footage.

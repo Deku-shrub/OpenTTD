@@ -53,7 +53,7 @@ launcher and populated test map.
 
 Smooth mouse-wheel zoom and fly-to navigation are enabled by default in this
 fork and require a supported 32bpp renderer. In Game Options > Advanced,
-search for smooth (use the Expert/all-settings filter) or fly to adjust
+search for smooth or fly with the Basic settings filter to enable
 or disable them. Existing configuration choices are preserved; enable the
 switches there if you previously turned them off.
 

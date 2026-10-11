@@ -3,10 +3,11 @@
 Smooth zoom is an optional client graphics setting, enabled by default in this fork. It
 does not change network game settings, and is stored in the local configuration
 as `gui.smooth_zoom`. Find Smooth mouse-wheel zoom in Game Options > Advanced,
-select Expert / all settings, and search for smooth. It is not in
+search for smooth. The switch is visible with the Basic settings filter. It is not in
 Game Options > Graphics. You can also enable it in the console with
-`set gui.smooth_zoom 1`. See [setup and use](smooth_zoom_readme.md) for the prepared
-Windows prototype launch command.
+`set gui.smooth_zoom 1`, or turn it off with `set gui.smooth_zoom 0`.
+See [setup and use](smooth_zoom_readme.md) for the prepared Windows prototype
+launch command.
 
 With the setting enabled and a supported 32bpp blitter active, the wheel selects
 targets in four steps per doubling or halving. Motion eases towards the target,

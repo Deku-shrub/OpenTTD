@@ -23,7 +23,7 @@ Run the resulting game with the matching language files and an installed base
 graphics set. Official OpenTTD releases do not contain this fork's features.
 
 Find Smooth mouse-wheel zoom in Game Options > Advanced; select the
-Expert/all-settings filter and search for smooth. For animated navigation,
+Basic settings filter and search for smooth. For animated navigation,
 search for fly and check Fly-to navigation. See the
 [zoom controls](#enable-smooth-mouse-wheel-zoom) and [flight settings](#fly-to-a-location)
 below for the full controls and per-destination overrides.
@@ -161,8 +161,8 @@ coverage in the [TODO list](smooth_zoom_todo.md).
 ## Enable smooth mouse-wheel zoom
 
 Open Game Options > Advanced (the settings page), rather than the Graphics tab.
-Select Expert / all settings in the settings filter, search for smooth,
-and enable Smooth mouse-wheel zoom.
+Select Basic in the settings filter and search for smooth.
+Toggle Smooth mouse-wheel zoom to enable or disable it.
 
 Alternatively, open the console using the key below Escape and enter:
 

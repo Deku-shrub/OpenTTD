@@ -11,7 +11,7 @@ Download a tested build from [the latest fork release](https://github.com/Deku-s
 
 Keep the executable, `lang` directory and `baseset` directory together in portable installations. OpenGFX 8.0 graphics are included. You can install optional OpenSFX sound, OpenMSX music and NewGRF content through the game's content downloader.
 
-Smooth zoom and fly navigation are enabled for new configurations. Existing choices are preserved. Open Game Options > Advanced, select the Expert/all-settings filter and search for smooth or fly to enable or adjust them. The main fly switch controls all destinations; individual destination switches provide overrides. Scroll or zoom during a flight to take control immediately.
+Smooth zoom and fly navigation are enabled for new configurations. Existing choices are preserved. Open Game Options > Advanced and search for smooth or fly to enable or disable them. Both main switches are visible with the Basic settings filter. Select Expert for individual destination overrides and flight tuning. Scroll or zoom during a flight to take control immediately.
 
 The toolbar zoom percentage shows your scale. Click it to stop and snap to a traditional zoom level. See the [user guide](smooth_zoom_readme.md) and [controls](smooth_zoom_controls.md) for examples and pacing options.
 
