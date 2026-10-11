@@ -22,18 +22,18 @@ Clone or download [this fork](https://github.com/Deku-shrub/OpenTTD), then follo
 Run the resulting game with the matching language files and an installed base
 graphics set. Official OpenTTD releases do not contain this fork's features.
 
-Find Smooth mouse-wheel zoom in Game Options > Advanced; select the
+Find Smooth mouse-wheel zoom in Game Options > Advanced. Select the
 Basic settings filter and search for smooth. For animated navigation,
 search for fly and check Fly-to navigation. See the
 [zoom controls](#enable-smooth-mouse-wheel-zoom) and [flight settings](#fly-to-a-location)
 below for the full controls and per-destination overrides.
 
 Both master switches and all destination categories default to On in this
-fork. Existing configuration files retain saved values, including Off;
-the defaults apply when those entries are absent. You can disable either master
+fork. Existing configuration files retain saved values, including Off.
+The defaults apply when those entries are absent. You can disable either master
 switch or individual flight categories normally. An eventual upstream proposal
 would be expected to use disabled master defaults, if such a contribution
-becomes eligible and is accepted; this fork deliberately showcases the features.
+becomes eligible and is accepted. This fork deliberately showcases the features.
 
 For a populated Windows demonstration, run the checked-in launcher from the
 repository root, supplying your own built executable and installed OpenGFX 8.0
@@ -44,7 +44,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\docs\validation\launch
 ```
 
 The launcher enables camera features in an isolated configuration and loads the
-included test map. It requires a compiled executable and graphics archive; it
+included test map. It requires a compiled executable and graphics archive. It
 does not download them. Keep the terminal open while playing. See the fixture
 instructions below for company selection and moving vehicles.
 
@@ -68,20 +68,20 @@ installation defaults enable the features too. Unpause to move the vehicles.
 Use the toolbar's station and vehicle company menus to select the fixture
 company: the initial human company has no fleet. Vehicle lists contain names
 such as Zoom bus and Zoom truck. Click a vehicle to open its window, then
-use its location control; double-click that control to follow. Stations can
+use its location control. Double-click that control to follow. Stations can
 also be opened by clicking them directly on the map.
 
 The launcher stages the matching language, base metadata and NoAI fixture files.
 It accepts `-Executable` for another Windows build, `-GraphicsArchive` for an
 installed `opengfx-8.0.tar`, `-Savegame` for your own world, or `-NewMap` for an
-empty generated map. Audio is disabled. It requires a compiled game and OpenGFX;
-this is not a standalone installation package. The older local `desktop.ps1`
+empty generated map. Audio is disabled. It requires a compiled game and OpenGFX.
+This is not a standalone installation package. The older local `desktop.ps1`
 helper also defaults to the populated map.
 
 ## Existing saves, rollback and mod compatibility
 
 This is an OpenTTD engine patch, not a NewGRF or a downloadable content pack.
-Use the patched executable and its matching language files; enabling a NewGRF
+Use the patched executable and its matching language files. Enabling a NewGRF
 in an ordinary OpenTTD installation cannot add these camera controls.
 
 ### Retrofit an existing game
@@ -96,7 +96,7 @@ to the launch command above instead of generating a test map.
 Keep the save's existing NewGRF files, versions, order and parameters. This
 patch does not relax ordinary content dependencies or NewGRF incompatibilities.
 Changing a running game's NewGRF list is a separate operation and is unnecessary
-for this feature; see the [official NewGRF guide](https://wiki.openttd.org/en/Manual/NewGRF).
+for this feature. See the [official NewGRF guide](https://wiki.openttd.org/en/Manual/NewGRF).
 
 Camera options are local configuration settings (`NotInSave`, `NoNetworkSync`),
 not game-world settings. A save sent to another player does not enable the
@@ -110,7 +110,7 @@ The patch adds no savegame fields, chunks or savegame-version bump. A game saved
 here should therefore remain readable by an unmodified build that understands
 the same upstream savegame version, provided its content dependencies are
 available. A stock -> modified -> stock save/load round trip passed against the
-matching upstream revision; see the [coverage notes](validation/zoom-coverage.md).
+matching upstream revision. See the [coverage notes](validation/zoom-coverage.md).
 An older OpenTTD release, a newer-format save, or a save
 from a patch pack with its own format extensions may still be incompatible.
 To retain the option of returning to an older installation, keep the original
@@ -119,31 +119,31 @@ options off requires no game-data cleanup or uninstall operation inside the save
 
 ### Content and renderer compatibility
 
-The expectations below come from the code boundaries; only the stated coverage
+The expectations below come from the code boundaries. Only the stated coverage
 has been exercised. No specific third-party NewGRF set is certified yet.
 
 | Content or environment | Retrofit implications and current limits |
 | --- | --- |
 | Base graphics | OpenGFX 8.0, OpenGFX2 Classic 0.8 and OpenGFX2 High Def 0.8 passed the eleven-configuration runtime matrix, including fractional rest and save/load. Original TTD graphics and zBase are untested. |
-| 8-bit NewGRF artwork | Expected to work through a supported 32bpp blitter, including palette remapping. 8-bit artwork is not the same as an 8bpp renderer; switching the blitter does not require replacing those NewGRFs. |
+| 8-bit NewGRF artwork | Expected to work through a supported 32bpp blitter, including palette remapping. 8-bit artwork is not the same as an 8bpp renderer. Switching the blitter does not require replacing those NewGRFs. |
 | 32-bit / extra-zoom NewGRFs | Expected to load normally, without format or asset conversion. Different artwork at native sprite zoom levels can visibly change during a transition. Large sprites and high-resolution packs can increase redraw cost. These sets still need visual tests. |
-| Vehicle, industry/cargo, house, object, station, track, road/tram and bridge NewGRFs | No deliberate content restriction or changes to their simulation rules. Custom sprite bounds, transparency, company colours, animation, articulated vehicles and trams need broader coverage. Base infrastructure and representative base vehicles have been exercised; that does not validate every custom set. |
+| Vehicle, industry/cargo, house, object, station, track, road/tram and bridge NewGRFs | No deliberate content restriction or changes to their simulation rules. Custom sprite bounds, transparency, company colours, animation, articulated vehicles and trams need broader coverage. Base infrastructure and representative base vehicles have been exercised. That does not validate every custom set. |
 | Palette animation / translucency | Implemented in the supported rendering paths with remapping, alpha and dirty-region tests. Complex animated NewGRF scenes still need runtime validation. |
-| AIs and Game Scripts | No AI/API format change is required. Script-triggered camera movement can animate when its flight option is enabled, changing presentation timing. Disable flights to preserve ordinary navigation behaviour. Local script navigation has a separate switch; multiplayer script redirects use the script switch; their runtime validation remains open. |
-| Scenarios and heightmaps | Ordinary load/version/content requirements apply. A loaded scenario can use the camera options; an imported heightmap creates a world through the ordinary generator. |
+| AIs and Game Scripts | No AI/API format change is required. Script-triggered camera movement can animate when its flight option is enabled, changing presentation timing. Disable flights to preserve ordinary navigation behaviour. Local script navigation has a separate switch. Multiplayer script redirects use the script switch. Their runtime validation remains open. |
+| Scenarios and heightmaps | Ordinary load/version/content requirements apply. A loaded scenario can use the camera options. An imported heightmap creates a world through the ordinary generator. |
 | Sound/music packs | No audio format or playback changes are introduced by this patch. |
 | Supported software 32bpp blitters | Runtime checks passed for simple, optimized, SSE2, SSE4 and animation variants on Windows with all three tested base sets. |
-| 8bpp or null/headless blitters | Smooth zoom and animated flights are unavailable; normal navigation remains. A dedicated server does not need to render the effect. |
+| 8bpp or null/headless blitters | Smooth zoom and animated flights are unavailable. Normal navigation remains. A dedicated server does not need to render the effect. |
 | OpenGL / `40bpp-anim` | Runtime zoom, fractional settling and save/load checks passed with all three tested base sets. GPU palette-backed label composition is corrected. Other GPU/driver combinations still need testing. |
-| Multiplayer | Camera preferences are per client, but normal executable-revision and NewGRF compatibility checks still apply. This fork has a different revision from stock OpenTTD and ordinarily cannot join a stock server. Use matching builds and content for server/clients; multiplayer testing is still open. See the [official multiplayer guide](https://wiki.openttd.org/en/Manual/Multiplayer). |
-| Other engine patches / patch packs | Not a plug-in for another executable. Port the source changes and rebuild. Changes to viewports, blitters, zoom, toolbar/window input or settings may conflict; patches with custom save formats add separate compatibility constraints. No patch-pack integration has been validated. |
+| Multiplayer | Camera preferences are per client, but normal executable-revision and NewGRF compatibility checks still apply. This fork has a different revision from stock OpenTTD and ordinarily cannot join a stock server. Use matching builds and content for server/clients. Multiplayer testing is still open. See the [official multiplayer guide](https://wiki.openttd.org/en/Manual/Multiplayer). |
+| Other engine patches / patch packs | Not a plug-in for another executable. Port the source changes and rebuild. Changes to viewports, blitters, zoom, toolbar/window input or settings may conflict. Patches with custom save formats add separate compatibility constraints. No patch-pack integration has been validated. |
 
 ### Current evidence and remaining checks
 
 Existing saved validation worlds have been loaded repeatedly, including loading
 during a flight. Infrastructure, representative moving vehicles and camera
 cancellation have been checked. Save-format declarations and the savegame
-version remain unchanged; the only save/load adaptation converts the camera
+version remain unchanged. The only save/load adaptation converts the camera
 view to the existing integer representation. The latest full Release suite
 passes 68,744 assertions across 142 unit cases, plus all four upstream
 regression suites (146 local CTest tests). The graphics-set matrix and stock
@@ -205,13 +205,13 @@ smooth wheel controls, use `set gui.smooth_zoom 0`.
 
 Flight navigation has a separate master switch, enabled by default in this fork. In Game Options > Advanced,
 search for fly and enable Fly-to navigation. The master switch is visible
-at Basic settings level; Expert settings expose the category overrides.
+at Basic settings level. Expert settings expose the category overrides.
 All destination categories default to on beneath the enabled master switch.
 Use Expert settings only to opt out particular categories. Existing saved
 configuration values remain in effect: enable any category you previously disabled.
 
 Alternatively, enter `set gui.fly_navigation 1` in the console. It requires a
-supported 32bpp blitter; the mouse-wheel smooth-zoom setting is independent.
+supported 32bpp blitter. The mouse-wheel smooth-zoom setting is independent.
 
 Click a town in the town directory, or use a town window's location button.
 The camera pans and zooms simultaneously along a continuous arc: it pulls back
@@ -222,12 +222,12 @@ For longer trips, no pull-back is possible when the extra zoom-out allowance is
 zero or the view is already at its configured zoom-out limit.
 Medium trips use the [van Wijk-Nuij zoom/pan model](https://vanwijk.win.tue.nl/zoompan.pdf),
 which derives height and duration from the perceptual path. Animated flights
-last 300-2,200 ms. Longer flights accelerate to finish within that limit; they
+last 300-2,200 ms. Longer flights accelerate to finish within that limit. They
 no longer silently switch to an instant jump after a previous town arrival. Disabling the existing smooth-scrolling setting also disables flights.
 Flights now choose an arrival zoom for the destination, independently of the
 departure zoom. Automatic fitting aims to keep the object within 80% of the
 viewport and stops at a traditional zoom level. Small objects arrive at up to
-200%; larger objects require a wider view. Your configured zoom limits apply.
+200%. Larger objects require a wider view. Your configured zoom limits apply.
 
 Stations use their full spread, industries their footprint, and vehicles their
 whole consist with surrounding context. Town fitting estimates their size from
@@ -235,8 +235,8 @@ the town influence radius. Terrain height and a roof allowance help frame
 station and industry structures. Coordinate-only destinations use a normal
 100% context view. These are framing estimates rather than exact sprite outlines.
 
-The Expert Town arrival zoom override defaults to Fit target automatically;
-fixed zoom and Keep current zoom remain available. Existing configurations
+The Expert Town arrival zoom override defaults to Fit target automatically.
+Fixed zoom and Keep current zoom remain available. Existing configurations
 that selected Keep current zoom preserve that choice: select automatic fitting
 or run `set gui.fly_town_zoom 0` to use the new default.
 
@@ -248,16 +248,16 @@ the filter and expand Graphics to see all of these options together.
 | --- | --- | --- |
 | Fly-to navigation | On in this fork | Master switch for all navigation flights. |
 | Fly to map locations | On, subject to master switch | Enables town-directory, town-location and uncategorised map-location flights, including console `scrollto`. Console setting: `gui.fly_towns`. |
-| Flight speed | 120% | Perceptual path speed (1.2 by default); range 25-400%. Duration grows with path length rather than map distance. |
-| Flight duration scale | 100% | Scale the whole flight; range 25-200%. |
-| Flight curvature | 142 / 100 | Lower values give flatter flights, higher values pull back more; range 25-300 / 100. |
-| Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance; range 0-3. Zero removes the extra pull-back. |
+| Flight speed | 120% | Perceptual path speed (1.2 by default). Range 25-400%. Duration grows with path length rather than map distance. |
+| Flight duration scale | 100% | Scale the whole flight. Range 25-200%. |
+| Flight curvature | 142 / 100 | Lower values give flatter flights, higher values pull back more. Range 25-300 / 100. |
+| Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance. Range 0-3. Zero removes the extra pull-back. |
 | Town arrival zoom | Fit target automatically | Override automatic fitting with a fixed level from 400% to 12.5%, or Keep current zoom. |
 
-Every category has an Expert override, enabled by default. All require Fly-to navigation;
-none requires Fly to map locations or another category to be enabled.
+Every category has an Expert override, enabled by default. All require Fly-to navigation.
+None requires Fly to map locations or another category to be enabled.
 
-Expert settings provide independent category overrides; scroll for the remaining
+Expert settings provide independent category overrides. Scroll for the remaining
 options. All are enabled by default under the main switch.
 
 | Switch | Navigation covered | Console setting |
@@ -288,20 +288,20 @@ The switch follows the action used: a vehicle referenced in a news item uses
 the news switch, while its own location button uses the vehicle switch. Order
 destinations use the order switch even when the destination is a station.
 The Expert Fly to map locations override combines town and uncategorised
-map navigation; it does not override any other disabled category. The combined
+map navigation. It does not override any other disabled category. The combined
 switch retains `gui.fly_towns` and its existing value. The former
-`gui.fly_other_navigation` setting is removed; use `gui.fly_towns` instead.
+`gui.fly_other_navigation` setting is removed. Use `gui.fly_towns` instead.
 
 Turning off a category cancels any active flight in that category at its
 currently displayed view. Turning off the master cancels every flight.
 The vehicle window's Centre <vehicle name> on location button uses the
-main switch by default; the Expert Fly to vehicles override can disable it.
+main switch by default. The Expert Fly to vehicles override can disable it.
 Vehicle location flights (including vehicle news references) blend toward the live vehicle position during the final
 20% of the flight, without extending the flight. A removed vehicle cancels the
 flight. Double-click following remains immediate and tracks it continuously.
 
 Flight speed, duration scale, curvature and maximum pull-back apply to all enabled
-flights; changed values take effect on the next flight. Start with 120% speed,
+flights. Changed values take effect on the next flight. Start with 120% speed,
 100% duration and curvature 142. Faster speed or a smaller duration scale gives
 quicker travel. Curvature is reduced automatically to fit zoom limits, while pan
 and zoom stay simultaneous. The old `gui.fly_zoom_duration` setting is replaced
@@ -330,7 +330,7 @@ scrollto 50 50
 Leave the console open while that flight runs: closing it is a key press and
 therefore interrupts the flight. `scrollto instant 50 50` bypasses the flight. Disable the feature with
 `set gui.fly_navigation 0`. Flights are local display effects and do not change
-the savegame format; loading cancels a pending flight.
+the savegame format. Loading cancels a pending flight.
 
 ## Zoom examples
 
@@ -344,7 +344,7 @@ Clips open on demand so the guide loads without downloading animated images.
 
 The object scene combines terrain, trees, NewGRF structures and map labels.
 These clips do not demonstrate every vehicle type. The gallery uses general
-scenes; individual vehicle checks are recorded in the
+scenes. Individual vehicle checks are recorded in the
 [coverage notes](validation/zoom-coverage.md), rather than separate movies.
 
 See the [capture notes](images/smooth-zoom/README.md) for provenance and the
@@ -355,7 +355,7 @@ mixed-scene requirements for future recordings.
 Inspect coastlines, slopes, roads and buildings while zooming and scrolling.
 Look for tile seams, flickering, misplaced labels and sluggish rendering. Include
 the zoom level and a screenshot when reporting a problem. Saving records a
-nearby integer zoom level; loading resets the viewport to integer zoom.
+nearby integer zoom level. Loading resets the viewport to integer zoom.
 
 See [the controls documentation](smooth_zoom_controls.md) for more behavior details.
 
@@ -377,7 +377,7 @@ up. Native and fractional zoom levels use the same sizing policy.
 Their click rectangles and redraw bounds follow the displayed size. Normal map
 labels keep the same font and content through zoom transitions, including town
 population and station icons when enabled. Interface font settings still provide
-the base size; toolbar and window text follow the interface size setting.
+the base size. Toolbar and window text follow the interface size setting.
 Legacy blitters without smooth zoom support retain their original labels.
 
 The paused fixture was checked at 12.5%, 84%, 130%, 200% and 400%. Clicking a
@@ -400,5 +400,5 @@ and prevents a later change when that scenery is redrawn. On the test machine,
 130% panning improved from about 47 to 60 FPS at 960 × 600, and from about
 16 to 58 FPS at 1920 × 1080. Changing the zoom still redraws the view.
 
-The extended validation world also includes moving trams and NewGRF objects;
-see the current zoom example above.
+The extended validation world also includes moving trams and NewGRF objects.
+See the current zoom example above.

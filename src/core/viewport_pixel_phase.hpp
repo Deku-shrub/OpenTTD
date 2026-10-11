@@ -16,7 +16,7 @@
 struct ViewportPixelPhase {
 	double left = 0; ///< Actual render origin on the virtual x axis.
 	double top = 0; ///< Actual render origin on the virtual y axis.
-	float step = 0; ///< Virtual pixels per screen pixel; zero means inactive.
+	float step = 0; ///< Virtual pixels per screen pixel. Zero means inactive.
 
 	/**
 	 * Reset the sampling phase after a scale or origin change.

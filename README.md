@@ -1,8 +1,8 @@
 # OpenTTD: Smooth Zoom and Fly Navigation
 
 An experimental [OpenTTD](https://github.com/OpenTTD/OpenTTD) fork with continuous
-map zoom and animated camera flights. This repository is the home of the fork;
-the standard OpenTTD downloads do not include these changes.
+map zoom and animated camera flights. This repository is the home of the fork.
+The standard OpenTTD downloads do not include these changes.
 
 [Download the latest tested build](https://github.com/Deku-shrub/OpenTTD/releases/latest) |
 [Installation](docs/install_smooth_zoom.md) |
@@ -27,7 +27,7 @@ enabled for new configurations.
 
 - Smooth mouse-wheel zoom: eased transitions between fractional zoom levels,
   with the map position beneath the cursor kept in place.
-- Compact zoom controls: a toolbar percentage shows the current scale; click
+- Compact zoom controls: a toolbar percentage shows the current scale. Click
   it to stop the transition and snap to a traditional zoom level.
 - Fly-to navigation: pan and zoom simultaneously to towns, vehicles, stations,
   industries, news/events and other map destinations. A master switch enables
@@ -47,14 +47,14 @@ panning and zooming with NewGRF objects and map labels.
 
 Downloads are published after all platform build and test jobs pass. Each release
 includes its source revision and checksums. This is an engine modification, not
-a NewGRF content pack. Developers can [build from source](COMPILING.md); the
+a NewGRF content pack. Developers can [build from source](COMPILING.md). The
 [user guide](docs/smooth_zoom_readme.md#get-started) also includes a Windows demo
 launcher and populated test map.
 
 Smooth mouse-wheel zoom and fly-to navigation are enabled by default in this
 fork and require a supported 32bpp renderer. In Game Options > Advanced,
 search for smooth or fly with the Basic settings filter to enable
-or disable them. Existing configuration choices are preserved; enable the
+or disable them. Existing configuration choices are preserved. Enable the
 switches there if you previously turned them off.
 
 Existing saved games can use these features without converting the map, as long
@@ -75,15 +75,15 @@ upstream revision `fab8089e6bed2be570b6b0a2cb9f19a5db16a7da`, preserved as the
 - [Compare with current upstream master](https://github.com/OpenTTD/OpenTTD/compare/master...Deku-shrub:master)
 
 `master` contains the fork's implementation. `upstream-master` preserves the
-upstream checkpoint taken during fork setup; it is not an automatically updated
+upstream checkpoint taken during fork setup. It is not an automatically updated
 mirror. The original branches and commits are preserved in this fork. The former
-standalone backup repository is no longer available; its historical CI logs
+standalone backup repository is no longer available. Its historical CI logs
 were not copied during migration.
 
 ### Status and reporting issues
 
 This is a work in progress. The [TODO list](docs/smooth_zoom_todo.md) distinguishes
-implemented work from remaining validation; the [test coverage
+implemented work from remaining validation. The [test coverage
 notes](docs/validation/zoom-coverage.md) record graphics sets, renderers and
 performance measurements. [CI requirements and results](docs/validation/upstream-readiness.md)
 track the platform checks and submission constraints. Upstream integration is
@@ -92,8 +92,8 @@ submissions, and this fork contains AI-generated code.
 
 For problems with this fork, use [this repository's issue
 tracker](https://github.com/Deku-shrub/OpenTTD/issues). Include the build revision,
-operating system, graphics set, renderer, camera settings and steps to reproduce;
-a savegame or short recording helps with visual issues.
+operating system, graphics set, renderer, camera settings and steps to reproduce.
+A savegame or short recording helps with visual issues.
 
 - [Detailed controls](docs/smooth_zoom_controls.md)
 - [Reproducible test maps and validation tools](docs/validation/README.md)
@@ -106,7 +106,7 @@ a savegame or short recording helps with visual issues.
 ## OpenTTD documentation
 
 The information below describes the upstream game. Official downloads are the
-unmodified OpenTTD releases; download this fork's builds to use smooth zoom and flights.
+unmodified OpenTTD releases. Download this fork's builds to use smooth zoom and flights.
 
 ### Table of contents
 
@@ -218,7 +218,7 @@ OpenTTD features multiple types of add-on content, which modify gameplay in diff
 
 Most types of add-on content can be downloaded within OpenTTD via the 'Check Online Content' button in the main menu.
 
-Add-on content can also be installed manually, but that's more complicated; the [OpenTTD wiki](https://wiki.openttd.org/) may offer help with that, or the [OpenTTD directory structure guide](./docs/directory_structure.md).
+Add-on content can also be installed manually, but that's more complicated. The [OpenTTD wiki](https://wiki.openttd.org/) may offer help with that, or the [OpenTTD directory structure guide](./docs/directory_structure.md).
 
 ### 1.5.1) Social Integration
 

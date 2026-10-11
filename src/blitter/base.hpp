@@ -90,7 +90,7 @@ public:
 		int clip_right = 0;  ///< Source pixels excluded from the right edge of the sprite
 		int clip_bottom = 0; ///< Source pixels excluded from the bottom edge of the sprite
 		uint32_t palette_mask = 0; ///< Output: animated palette entries contributing to pixels actually drawn
-		bool nearest = false; ///< Centre sampling when true; area filtering when false. Viewports use centre sampling throughout motion and rest.
+		bool nearest = false; ///< Centre sampling when true, area filtering when false. Viewports use centre sampling throughout motion and rest.
 	};
 
 	/**

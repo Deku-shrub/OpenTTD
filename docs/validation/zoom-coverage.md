@@ -9,7 +9,7 @@ All eleven configurations passed with the paused `zoom-navigation.sav` fixture:
 
 | Configuration | Checks |
 | --- | --- |
-| 32bpp-anim, simple, optimized, SSE2 and SSE4 | 100%, 130%, 200%, 84%, 25%; stable fractional rest; save/load |
+| 32bpp-anim, simple, optimized, SSE2 and SSE4 | 100%, 130%, 200%, 84%, 25%. Stable fractional rest. Save/load |
 | 40bpp-anim with Windows OpenGL | Same zoom, settling and save/load checks |
 | 8bpp-optimized | Native rendering and unsupported fractional request remain safe |
 | 1920 × 1080 | Same zoom, settling and save/load checks |
@@ -24,13 +24,13 @@ blitter before blending their text edges.
 The release unit suite passes 68,807 assertions in 140 cases after this fix,
 including GPU-format decoding, palette/partial-alpha sprites and clipped-source
 checks. Native SSE palette and alpha arithmetic can differ from the scalar
-compositor by one RGB unit; opaque non-palette comparisons remain byte-exact.
+compositor by one RGB unit. Opaque non-palette comparisons remain byte-exact.
 The runtime checks are functional checks, not comparative frame-rate benchmarks.
 
 ## Additional graphics sets
 
 OpenGFX2 Classic 0.8 and OpenGFX2 High Def 0.8 each passed all eleven
-configurations in the table above. Classic supplies palette artwork; High Def
+configurations in the table above. Classic supplies palette artwork. High Def
 supplies 32-bit extra-zoom artwork. Native and fractional rendering therefore
 exercise different source formats with the same camera and label code.
 Downloads come from the
@@ -39,8 +39,8 @@ Downloaded graphics remain local and are not bundled with this modification.
 
 The [machine-readable results](zoom-matrix-results.json) record the 33 passing
 configurations, individual checks, local artifact paths and archive SHA-256
-hashes. Early High Def attempts sent input before sprite loading completed;
-the harness now waits longer at startup and after loading a save. Two interrupted
+hashes. Early High Def attempts sent input before sprite loading completed.
+The harness now waits longer at startup and after loading a save. Two interrupted
 or incomplete runs were repeated successfully. Original Transport Tycoon
 graphics and zBase have not been tested in this pass.
 
@@ -65,14 +65,14 @@ company colours and Arabic, Japanese and accented Latin signs. Install its
 folder as a local AI together with the official OpenGFX2 tram, tree, station and
 object GRFs. Its Unicode source uses a UTF-8 BOM, required by the Squirrel loader.
 
-Arabic and accented Latin signs were checked with Segoe UI; Japanese signs
+Arabic and accented Latin signs were checked with Segoe UI. Japanese signs
 were checked with Yu Gothic at 130%. A font without the
-requested characters displays missing-glyph boxes; scaling cannot supply absent
+requested characters displays missing-glyph boxes. Scaling cannot supply absent
 glyphs. In the unpaused fixture, tram 10 changed tile from 3257 to 3254 at speed
-40; the truck and four trains also reported changing positions and nonzero
+40. The truck and four trains also reported changing positions and nonzero
 speeds in the AI debug window. Those historical checks exercised infrastructure,
 company colours, wires and trees while zooming. Changing vehicle and animated
-world pixels are expected; this is not a paused-scene settling comparison.
+world pixels are expected. This is not a paused-scene settling comparison.
 Interface-language checks above are separate from these custom-sign checks.
 
 The extended fixture also builds eight objects, including a gasometer,
@@ -122,13 +122,13 @@ remain separate from camera settling.
 
 A stock build of upstream revision `fab8089e6bed2be570b6b0a2cb9f19a5db16a7da`
 created a new save. The modified build loaded it, selected 130% zoom and saved
-it; the stock build then reopened that save successfully. Screenshots and console
+it. The stock build then reopened that save successfully. Screenshots and console
 logs are under `build-smoothzoom/stock-profile`. The test can be repeated with:
 
 ```powershell
 py -3 docs/validation/run-save-roundtrip.py --stock <path-to-stock-openttd.exe>
 ```
 
-The fractional view is client state; the save retains an integer zoom value.
+The fractional view is client state. The save retains an integer zoom value.
 This test used OpenGFX without NewGRFs. A save that uses NewGRFs still needs
 those NewGRFs available when loaded, as in stock OpenTTD.

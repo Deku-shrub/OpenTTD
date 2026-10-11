@@ -29,7 +29,7 @@ The main toolbar shows a compact percentage button, for example 84%.
 Its tooltip shows the nearest traditional level, such as 100%. Click the
 button to stop an active transition and snap to that traditional level,
 preserving the viewed centre. The existing +/- buttons select adjacent levels.
-The readout appears beside the zoom buttons when there is room; at very narrow
+The readout appears beside the zoom buttons when there is room. At very narrow
 widths, the existing split toolbar keeps its zoom buttons available.
 
 Dragging, keyboard arrow scrolling and scrolling near viewport edges use the
@@ -40,7 +40,7 @@ viewports use different fractional scales.
 
 Savegames retain the existing integer zoom format. Saving a fractional viewport
 records its nearest integer level and adjusts the position to preserve its
-centre. Loading resets fractional zoom; the client setting remains
+centre. Loading resets fractional zoom. The client setting remains
 available for subsequent wheel events. This requires no savegame format change.
 
 ## Verification
@@ -62,7 +62,7 @@ Desktop integration checks should also cover:
   scales, then resize and scroll the extra viewport.
 - Open a vehicle window, wheel-zoom its viewport and verify the vehicle remains
   centred. Follow a vehicle in the main viewport and repeat.
-- Save at a fractional scale and reload; check that the viewed centre is retained
+- Save at a fractional scale and reload. Check that the viewed centre is retained
   and wheel zoom remains available.
 - Switch between supported 32bpp rendering and an unsupported blitter, confirming
   that integer zoom remains usable.

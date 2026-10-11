@@ -9,7 +9,7 @@ Run `launch-prototype.ps1` with a compiled Windows game and installed OpenGFX
 (the default executable is `C:\ottd-build\Release\openttd.exe`). It loads
 `zoom-navigation.sav`, the existing fleet fixture including stations and all
 base vehicle categories. The paused world is ready for directory and location
-button tests; unpause for live vehicle approaches. Select the fixture company
+button tests. Unpause for live vehicle approaches. Select the fixture company
 in toolbar station/vehicle menus rather than the empty human company.
 
 The launcher enables the main flight switch and smooth zoom in a separate
@@ -22,7 +22,7 @@ loading does not require rebuilding the fixture. Keep the terminal open.
 `ZoomStatic` is a NoAI fixture for a disposable test game. It builds infrastructure
 without constructing vehicles. Copy its directory into that game's `ai` search
 directory, then run `rescan_ai`, `debug_level script=5`, and `start_ai ZoomStatic`
-in the console. Unpause while it builds; pause before comparing rendering frames.
+in the console. Unpause while it builds. Pause before comparing rendering frames.
 Use a temperate 256×256 map with enough flat land and some hills and water.
 Starting in 2050 makes the base game's later rail technologies available.
 
@@ -57,7 +57,7 @@ Basic master visibility, default-on Expert categories, bus centre flight and
 vehicle opt-out, consecutive town navigation retaining 130%, and stable land
 when a moving fractional follow camera was paused. At 130% in the 960x600
 32bpp-anim / win32:no_threads fixture, captured pan update intervals improved
-from 109 ms median to 32 ms. Baseline compilation load was present; this is an
+from 109 ms median to 32 ms. Baseline compilation load was present. This is an
 observational comparison. No land-crop changes occurred beyond 300 ms after
 release. Raw timings/captures are in ignored build-smoothzoom/pan-*.json and
 followed-paused-*.png. Larger-resolution and NewGRF performance checks remain open.
@@ -66,16 +66,16 @@ followed-paused-*.png. Larger-resolution and NewGRF performance checks remain op
 
 Release build passed 13,722 assertions in 134 cases, including departure-independent fitting, viewport size limits and offscreen vehicle consist extent. Logs: `build-smoothzoom/build-target-fit-final.log` and `build-smoothzoom/validation-target-fit.txt` (local ignored artifacts).
 
-The paused fixture was exercised at 960 × 600: town directory trips from 25% arrived at 100%, an airport at 100%, and a road station, bus centre-button destination and coal mine at 200%. The same station category produces different arrival levels based on its extent. Refreshed town flights (historical recording removed) and new vehicle fitting (historical recording removed) preserve actual captured frames and timing. Settings and savegame compatibility remain as described in the user guide; saved Keep current zoom overrides must be changed to automatic fitting to adopt the new behaviour.
+The paused fixture was exercised at 960 × 600: town directory trips from 25% arrived at 100%, an airport at 100%, and a road station, bus centre-button destination and coal mine at 200%. The same station category produces different arrival levels based on its extent. Refreshed town flights (historical recording removed) and new vehicle fitting (historical recording removed) preserve actual captured frames and timing. Settings and savegame compatibility remain as described in the user guide. Saved Keep current zoom overrides must be changed to automatic fitting to adopt the new behaviour.
 
 ## Fractional landing jitter follow-up
 
 All 16,024 assertions in 135 cases pass after the consistent-sampler and subpixel flight-tail changes. Coverage adds 130%/84% redraw partitions and landing-tail bounds at 640, 1280 and 3840 pixel viewport extents.
 
-Paused 960 x 600 fixture recordings: wheel landing (historical recording removed) last static crop change 565 ms, captures through 3,016 ms; 130% flight landing (historical recording removed) last change 1,974 ms, captures through 5,022 ms. The latter deliberately uses `gui.fly_town_zoom 7` to land at a fractional level; the default automatic fit was restored afterwards. A 130% right-drag check found no changes beyond 300 ms after release. Local raw timing JSON and frames use the `demo-fractional-*-landing` prefix in ignored build-smoothzoom.
+Paused 960 x 600 fixture recordings: wheel landing (historical recording removed) last static crop change 565 ms, captures through 3,016 ms. 130% flight landing (historical recording removed) last change 1,974 ms, captures through 5,022 ms. The latter deliberately uses `gui.fly_town_zoom 7` to land at a fractional level. The default automatic fit was restored afterwards. A 130% right-drag check found no changes beyond 300 ms after release. Local raw timing JSON and frames use the `demo-fractional-*-landing` prefix in ignored build-smoothzoom.
 
 ## Continuous map-label checks
 
 The suite passes 53,284 assertions in 137 cases, including label-scale continuity at native stops, readability limits, monotonic scaling and text coverage composition. Final logs: `build-smoothzoom/build-label-scaling-final.log` and `validation-label-scaling.txt` (local ignored artifacts).
 
-At 960 x 600, the fixture was inspected at 12.5%, 84%, 130%, 200% and 400%. Enlarged station-edge, custom sign and town-name clicks opened their expected windows. Station/sign land crops remained identical across captures 700 ms apart after wheel settling. Station/sign scaling (historical recording removed) and town scaling (historical recording removed) preserve measured capture timing (5.07 s and 5.01 s playback). Maximum observed capture intervals were 78 ms and 66 ms respectively; these are recording observations, not a rendering benchmark.
+At 960 x 600, the fixture was inspected at 12.5%, 84%, 130%, 200% and 400%. Enlarged station-edge, custom sign and town-name clicks opened their expected windows. Station/sign land crops remained identical across captures 700 ms apart after wheel settling. Station/sign scaling (historical recording removed) and town scaling (historical recording removed) preserve measured capture timing (5.07 s and 5.01 s playback). Maximum observed capture intervals were 78 ms and 66 ms respectively. These are recording observations, not a rendering benchmark.

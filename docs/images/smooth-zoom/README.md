@@ -3,7 +3,7 @@
 Only recordings of current behaviour are embedded in the documentation.
 Older development clips and settings screenshots have been removed from those
 pages, including alternate flight-speed and fixed-arrival examples. Speed and
-arrival overrides remain available; their old clips are not current evidence.
+arrival overrides remain available. Their old clips are not current evidence.
 
 | Clip | Behaviour | Capture source |
 | --- | --- | --- |
