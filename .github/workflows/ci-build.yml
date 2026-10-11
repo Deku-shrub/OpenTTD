@@ -54,7 +54,7 @@ jobs:
     secrets: inherit
 
     with:
-      package: ${{ github.repository == 'Deku-shrub/OpenTTD' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && matrix.package == true }}
+      package: ${{ github.repository == 'Deku-shrub/OpenTTD' && (github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/master' && github.event_name == 'push')) && matrix.package == true }}
       compiler: ${{ matrix.compiler }}
       cxxcompiler: ${{ matrix.cxxcompiler }}
       libraries: ${{ matrix.libraries }}
@@ -81,7 +81,7 @@ jobs:
     secrets: inherit
 
     with:
-      package: ${{ github.repository == 'Deku-shrub/OpenTTD' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && matrix.package == true }}
+      package: ${{ github.repository == 'Deku-shrub/OpenTTD' && (github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/master' && github.event_name == 'push')) && matrix.package == true }}
       arch: ${{ matrix.arch }}
       full_arch: ${{ matrix.full_arch }}
       extra-cmake-parameters: ${{ matrix.extra-cmake-parameters }}
@@ -100,7 +100,7 @@ jobs:
     secrets: inherit
 
     with:
-      package: ${{ github.repository == 'Deku-shrub/OpenTTD' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+      package: ${{ github.repository == 'Deku-shrub/OpenTTD' && (github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/master' && github.event_name == 'push')) }}
       arch: ${{ matrix.arch }}
 
   check_annotations:
