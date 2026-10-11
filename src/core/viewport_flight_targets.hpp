@@ -11,11 +11,30 @@
 
 /** Category of the navigation action, independent of its arrival zoom. */
 enum class ViewportFlightTarget {
-	Town, Vehicle, Station, Industry, News, Sign, SmallMap, Company, Depot,
-	Waypoint, Order, Scenario, Subsidy, Script, Other,
+	Town, ///< Town directory or town location.
+	Vehicle, ///< Vehicle location control.
+	Station, ///< Station location control.
+	Industry, ///< Industry location control.
+	News, ///< News or event destination.
+	Sign, ///< Sign-list destination.
+	SmallMap, ///< Small-map click.
+	Company, ///< Company headquarters or location.
+	Depot, ///< Depot destination.
+	Waypoint, ///< Waypoint destination.
+	Order, ///< Order-list location.
+	Scenario, ///< Scenario or editor destination.
+	Subsidy, ///< Subsidy endpoint.
+	Script, ///< Script-requested location.
+	Other, ///< Uncategorised map destination.
 };
 
-/** The master switch gates each category; other destinations are not a fallback permission. */
+/**
+ * The master switch gates each category; other destinations are not a fallback permission.
+ * @tparam Settings Settings type exposing flight switch members.
+ * @param settings Client camera switches.
+ * @param target Category of the initiating navigation action.
+ * @return True when both the master and category switches allow a flight.
+ */
 template <typename Settings>
 bool IsViewportFlightEnabled(const Settings &settings, ViewportFlightTarget target)
 {

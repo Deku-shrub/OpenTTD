@@ -16,7 +16,11 @@
 #include <string>
 #include <string_view>
 
-/** Parse a complete nonnegative decimal scale; zero selects traditional zoom. */
+/**
+ * Parse a complete nonnegative decimal scale; zero selects traditional zoom.
+ * @param text Entire console argument using a decimal point.
+ * @return Finite nonnegative scale, or nullopt for invalid input.
+ */
 inline std::optional<float> ParseSmoothZoomScale(std::string_view text)
 {
 	if (text.empty() || text.front() == '+' || text.find_first_not_of("0123456789.eE+-") != std::string_view::npos) return std::nullopt;

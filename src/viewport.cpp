@@ -291,14 +291,25 @@ int ViewportScale(const Viewport &vp, int v)
 	return ScaleByZoom(v, vp.zoom);
 }
 
-/** Convert virtual coordinates to screen pixels, rounding towards the lower edge. */
+/**
+ * Convert virtual coordinates to screen pixels, rounding towards the lower edge.
+ * @param vp Viewport supplying the scale.
+ * @param v Virtual-coordinate displacement.
+ * @return Rounded displacement in screen pixels.
+ */
 int ViewportUnScale(const Viewport &vp, double v)
 {
 	if (vp.zoom_step > 0) return static_cast<int>(std::floor(v / static_cast<double>(vp.zoom_step)));
 	return UnScaleByZoomLower(static_cast<int>(v), vp.zoom);
 }
 
-/** Convert a screen offset using the origin actually used to render the viewport. */
+/**
+ * Convert a screen offset using the origin actually used to render the viewport.
+ * @param vp Viewport supplying the scale.
+ * @param origin Actual render origin on the selected axis.
+ * @param offset Offset within the viewport in screen pixels.
+ * @return Virtual coordinate corresponding to the screen offset.
+ */
 static int ViewportScreenCoordinate(const Viewport &vp, double origin, int offset)
 {
 	if (vp.zoom_step > 0) return static_cast<int>(std::floor(origin + offset * static_cast<double>(vp.zoom_step)));
@@ -310,6 +321,7 @@ static int ViewportScreenCoordinate(const Viewport &vp, double origin, int offse
  * @param w The window with the viewport.
  * @param scale Magnification where 1.0 is #ZoomLevel::Normal, or 0 to return to integer zoom.
  * @return True iff the zoom was changed.
+ * @param cancel_animation Whether to stop existing camera animation before applying the scale.
  */
 bool SetViewportSmoothZoom(Window *w, float scale, bool cancel_animation)
 {
@@ -1436,6 +1448,13 @@ std::string *ViewportAddString(const DrawPixelInfo *dpi, const ViewportSign *sig
 	return &AddStringToDraw(sign->center - sign_half_width, sign->top, colour, flags, small ? sign->width_small : sign->width_normal);
 }
 
+/**
+ * Expand culling bounds to include scaled label extents.
+ * @param r Virtual-coordinate culling rectangle.
+ * @param zoom Traditional zoom level.
+ * @param zoom_step Fractional step; zero uses traditional zoom.
+ * @return Expanded virtual culling rectangle.
+ */
 static Rect ExpandRectWithViewportSignMargins(Rect r, ZoomLevel zoom, double zoom_step = 0)
 {
 	const int fh = std::max(GetCharacterHeight(FontSize::Normal), GetCharacterHeight(FontSize::Small));
@@ -1873,6 +1892,12 @@ static void ViewportDrawDirtyBlocks()
 	} while (--bottom > 0);
 }
 
+/**
+ * Draw a label at its native raster size.
+ * @param ss Label text, font and background description.
+ * @param x Destination x coordinate in screen pixels.
+ * @param y Destination y coordinate in screen pixels.
+ */
 static void ViewportDrawLabel(const StringSpriteToDraw &ss, int x, int y)
 {
 	const bool small = ss.flags.Test(ViewportStringFlag::Small);
@@ -1905,7 +1930,13 @@ static void ViewportDrawLabel(const StringSpriteToDraw &ss, int x, int y)
 	DrawString(left, right, top - shadow_offset, ss.string, colour, AlignmentH::Centre, false, small ? FontSize::Small : FontSize::Normal);
 }
 
-/** Rasterise at the interface font size, then scale coverage and colour together. */
+/**
+ * Rasterise at the interface font size, then scale coverage and colour together.
+ * @param ss Label text, font and background description.
+ * @param x Destination x coordinate in screen pixels.
+ * @param y Destination y coordinate in screen pixels.
+ * @param scale Label raster magnification.
+ */
 static void ViewportDrawScaledLabel(const StringSpriteToDraw &ss, int x, int y, double scale)
 {
 	const int width = ss.width;
@@ -1968,6 +1999,12 @@ static void ViewportDrawScaledLabel(const StringSpriteToDraw &ss, int x, int y, 
 	}
 }
 
+/**
+ * Draw culled map labels with continuous readability-bounded scaling.
+ * @param zoom Traditional viewport zoom level.
+ * @param sstdv Labels collected for this draw.
+ * @param fractional_dpi Fractional draw state, or nullptr for traditional drawing.
+ */
 static void ViewportDrawStrings(ZoomLevel zoom, const StringSpriteToDrawVector *sstdv, const DrawPixelInfo *fractional_dpi = nullptr)
 {
 	const double step = fractional_dpi != nullptr ? fractional_dpi->zoom_step : ScaleByZoom(1, zoom);
@@ -1998,7 +2035,6 @@ static void ViewportDoDrawFractional(const Viewport &vp, int sx0, int sy0, int s
 
 	_vd.dpi.zoom = vp.zoom;
 	_vd.dpi.zoom_step = vp.zoom_step;
-	_vd.dpi.zoom_animation = vp.zoom_animation;
 	_vd.combine_sprites = SpriteCombineMode::None;
 
 	_vd.dpi.virtual_left = vp.GetRenderLeft() + (sx0 - vp.left) * step;
@@ -2021,7 +2057,6 @@ void ViewportDoDraw(const Viewport &vp, int left, int top, int right, int bottom
 {
 	_vd.dpi.zoom = vp.zoom;
 	_vd.dpi.zoom_step = 0;
-	_vd.dpi.zoom_animation = false;
 	int mask = ScaleByZoom(-1, vp.zoom);
 
 	_vd.combine_sprites = SpriteCombineMode::None;
@@ -2040,7 +2075,7 @@ void ViewportDoDraw(const Viewport &vp, int left, int top, int right, int bottom
 }
 
 /**
- * Draw the contents of the viewport into the already prepared #_vd.dpi.
+ * Draw the contents of the viewport into the already prepared `_vd.dpi`.
  * @param vp Viewport to draw.
  * @param x Screen x coordinate of the left edge of the drawn area.
  * @param y Screen y coordinate of the top edge of the drawn area.
@@ -2800,7 +2835,29 @@ void RebuildViewportOverlay(Window *w)
 	}
 }
 
-/** Fit a destination once when navigation starts; no per-frame scans or image caches. */
+/**
+ * Fit a complete vehicle or consist using the client's zoom bounds.
+ * @param front Front vehicle of the selected consist.
+ * @param vp Destination viewport supplying the screen dimensions.
+ * @return Arrival magnification that fits the vehicle extent.
+ */
+double GetVehicleNavigationArrivalScale(const Vehicle *front, const Viewport &vp)
+{
+	const auto [width, height] = GetNavigationVehicleExtent(front, ZOOM_BASE, INVALID_COORD);
+	return ZOOM_BASE / GetNavigationArrivalStep(width, height, vp.width, vp.height, ZOOM_BASE / 2.0,
+			ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
+}
+
+/**
+ * Fit a destination once when navigation starts; no per-frame scans or image caches.
+ * @param x World x coordinate, adjusted to the fitted target centre.
+ * @param y World y coordinate, adjusted to the fitted target centre.
+ * @param z World elevation, adjusted to the fitted target centre.
+ * @param vp Viewport supplying screen dimensions.
+ * @param target Navigation category.
+ * @param vehicle_reference Whether coordinates identify a vehicle.
+ * @return Destination-aware arrival magnification.
+ */
 static double GetDestinationArrivalScale(int &x, int &y, int &z, const Viewport &vp, ViewportFlightTarget target, bool vehicle_reference)
 {
 	const auto fit = [&](double width, double height, double closest_step) {
@@ -2812,8 +2869,7 @@ static double GetDestinationArrivalScale(int &x, int &y, int &z, const Viewport 
 			if (!IsCompanyBuildableVehicleType(candidate)) continue;
 			const Vehicle *front = candidate->GetMovingFront();
 			if (front->x_pos != x || front->y_pos != y || front->z_pos != z) continue;
-			const auto [width, height] = GetNavigationVehicleExtent(front, ZOOM_BASE, INVALID_COORD);
-			return fit(width, height, ZOOM_BASE / 2.0);
+			return GetVehicleNavigationArrivalScale(front, vp);
 		}
 		return fit(256 * ZOOM_BASE, 160 * ZOOM_BASE, ZOOM_BASE / 2.0);
 	}
@@ -2882,6 +2938,8 @@ static double GetDestinationArrivalScale(int &x, int &y, int &z, const Viewport 
  * @param w       %Window containing the viewport.
  * @param instant Jump to the location instead of slowly moving to it.
  * @return Destination of the viewport was changed (to activate other actions when the viewport is already at the desired position).
+ * @param arrival_scale Arrival magnification; zero requests automatic target fitting.
+ * @param target Category authorising the navigation.
  */
 bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival_scale, ViewportFlightTarget target)
 {
@@ -2936,13 +2994,18 @@ bool ScrollWindowToTile(TileIndex tile, Window *w, bool instant)
  * @param tile    Desired tile to center on.
  * @param instant Jump to the location instead of slowly moving to it.
  * @return Destination of the viewport was changed (to activate other actions when the viewport is already at the desired position).
+ * @param target Category authorising the navigation.
  */
 bool ScrollMainWindowToTile(TileIndex tile, bool instant, ViewportFlightTarget target)
 {
 	return ScrollMainWindowTo(TileX(tile) * TILE_SIZE + TILE_SIZE / 2, TileY(tile) * TILE_SIZE + TILE_SIZE / 2, -1, instant, target);
 }
 
-/** Towns use the shared destination fit and the same navigation policy as other objects. */
+/**
+ * Towns use the shared destination fit and the same navigation policy as other objects.
+ * @param town Destination town.
+ * @return True if a camera move was requested.
+ */
 bool ScrollMainWindowToTown(const Town &town)
 {
 	Window *w = GetMainWindow();

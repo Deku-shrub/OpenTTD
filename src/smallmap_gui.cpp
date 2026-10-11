@@ -2163,6 +2163,7 @@ void ShowSmallMap()
  * @param z z coordinate; -1 to scroll to terrain height
  * @param instant scroll instantly (meaningful only when smooth_scrolling is active)
  * @return did the viewport position change?
+ * @param target Category authorising the navigation.
  */
 bool ScrollMainWindowTo(int x, int y, int z, bool instant, ViewportFlightTarget target)
 {

@@ -98,6 +98,8 @@ void Blitter_32bppSimple::Draw(Blitter::BlitterParams *bp, BlitterMode mode, Zoo
  * Choose a source mipmap without crossing a sub-sprite clip boundary.
  * A coarse source pixel straddling that boundary may contain excluded colours,
  * which cannot be removed by limiting its area-filter weight afterwards.
+ * @param bp Fractional draw and source clipping parameters.
+ * @return Coarsest usable source mipmap without crossing excluded edges.
  */
 ZoomLevel Blitter_32bppSimple::SelectScaledSpriteZoom(const ScaledBlitterParams &bp)
 {
@@ -112,7 +114,12 @@ ZoomLevel Blitter_32bppSimple::SelectScaledSpriteZoom(const ScaledBlitterParams 
 	return zoom;
 }
 
-/** Resolve remapping before filtering, so a footprint can contain several company colours. */
+/**
+ * Resolve remapping before filtering, so a footprint can contain several company colours.
+ * @param p Source pixel, updated with resolved palette colour and alpha.
+ * @param mode Blitting mode.
+ * @param remap Optional palette remapping table.
+ */
 void Blitter_32bppSimple::ResolveScaledPixel(Pixel &p, BlitterMode mode, const uint8_t *remap)
 {
 	if (p.a == 0) return;
@@ -138,7 +145,13 @@ void Blitter_32bppSimple::ResolveScaledPixel(Pixel &p, BlitterMode mode, const u
 	}
 }
 
-/** Composite a resolved pixel; palette animation blitters override this to clear their metadata. */
+/**
+ * Composite a resolved pixel; palette animation blitters override this to clear their metadata.
+ * @param dst Destination pixel.
+ * @param p Resolved source pixel.
+ * @param mode Blitting mode.
+ * @param remap Optional palette remapping table.
+ */
 void Blitter_32bppSimple::WriteScaledPixel(Colour *dst, const Pixel &p, BlitterMode mode, const uint8_t *remap)
 {
 	switch (mode) {
@@ -164,6 +177,8 @@ void Blitter_32bppSimple::WriteScaledPixel(Colour *dst, const Pixel &p, BlitterM
  * Every clip boundary in a selected mipmap is a multiple of 1 / 32. Separate
  * dirty rectangles can reach the same coordinate through different additions;
  * treating an almost exact boundary consistently prevents missing edge pixels.
+ * @param value Source coordinate before arithmetic-noise correction.
+ * @return Coordinate snapped only when extremely close to a clipping-grid boundary.
  */
 static double SnapScaledSpriteCoordinate(double value)
 {
@@ -179,6 +194,14 @@ static double SnapScaledSpriteCoordinate(double value)
  * choose a mipmap whose output footprint spans at most three rows/columns.
  * Transparent edges use centre coverage so adjoining ground sprites do not
  * expose the destination through independently blended edges.
+ * @param bp Fractional source, destination and clipping parameters.
+ * @param mode Blitting mode.
+ * @param width Selected source mipmap width in pixels.
+ * @param height Selected source mipmap height in pixels.
+ * @param factor Virtual pixels per selected mipmap pixel.
+ * @param context Opaque row-decoder context.
+ * @param read_row Callback decoding a source scanline into Pixel values.
+ * @return True when fractional drawing is supported.
  */
 bool Blitter_32bppSimple::DrawScaledRows(ScaledBlitterParams *bp, BlitterMode mode, int width, int height, double factor,
 		const void *context, void (*read_row)(const void *, int, Pixel *))
@@ -427,7 +450,12 @@ bool Blitter_32bppSimple::DrawScaledRows(ScaledBlitterParams *bp, BlitterMode mo
 	}
 	return true;
 }
-/** Draw the uncompressed reference sprite through the shared area sampler. */
+/**
+ * Draw the uncompressed reference sprite through the shared area sampler.
+ * @param bp Fractional draw parameters.
+ * @param mode Blitting mode.
+ * @return True when the sprite was handled.
+ */
 bool Blitter_32bppSimple::DrawScaled(Blitter::ScaledBlitterParams *bp, BlitterMode mode)
 {
 	const Pixel *sprite = static_cast<const Pixel *>(bp->sprite);

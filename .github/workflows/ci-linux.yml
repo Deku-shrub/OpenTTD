@@ -3,6 +3,10 @@ name: CI (Linux)
 on:
   workflow_call:
     inputs:
+      package:
+        required: false
+        type: boolean
+        default: false
       compiler:
         required: true
         type: string
@@ -23,7 +27,7 @@ jobs:
   linux:
     name: CI
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       CC: ${{ inputs.compiler }}
       CXX: ${{ inputs.cxxcompiler }}
@@ -116,3 +120,16 @@ jobs:
 
         # Check no tracked files have been modified.
         git diff --exit-code
+
+    - name: Package tested fork build
+      if: inputs.package
+      run: python3 .github/prepare-fork-package.py linux-x64
+
+    - name: Upload fork download
+      if: inputs.package
+      uses: actions/upload-artifact@v7
+      with:
+        name: fork-linux-x64
+        path: fork-packages/*
+        if-no-files-found: error
+        retention-days: 7

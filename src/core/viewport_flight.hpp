@@ -13,7 +13,17 @@
 #include <cmath>
 #include <utility>
 
-/** Choose a traditional level that fits an estimated destination within 80% of the viewport. */
+/**
+ * Choose a traditional level that fits an estimated destination within 80% of the viewport.
+ * @param virtual_width Destination width in virtual pixels.
+ * @param virtual_height Destination height in virtual pixels.
+ * @param width Viewport width in screen pixels.
+ * @param height Viewport height in screen pixels.
+ * @param normal_step Closest desired arrival step.
+ * @param min_step Minimum permitted virtual-pixel step.
+ * @param max_step Maximum permitted virtual-pixel step.
+ * @return Traditional virtual-pixel step fitting the destination within the zoom bounds.
+ */
 inline double GetNavigationArrivalStep(double virtual_width, double virtual_height, double width, double height,
 		double normal_step, double min_step, double max_step)
 {
@@ -21,7 +31,14 @@ inline double GetNavigationArrivalStep(double virtual_width, double virtual_heig
 	return std::clamp(std::exp2(std::ceil(std::log2(required))), min_step, max_step);
 }
 
-/** Include every vehicle part, using world positions even if sprite bounds are not cached yet. */
+/**
+ * Include every vehicle part, using world positions even if sprite bounds are not cached yet.
+ * @tparam VehicleType Vehicle type exposing positions, bounds and consist links.
+ * @param front Selected vehicle or consist front.
+ * @param zoom_base Virtual pixels per traditional map pixel.
+ * @param invalid_coord Sentinel for uncached sprite bounds.
+ * @return Destination width and height in virtual pixels.
+ */
 template <typename VehicleType>
 std::pair<double, double> GetNavigationVehicleExtent(const VehicleType *front, double zoom_base, int invalid_coord)
 {
@@ -44,30 +61,43 @@ std::pair<double, double> GetNavigationVehicleExtent(const VehicleType *front, d
 /** Finite camera flight, sampled by elapsed real time rather than accumulated frame deltas. */
 class ViewportFlight {
 public:
-	struct Pose { double x, y, step; };
+	/** Camera centre and scale in virtual coordinates. */
+	struct Pose {
+		double x; ///< Virtual x coordinate of the camera centre.
+		double y; ///< Virtual y coordinate of the camera centre.
+		double step; ///< Virtual pixels per screen pixel.
+	};
 
 private:
-	Pose start;
-	Pose destination;
-	double min_step;
-	double max_step;
-	double peak_step;
-	double distance;
-	double rho;
-	double r0 = 0;
-	double r_span = 0;
-	double path_length = 0;
-	double duration_ms = 0;
-	double elapsed_ms = 0;
-	bool flat = false;
+	Pose start; ///< Initial camera pose.
+	Pose destination; ///< Requested arrival pose.
+	double min_step; ///< Minimum permitted virtual-pixel step.
+	double max_step; ///< Maximum permitted virtual-pixel step.
+	double peak_step; ///< Maximum step reached by the bounded path.
+	double distance; ///< Centre distance normalised by viewport width.
+	double rho; ///< Perceptual path curvature.
+	double r0 = 0; ///< Initial hyperbolic path coordinate.
+	double r_span = 0; ///< Span of hyperbolic path coordinates.
+	double path_length = 0; ///< Integrated perceptual path length.
+	double duration_ms = 0; ///< Bounded total flight duration in milliseconds.
+	double elapsed_ms = 0; ///< Elapsed flight time in milliseconds.
+	bool flat = false; ///< Whether the path omits extra zoom-out.
 
+	/**
+	 * Apply quintic easing with zero endpoint velocity and acceleration.
+	 * @param t Normalised progress, clamped to zero through one.
+	 * @return Eased progress.
+	 */
 	static double Ease(double t)
 	{
 		t = std::clamp(t, 0.0, 1.0);
 		return t * t * t * (10 + t * (-15 + 6 * t));
 	}
 
-	/** Compute the van Wijk-Nuij path in viewport-width units, avoiding cancellation in log(sqrt(b*b+1)-b). */
+	/**
+	 * Compute the van Wijk-Nuij path in viewport-width units, avoiding cancellation in log(sqrt(b*b+1)-b).
+	 * @param curve Positive perceptual curvature parameter.
+	 */
 	void MakeCurve(double curve)
 	{
 		this->rho = curve;
@@ -83,6 +113,18 @@ private:
 	}
 
 public:
+	/**
+	 * Construct a bounded simultaneous zoom-and-pan path.
+	 * @param start Initial camera pose.
+	 * @param destination Requested arrival pose.
+	 * @param min_step Minimum permitted virtual-pixel step.
+	 * @param max_step Maximum permitted virtual-pixel step.
+	 * @param screen_extent Viewport width in screen pixels.
+	 * @param speed_percent Perceptual navigation speed as a percentage.
+	 * @param duration_percent Duration multiplier as a percentage.
+	 * @param extra_levels Additional zoom-out allowance in octaves.
+	 * @param curve Requested perceptual curvature.
+	 */
 	ViewportFlight(Pose start, Pose destination, double min_step, double max_step, double screen_extent,
 			double speed_percent, double duration_percent, double extra_levels, double curve = 1.42) :
 		start(start), destination(destination), min_step(min_step), max_step(max_step), rho(curve)
@@ -130,7 +172,11 @@ public:
 		this->duration_ms = std::clamp(raw_ms, 300.0, 2200.0);
 	}
 
-	/** Finish the invisible landing tail when combined pan/zoom error is below a pixel. */
+	/**
+	 * Finish the invisible landing tail when combined pan/zoom error is below a pixel.
+	 * @param delta_ms Elapsed real time in milliseconds.
+	 * @param screen_extent Screen-pixel span for a subpixel landing bound; zero disables it.
+	 */
 	void Advance(unsigned int delta_ms, double screen_extent = 0)
 	{
 		this->elapsed_ms = std::min(this->elapsed_ms + delta_ms, this->GetDuration());
@@ -140,12 +186,36 @@ public:
 		const double zoom_pixels = screen_extent * std::abs(this->destination.step / pose.step - 1);
 		if (pan_pixels + zoom_pixels <= 1) this->elapsed_ms = this->GetDuration();
 	}
+	/**
+	 * Read the bounded duration.
+	 * @return Flight duration in milliseconds.
+	 */
 	double GetDuration() const { return this->duration_ms; }
+	/**
+	 * Read the perceptual path length.
+	 * @return Integrated perceptual path length.
+	 */
 	double GetPathLength() const { return this->path_length; }
+	/**
+	 * Read elapsed normalised progress.
+	 * @return Progress from zero to one.
+	 */
 	double GetProgress() const { return this->duration_ms == 0 ? 1 : this->elapsed_ms / this->duration_ms; }
+	/**
+	 * Read the requested arrival pose.
+	 * @return Original destination pose.
+	 */
 	const Pose &GetDestination() const { return this->destination; }
+	/**
+	 * Check whether a flight remains.
+	 * @return True before the duration is reached.
+	 */
 	bool IsActive() const { return this->elapsed_ms < this->GetDuration(); }
 
+	/**
+	 * Sample the path at the current elapsed time.
+	 * @return Current camera centre and step.
+	 */
 	Pose GetPose() const
 	{
 		if (!this->IsActive()) return this->destination;
@@ -168,7 +238,12 @@ public:
 				std::clamp(step, this->min_step, std::min(this->max_step, this->peak_step))};
 	}
 
-	/** Blend a moving destination only near arrival, without restarting the flight clock. */
+	/**
+	 * Blend a moving destination only near arrival, without restarting the flight clock.
+	 * @param x Live destination centre in virtual x coordinates.
+	 * @param y Live destination centre in virtual y coordinates.
+	 * @return Pose adjusted towards a moving destination near arrival.
+	 */
 	Pose GetPoseTowards(double x, double y) const
 	{
 		Pose pose = this->GetPose();
@@ -179,17 +254,6 @@ public:
 		return pose;
 	}
 
-	/** Restore filtering during the last visible movement, avoiding delayed sharpening. */
-	bool UseFastSampling(double screen_extent) const
-	{
-		if (!this->IsActive()) return false;
-		/* Keep the first half inexpensive; restore filtering before arrival. */
-		if (this->elapsed_ms < this->GetDuration() * 0.5) return true;
-		const Pose pose = this->GetPose();
-		const double pan_pixels = std::hypot(this->destination.x - pose.x, this->destination.y - pose.y) / pose.step;
-		const double zoom_pixels = screen_extent * std::abs(this->destination.step / pose.step - 1);
-		return pan_pixels > 8 || zoom_pixels > 8;
-	}
 };
 
 #endif /* VIEWPORT_FLIGHT_HPP */

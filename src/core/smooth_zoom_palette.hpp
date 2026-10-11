@@ -16,18 +16,23 @@
 
 /** Conservative palette dependencies. Partial repaints retain dependencies outside their clip. */
 class SmoothZoomPaletteTracker {
-	int width = 0;
-	int height = 0;
-	int columns = 0;
-	int rows = 0;
-	std::vector<uint32_t> dependencies;
-	std::vector<uint32_t> scroll_source;
-	bool have_dependencies = false;
+	int width = 0; ///< Tracked screen width in pixels.
+	int height = 0; ///< Tracked screen height in pixels.
+	int columns = 0; ///< Number of block columns.
+	int rows = 0; ///< Number of block rows.
+	std::vector<uint32_t> dependencies; ///< Animated-palette mask per block, stored by column.
+	std::vector<uint32_t> scroll_source; ///< Reusable snapshot of dependency masks before a scroll.
+	bool have_dependencies = false; ///< Conservative shortcut for an empty dependency map.
 
 public:
-	static constexpr int BLOCK_WIDTH = 64;
-	static constexpr int BLOCK_HEIGHT = 8;
+	static constexpr int BLOCK_WIDTH = 64; ///< Width of one tracked screen block in pixels.
+	static constexpr int BLOCK_HEIGHT = 8; ///< Height of one tracked screen block in pixels.
 
+	/**
+	 * Resize and clear the tracked screen.
+	 * @param width Screen width in pixels.
+	 * @param height Screen height in pixels.
+	 */
 	void Resize(int width, int height)
 	{
 		this->width = std::max(0, width);
@@ -38,7 +43,14 @@ public:
 		this->have_dependencies = false;
 	}
 
-	/** Register a sprite's palette dependencies; right and bottom are exclusive. */
+	/**
+	 * Register a sprite's palette dependencies; right and bottom are exclusive.
+	 * @param left Left screen-pixel edge.
+	 * @param top Top screen-pixel edge.
+	 * @param right Exclusive right screen-pixel edge.
+	 * @param bottom Exclusive bottom screen-pixel edge.
+	 * @param mask Bit mask of contributing animated palette entries.
+	 */
 	void Register(int left, int top, int right, int bottom, uint32_t mask)
 	{
 		left = std::max(0, left);
@@ -54,7 +66,13 @@ public:
 		}
 	}
 
-	/** Clear only blocks completely covered by a repaint, before window partitioning. */
+	/**
+	 * Clear only blocks completely covered by a repaint, before window partitioning.
+	 * @param left Left screen-pixel edge.
+	 * @param top Top screen-pixel edge.
+	 * @param right Exclusive right screen-pixel edge.
+	 * @param bottom Exclusive bottom screen-pixel edge.
+	 */
 	void Clear(int left, int top, int right, int bottom)
 	{
 		left = std::max(0, left);
@@ -72,7 +90,15 @@ public:
 		}
 	}
 
-	/** Move dependencies with copied pixels, preserving masks outside the copied rectangle. */
+	/**
+	 * Move dependencies with copied pixels, preserving masks outside the copied rectangle.
+	 * @param left Left screen-pixel edge.
+	 * @param top Top screen-pixel edge.
+	 * @param width Width of the scrolling rectangle in pixels.
+	 * @param height Height of the scrolling rectangle in pixels.
+	 * @param dx Signed horizontal pixel translation.
+	 * @param dy Signed vertical pixel translation.
+	 */
 	void Scroll(int left, int top, int width, int height, int dx, int dy)
 	{
 		if (!this->have_dependencies || (dx == 0 && dy == 0)) return;
@@ -98,7 +124,12 @@ public:
 		}
 	}
 
-	/** Visit only blocks affected by the changed animated palette entries. */
+	/**
+	 * Visit only blocks affected by the changed animated palette entries.
+	 * @tparam Callback Callable accepting four screen-pixel edges.
+	 * @param changed Bit mask of animated entries that changed.
+	 * @param callback Receives each affected block as left, top, exclusive right and bottom.
+	 */
 	template <typename Callback>
 	void ForEachChanged(uint32_t changed, const Callback &callback) const
 	{
@@ -113,7 +144,10 @@ public:
 	}
 };
 
-/** Mark fractional pixels dirty after changes to the animation palette. */
+/**
+ * Mark fractional pixels dirty after changes to the animation palette.
+ * @param changed Bit mask of animated palette entries that changed.
+ */
 void InvalidateSmoothZoomPalette(uint32_t changed);
 
 #endif /* SMOOTH_ZOOM_PALETTE_HPP */

@@ -20,6 +20,13 @@
 /** Instantiation of the 32bpp with animation blitter factory. */
 static FBlitter_32bppAnim iFBlitter_32bppAnim;
 
+/**
+ * Composite a resolved pixel and clear native palette-animation metadata.
+ * @param dst Destination pixel.
+ * @param pixel Resolved source pixel.
+ * @param mode Blitting mode.
+ * @param remap Optional palette remapping table.
+ */
 void Blitter_32bppAnim::WriteScaledPixel(Colour *dst, const Pixel &pixel, BlitterMode mode, const uint8_t *remap)
 {
 	Blitter_32bppSimple::WriteScaledPixel(dst, pixel, mode, remap);

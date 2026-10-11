@@ -3,6 +3,10 @@ name: CI (MacOS)
 on:
   workflow_call:
     inputs:
+      package:
+        required: false
+        type: boolean
+        default: false
       arch:
         required: true
         type: string
@@ -79,3 +83,16 @@ jobs:
       run: |
         cd build
         ctest -j $(sysctl -n hw.logicalcpu) --timeout 120
+
+    - name: Package tested fork build
+      if: inputs.package
+      run: python3 .github/prepare-fork-package.py macos-arm64
+
+    - name: Upload fork download
+      if: inputs.package
+      uses: actions/upload-artifact@v7
+      with:
+        name: fork-macos-arm64
+        path: fork-packages/*
+        if-no-files-found: error
+        retention-days: 7

@@ -41,6 +41,7 @@ void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms);
 void CancelViewportFlight(Window *w);
 void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle);
 bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale = 0, ViewportFlightTarget target = ViewportFlightTarget::Other);
+double GetVehicleNavigationArrivalScale(const struct Vehicle *front, const Viewport &vp);
 void ConstrainAllViewportsZoom();
 Point GetTileZoomCenterWindow(bool in, Window * w);
 void FixTitleGameZoom(int zoom_adjust = 0);

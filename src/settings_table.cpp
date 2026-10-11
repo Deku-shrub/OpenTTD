@@ -414,7 +414,10 @@ static void SpriteZoomMinChanged(int32_t)
 	MarkWholeScreenDirty();
 }
 
-/** Return fractional viewports to integer zoom when smooth zoom is disabled. */
+/**
+ * Return fractional viewports to integer zoom when smooth zoom is disabled.
+ * @param new_value New master setting value; zero disables the feature.
+ */
 static void SmoothZoomChanged(int32_t new_value)
 {
 	if (new_value != 0) return;
@@ -426,7 +429,10 @@ static void SmoothZoomChanged(int32_t new_value)
 	}
 }
 
-/** Turning off flight navigation stops it at the displayed location. */
+/**
+ * Turning off flight navigation stops it at the displayed location.
+ * @param new_value New master setting value; zero disables the feature.
+ */
 static void FlyNavigationChanged(int32_t new_value)
 {
 	if (new_value != 0) return;

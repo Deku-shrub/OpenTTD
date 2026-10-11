@@ -14,10 +14,16 @@
 
 /** Preserve the source sampling phase when scrolling already-rendered pixels. */
 struct ViewportPixelPhase {
-	double left = 0;
-	double top = 0;
-	float step = 0;
+	double left = 0; ///< Actual render origin on the virtual x axis.
+	double top = 0; ///< Actual render origin on the virtual y axis.
+	float step = 0; ///< Virtual pixels per screen pixel; zero means inactive.
 
+	/**
+	 * Reset the sampling phase after a scale or origin change.
+	 * @param x Desired virtual left origin.
+	 * @param y Desired virtual top origin.
+	 * @param new_step New fractional virtual-pixel step.
+	 */
 	void Reset(int x, int y, float new_step)
 	{
 		this->left = x;
@@ -25,7 +31,12 @@ struct ViewportPixelPhase {
 		this->step = new_step;
 	}
 
-	/** Return the whole screen-pixel translation; retain subpixel input in the desired camera coordinates. */
+	/**
+	 * Return the whole screen-pixel translation; retain subpixel input in the desired camera coordinates.
+	 * @param x Desired virtual left origin.
+	 * @param y Desired virtual top origin.
+	 * @return Whole screen-pixel translation in x and y.
+	 */
 	std::pair<int, int> Move(int x, int y)
 	{
 		/* A half-open rounding interval keeps an exact half-pixel tie stable

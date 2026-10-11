@@ -24,30 +24,53 @@ protected:
 		uint8_t m;  ///< Remap-channel
 		uint8_t v;  ///< Brightness-channel
 	};
+	/**
+	 * Composite one traditional sprite pixel.
+	 * @param dst Destination pixel.
+	 * @param src Source sprite pixel.
+	 * @param mode Blitting mode.
+	 * @param remap Optional palette remapping table.
+	 */
 	void DrawPixel(Colour *dst, const Pixel *src, BlitterMode mode, const uint8_t *remap);
 	/** Scratch scanlines; optimized blitters need at most three rows of the selected mipmap. */
 	std::vector<Pixel> scaled_rows;
 	/** Horizontal sampling footprint, shared by all output rows of one sprite. */
 	struct ScaledColumn {
-		int first, last, centre;
-		double coverage;
-		bool edge;
+		int first; ///< First source column in the sampling footprint.
+		int last; ///< Last source column in the sampling footprint.
+		int centre; ///< Source column containing the output pixel centre.
+		double coverage; ///< Source-space footprint width.
+		bool edge; ///< Whether the footprint touches a transparent or clipped edge.
 	};
 	/** Premultiplied, horizontally filtered source pixel. */
 	struct ScaledFilteredPixel {
-		double r, g, b, a;
-		uint32_t palette_mask;
-		bool transparent, opaque;
+		double r; ///< Premultiplied red contribution.
+		double g; ///< Premultiplied green contribution.
+		double b; ///< Premultiplied blue contribution.
+		double a; ///< Accumulated alpha coverage.
+		uint32_t palette_mask; ///< Animated-palette entries contributing to this footprint.
+		bool transparent; ///< Whether the whole footprint is transparent.
+		bool opaque; ///< Whether the whole footprint is opaque.
 	};
-	std::vector<ScaledColumn> scaled_columns;
-	std::vector<double> scaled_weights;
-	std::vector<ScaledFilteredPixel> scaled_filtered_rows;
+	std::vector<ScaledColumn> scaled_columns; ///< Reusable horizontal sampling footprints.
+	std::vector<double> scaled_weights; ///< Reusable source-column filter weights.
+	std::vector<ScaledFilteredPixel> scaled_filtered_rows; ///< Reusable horizontally filtered source scanlines.
 	void ResolveScaledPixel(Pixel &pixel, BlitterMode mode, const uint8_t *remap);
 	static ZoomLevel SelectScaledSpriteZoom(const ScaledBlitterParams &bp);
 	virtual void WriteScaledPixel(Colour *dst, const Pixel &pixel, BlitterMode mode, const uint8_t *remap);
 	bool DrawScaledRows(ScaledBlitterParams *bp, BlitterMode mode, int width, int height, double factor,
 			const void *context, void (*read_row)(const void *, int, Pixel *));
-	/** Adapt row readers without allocating a type-erased function object per sprite. */
+	/**
+	 * Adapt row readers without allocating a type-erased function object per sprite.
+	 * @tparam ReadRow Source scanline decoder type.
+	 * @param bp Fractional source, destination and clipping parameters.
+	 * @param mode Blitting mode.
+	 * @param width Width of the selected source mipmap in pixels.
+	 * @param height Height of the selected source mipmap in pixels.
+	 * @param factor Virtual pixels per selected mipmap pixel.
+	 * @param read_row Callable decoding one source scanline.
+	 * @return True when fractional drawing is supported.
+	 */
 	template <typename ReadRow>
 	bool DrawScaledRows(ScaledBlitterParams *bp, BlitterMode mode, int width, int height, double factor, const ReadRow &read_row)
 	{

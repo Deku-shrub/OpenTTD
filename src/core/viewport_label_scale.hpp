@@ -11,15 +11,34 @@
 #include <algorithm>
 #include <cmath>
 
+/**
+ * Choose a continuous label scale bounded for readability.
+ * @param step Current virtual pixels per screen pixel.
+ * @param normal_step Step at normal map zoom.
+ * @return Label magnification between 0.75 and 1.5.
+ */
 inline double GetViewportLabelScale(double step, double normal_step)
 {
 	return std::clamp(std::pow(normal_step / step, 0.25), 0.75, 1.5);
 }
+/**
+ * Round a scaled label extent outward.
+ * @param pixels Unscaled extent in pixels.
+ * @param scale Label magnification.
+ * @return Positive pixel extent covering the scaled label.
+ */
 inline int GetViewportLabelExtent(int pixels, double scale)
 {
 	return std::max(1, static_cast<int>(std::ceil(pixels * scale)));
 }
-/** Black/white raster passes recover coverage without assuming glyph alpha semantics. */
+/**
+ * Black/white raster passes recover coverage without assuming glyph alpha semantics.
+ * @tparam Pixel RGB pixel type with a three-channel constructor.
+ * @param black Glyph raster sampled over black.
+ * @param white Glyph raster sampled over white.
+ * @param background Resolved scene colour below the glyph.
+ * @return Glyph colour composited onto the scene.
+ */
 template <typename Pixel>
 Pixel CompositeViewportLabelPixel(const Pixel &black, const Pixel &white, const Pixel &background)
 {

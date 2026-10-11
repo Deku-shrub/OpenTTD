@@ -1,6 +1,7 @@
 name: CI - Build
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -35,6 +36,8 @@ jobs:
           cxxcompiler: clang++
           libraries: libsdl2-dev
         - name: GCC - SDL2
+          package: true
+          extra-cmake-parameters: -DCMAKE_BUILD_TYPE=Release
           compiler: gcc
           cxxcompiler: g++
           libraries: libsdl2-dev
@@ -51,6 +54,7 @@ jobs:
     secrets: inherit
 
     with:
+      package: ${{ github.repository == 'Deku-shrub/OpenTTD' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && matrix.package == true }}
       compiler: ${{ matrix.compiler }}
       cxxcompiler: ${{ matrix.cxxcompiler }}
       libraries: ${{ matrix.libraries }}
@@ -66,6 +70,7 @@ jobs:
           full_arch: arm64
           extra-cmake-parameters: -DCMAKE_BUILD_TYPE=Debug
         - name: arm64 - Release
+          package: true
           arch: arm64
           full_arch: arm64
           extra-cmake-parameters: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DOPTION_USE_ASSERTS=OFF
@@ -76,6 +81,7 @@ jobs:
     secrets: inherit
 
     with:
+      package: ${{ github.repository == 'Deku-shrub/OpenTTD' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && matrix.package == true }}
       arch: ${{ matrix.arch }}
       full_arch: ${{ matrix.full_arch }}
       extra-cmake-parameters: ${{ matrix.extra-cmake-parameters }}
@@ -94,6 +100,7 @@ jobs:
     secrets: inherit
 
     with:
+      package: ${{ github.repository == 'Deku-shrub/OpenTTD' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
       arch: ${{ matrix.arch }}
 
   check_annotations:
@@ -111,3 +118,48 @@ jobs:
     steps:
     - name: Check annotations
       uses: OpenTTD/actions/annotation-check@v7
+
+  publish:
+    name: Publish tested downloads
+    needs: [emscripten, linux, macos, windows]
+    if: github.repository == 'Deku-shrub/OpenTTD' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    concurrency:
+      group: fork-release-publish
+      cancel-in-progress: false
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/download-artifact@v8
+      with:
+        pattern: fork-*
+        merge-multiple: true
+        path: downloads
+    - name: Publish revision and checksums
+      env:
+        GH_TOKEN: ${{ github.token }}
+        BUILD_SHA: ${{ github.sha }}
+      run: |
+        set -euo pipefail
+        for asset in windows-x64.zip windows-x86.zip linux-x64.deb macos-arm64.dmg; do
+          test -s "downloads/smooth-zoom-$asset"
+        done
+        cd downloads
+        sha256sum smooth-zoom-* > SHA256SUMS.txt
+        printf 'Source revision: %s\nCI run: %s/actions/runs/%s\n' "$BUILD_SHA" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" > BUILD.txt
+        cd ..
+        tag="build-${GITHUB_RUN_ID}-${BUILD_SHA:0:12}"
+        printf 'Experimental smooth zoom and fly navigation fork. All platform build and test jobs passed.\n\nSource revision: `%s`\n\n[Installation and controls](https://github.com/Deku-shrub/OpenTTD/blob/%s/docs/install_smooth_zoom.md)\n\nOpenGFX 8.0 is included. Sound and music sets can be downloaded in-game. These builds are unsigned.\n' "$BUILD_SHA" "$BUILD_SHA" > release-notes.md
+        # An older run may finish after a newer master revision. Keep its release,
+        # but only the current master build may become the latest download.
+        current=$(gh api "repos/$GITHUB_REPOSITORY/commits/master" --jq .sha)
+        latest=false
+        if [ "$current" = "$BUILD_SHA" ]; then latest=true; fi
+        if gh release view "$tag" > /dev/null 2>&1; then
+          gh release upload "$tag" downloads/* --clobber
+          gh release edit "$tag" --latest="$latest" --notes-file release-notes.md
+        else
+          gh release create "$tag" downloads/* --target "$BUILD_SHA" --latest="$latest" --title "Smooth Zoom development build ${BUILD_SHA:0:12}" --notes-file release-notes.md
+        fi

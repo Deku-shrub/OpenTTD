@@ -1521,8 +1521,8 @@ public:
 
 /** Container for the 'normal' main toolbar */
 class NWidgetMainToolbarContainer : public NWidgetToolbarContainer {
-	uint zoom_width = 0;
-	mutable std::vector<WidgetID> arrangement_with_zoom;
+	uint zoom_width = 0; ///< Width reserved for the compact zoom readout.
+	mutable std::vector<WidgetID> arrangement_with_zoom; ///< Reusable icon arrangement including the zoom readout.
 
 	void SetupSmallestSize(Window *w) override
 	{
@@ -1545,6 +1545,14 @@ class NWidgetMainToolbarContainer : public NWidgetToolbarContainer {
 		return this->arrangement_with_zoom.data();
 	}
 
+	/**
+	 * Arrange the traditional toolbar image buttons.
+	 * @param width Available width, updated to the required arrangement width.
+	 * @param arrangeable_count Output number of arranged widgets.
+	 * @param button_count Output number of image buttons.
+	 * @param spacer_count Output number of spacers.
+	 * @return Widget arrangement without the extra zoom readout.
+	 */
 	const WidgetID *GetImageButtonArrangement(uint &width, uint &arrangeable_count, uint &button_count, uint &spacer_count) const
 	{
 		static const uint SMALLEST_ARRANGEMENT = 14;

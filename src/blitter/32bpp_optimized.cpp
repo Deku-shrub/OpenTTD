@@ -285,7 +285,12 @@ void Blitter_32bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, 
 	this->Draw<false>(bp, mode, zoom);
 }
 
-/** Decode the selected RLE mipmap a row at a time for fractional drawing. */
+/**
+ * Decode the selected RLE mipmap a row at a time for fractional drawing.
+ * @param bp Fractional draw parameters.
+ * @param mode Blitting mode.
+ * @return True when the sprite was handled.
+ */
 bool Blitter_32bppOptimized::DrawScaled(ScaledBlitterParams *bp, BlitterMode mode)
 {
 	ZoomLevel zoom = this->SelectScaledSpriteZoom(*bp);

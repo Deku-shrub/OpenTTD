@@ -103,7 +103,7 @@ bool DoZoomInOutWindow(ZoomStateChange how, Window *w)
 	/* Fractional zoom buttons move to the next integer level in the requested direction. */
 	if (how != ZOOM_NONE && w->viewport != nullptr && w->viewport->zoom_step > 0) {
 		ViewportData &vp = *w->viewport;
-		const ZoomLevel target = GetNextIntegerZoom(vp.zoom_step, how == ZOOM_IN, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
+		const ZoomLevel target = GetNextIntegerZoom(vp.zoom_step, how == ZOOM_IN, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max); ///< Category that authorises this flight.
 		const float target_step = static_cast<float>(ScaleByZoom(1, target));
 		if (target_step == vp.zoom_step) return false;
 		SetViewportSmoothZoom(w, static_cast<float>(ZOOM_BASE) / target_step);
@@ -157,61 +157,70 @@ bool DoZoomInOutWindow(ZoomStateChange how, Window *w)
 	return true;
 }
 
+/** Per-window wheel easing, cursor anchoring and timing measurements. */
 struct SmoothZoomAnimation {
-	SmoothZoomMotion motion;
-	double start;
-	int anchor_x;
-	int anchor_y;
-	int origin_x;
-	int origin_y;
-	int last_scroll_x;
-	int last_scroll_y;
-	bool to_cursor;
-	uint frames = 0;
-	uint total_ms = 0;
-	uint longest_frame_ms = 0;
+	SmoothZoomMotion motion; ///< Wheel easing controller.
+	double start; ///< Step when the current cursor anchor was captured.
+	int anchor_x; ///< Cursor x within the viewport in screen pixels.
+	int anchor_y; ///< Cursor y within the viewport in screen pixels.
+	int origin_x; ///< Anchor origin in virtual x coordinates.
+	int origin_y; ///< Anchor origin in virtual y coordinates.
+	int last_scroll_x; ///< Previously displayed virtual x origin.
+	int last_scroll_y; ///< Previously displayed virtual y origin.
+	bool to_cursor; ///< Whether to preserve the cursor anchor.
+	uint frames = 0; ///< Number of displayed transition frames.
+	uint total_ms = 0; ///< Accumulated wheel transition time in milliseconds.
+	uint longest_frame_ms = 0; ///< Longest display-frame interval in milliseconds.
 };
 
-static std::map<Window *, SmoothZoomAnimation> _smooth_zoom_animations;
+static std::map<Window *, SmoothZoomAnimation> _smooth_zoom_animations; ///< Active wheel transitions by window.
 
+/** Per-window navigation path, moving target and timing measurements. */
 struct CameraFlight {
-	ViewportFlight path;
-	ViewportFlightTarget target;
-	VehicleID vehicle = VehicleID::Invalid();
-	uint elapsed_ms = 0;
-	uint frames = 0;
-	uint longest_frame_ms = 0;
-	uint native_pan_frames = 0;
-	uint native_pan_ms = 0;
-	uint longest_native_pan_ms = 0;
+	ViewportFlight path; ///< Simultaneous navigation path.
+	ViewportFlightTarget target; ///< Category that authorises this flight.
+	VehicleID vehicle = VehicleID::Invalid(); ///< Optional exact moving vehicle target.
+	uint elapsed_ms = 0; ///< Accumulated navigation time in milliseconds.
+	uint frames = 0; ///< Number of displayed transition frames.
+	uint longest_frame_ms = 0; ///< Longest display-frame interval in milliseconds.
+	uint native_pan_frames = 0; ///< Frames panned at traditional scale.
+	uint native_pan_ms = 0; ///< Time spent panning at traditional scale.
+	uint longest_native_pan_ms = 0; ///< Longest traditional-scale pan interval in milliseconds.
 };
 
-static std::map<Window *, CameraFlight> _viewport_flights;
+static std::map<Window *, CameraFlight> _viewport_flights; ///< Active navigation flights by window.
 
+/**
+ * Cancel navigation at its currently displayed camera pose.
+ * @param w Window whose flight should stop.
+ */
 void CancelViewportFlight(Window *w)
 {
 	if (_viewport_flights.erase(w) == 0) return;
 	if (w != nullptr && w->viewport != nullptr) {
-		w->viewport->zoom_animation = false;
 		w->viewport->dest_scrollpos_x = w->viewport->scrollpos_x;
 		w->viewport->dest_scrollpos_y = w->viewport->scrollpos_y;
 		w->SetDirty();
 	}
 }
 
+/**
+ * Cancel wheel easing and navigation without changing the displayed scale.
+ * @param w Window whose camera animation should stop.
+ */
 void CancelViewportSmoothZoomAnimation(Window *w)
 {
 	CancelViewportFlight(w);
-	if (w != nullptr && w->viewport != nullptr && w->viewport->zoom_animation) {
-		w->viewport->zoom_animation = false;
-		w->SetDirty(); // Restore settled filtering even if the scale itself is unchanged.
-	}
 	_smooth_zoom_animations.erase(w);
 }
 
 static void UpdateViewportFlight(Window *w, uint delta_ms);
 
-/** Attach a moving vehicle endpoint without changing the navigation category. */
+/**
+ * Attach a moving vehicle endpoint without changing the navigation category.
+ * @param w Window with an active navigation flight.
+ * @param vehicle Exact destination vehicle identifier.
+ */
 void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle)
 {
 	auto it = _viewport_flights.find(w);
@@ -220,14 +229,11 @@ void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle)
 	if (selected == nullptr) return;
 	const Vehicle *front = selected->GetMovingFront();
 	const Viewport &vp = *w->viewport;
-	const auto [width, height] = GetNavigationVehicleExtent(front, ZOOM_BASE, INVALID_COORD);
-	const double step = GetNavigationArrivalStep(width, height, vp.width, vp.height, ZOOM_BASE / 2.0,
-			ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
 	const auto destination = it->second.path.GetDestination();
-	const auto target = it->second.target;
+	const auto target = it->second.target; ///< Category that authorises this flight.
 	/* The exact ID disambiguates overlapping vehicles and trains in shared depots.
 	 * This runs in the initiating click, before any flight frame is advanced. */
-	if (!TryStartViewportFlight(w, {static_cast<int>(destination.x), static_cast<int>(destination.y)}, ZOOM_BASE / step, target)) {
+	if (!TryStartViewportFlight(w, {static_cast<int>(destination.x), static_cast<int>(destination.y)}, GetVehicleNavigationArrivalScale(front, vp), target)) {
 		CancelViewportFlight(w);
 		return;
 	}
@@ -235,7 +241,14 @@ void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle)
 	if (it != _viewport_flights.end()) it->second.vehicle = vehicle;
 }
 
-/** Start an opt-in main-viewport flight; zero arrival scale preserves the current zoom. */
+/**
+ * Start an opt-in main-viewport flight; zero arrival scale preserves the current zoom.
+ * @param w Main viewport window.
+ * @param centre Destination centre in virtual coordinates.
+ * @param arrival_scale Requested magnification; zero retains the intended landing zoom.
+ * @param target Category of the navigation action.
+ * @return True if enabled navigation is handled by a flight.
+ */
 bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale, ViewportFlightTarget target)
 {
 	if (!_settings_client.gui.smooth_scroll || !IsViewportFlightEnabled(_settings_client.gui, target) || w == nullptr || w != GetMainWindow() || w->viewport == nullptr ||
@@ -269,12 +282,16 @@ bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale, Viewp
 	_viewport_flights.insert_or_assign(w, CameraFlight{path, target});
 	Debug(Facility::Misc, Severity::Debug1, "Camera flight start: {},{} to {},{}, {:.4f}x arrival, {:.0f} ms planned, target={}",
 		start_x, start_y, centre.x, centre.y, ZOOM_BASE / end_step, path.GetDuration(), static_cast<int>(target));
-	vp.zoom_animation = true;
 	w->SetDirty();
 	if (!path.IsActive()) UpdateViewportFlight(w, 0);
 	return true;
 }
 
+/**
+ * Advance an active navigation flight and its moving destination.
+ * @param w Window owning the flight.
+ * @param delta_ms Elapsed real time in milliseconds.
+ */
 static void UpdateViewportFlight(Window *w, uint delta_ms)
 {
 	auto it = _viewport_flights.find(w);
@@ -292,7 +309,7 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 	flight.path.Advance(delta_ms, std::max(vp.width, vp.height));
 	auto pose = flight.path.GetPose();
 	if (flight.vehicle != VehicleID::Invalid()) {
-		const Vehicle *vehicle = Vehicle::GetIfValid(flight.vehicle);
+		const Vehicle *vehicle = Vehicle::GetIfValid(flight.vehicle); ///< Optional exact moving vehicle target.
 		if (vehicle == nullptr) { CancelViewportFlight(w); return; }
 		const Vehicle *front = vehicle->GetMovingFront();
 		const Point live = RemapCoords(front->x_pos, front->y_pos, front->z_pos);
@@ -306,7 +323,6 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 	}
 	vp.scrollpos_x = vp.dest_scrollpos_x = static_cast<int>(std::lround(pose.x)) - vp.virtual_width / 2;
 	vp.scrollpos_y = vp.dest_scrollpos_y = static_cast<int>(std::lround(pose.y)) - vp.virtual_height / 2;
-	vp.zoom_animation = flight.path.UseFastSampling(std::max(vp.width, vp.height));
 	if (vp.overlay != nullptr) vp.overlay->SetDirty();
 	if (zoom_changed || vp.overlay != nullptr) {
 		/* Scale changes need a complete redraw. Constant-scale translation,
@@ -327,43 +343,18 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 	}
 }
 
-/** Advance on real time, including while the simulation is paused. */
-/** Moving follow cameras can use fast sampling; stopped and paused views retain settled quality. */
-static bool UseFastPanSampling(const Window *w)
-{
-	if (w->viewport == nullptr || w->viewport->zoom_step == 0) return false;
-	const ViewportData &vp = *w->viewport;
-	if (_scrolling_viewport && w == GetMainWindow()) return true;
-	/* Fractional panning redraws the entire viewport. Restore settled quality
-	 * within the visible easing tail, or on the update after dragging stops. */
-	if (vp.follow_vehicle == VehicleID::Invalid() && std::max(std::abs(vp.dest_scrollpos_x - vp.scrollpos_x),
-			std::abs(vp.dest_scrollpos_y - vp.scrollpos_y)) > 8 * vp.zoom_step) return true;
-	if (_pause_mode.Any()) return false;
-	const Vehicle *followed = Vehicle::GetIfValid(w->viewport->follow_vehicle);
-	return followed != nullptr && followed->cur_speed != 0;
-}
 
-/** Advance camera filtering and animation on real time, including while paused. */
+/**
+ * Advance camera animation on real time, including while paused.
+ * @param w Window owning the camera animation.
+ * @param delta_ms Elapsed real time in milliseconds.
+ */
 void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms)
 {
 	if (delta_ms == 0) return;
 	UpdateViewportFlight(w, delta_ms);
 	auto it = _smooth_zoom_animations.find(w);
-	if (it == _smooth_zoom_animations.end()) {
-		if (w->viewport != nullptr && !_viewport_flights.contains(w)) {
-			/* Panning must not change sampling after the camera stops. Keep its
-			 * filter until a zoom/flight explicitly chooses another one. This also
-			 * avoids a delayed quality redraw when a follow camera stops or pauses. */
-			const bool fast = UseFastPanSampling(w) ||
-					(w->viewport->zoom_step > 0 && w->viewport->zoom_animation);
-			if (w->viewport->zoom_animation != fast) {
-				w->viewport->zoom_animation = fast;
-				/* Redraw when the sampling mode changes, including a return to native zoom. */
-				w->SetDirty();
-			}
-		}
-		return;
-	}
+	if (it == _smooth_zoom_animations.end()) return;
 	if (w->viewport == nullptr || !_settings_client.gui.smooth_zoom || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
 		CancelViewportSmoothZoomAnimation(w);
 		return;
@@ -376,9 +367,6 @@ void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms)
 	animation.longest_frame_ms = std::max(animation.longest_frame_ms, delta_ms);
 	const double screen_extent = std::max(vp.width, vp.height);
 	animation.motion.Advance(delta_ms, screen_extent);
-	/* Change filtering before apparent rest, rather than after the invisible
-	 * easing tail. Keep the quality filter for the remaining final frames. */
-	vp.zoom_animation = animation.motion.UseFastSampling(screen_extent) || UseFastPanSampling(w);
 	const double step = animation.motion.GetStep();
 	const int pending_scroll_x = vp.dest_scrollpos_x - vp.scrollpos_x;
 	const int pending_scroll_y = vp.dest_scrollpos_y - vp.scrollpos_y;
@@ -405,15 +393,16 @@ void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms)
 		Debug(Facility::Misc, Severity::Debug1, "Smooth zoom: {} frames, {} ms elapsed, {:.1f} ms average interval, {} ms maximum interval",
 			animation.frames, animation.total_ms, static_cast<double>(animation.total_ms) / animation.frames, animation.longest_frame_ms);
 		CancelViewportSmoothZoomAnimation(w);
-		/* A moving follow camera has not come to rest when wheel easing ends.
-		 * Avoid a single quality-filtered frame followed by fast sampling again. */
-		vp.zoom_animation = UseFastPanSampling(w);
 	}
 }
 
 /**
  * Animate a quarter-octave wheel zoom, optionally keeping the cursor position fixed.
  * @return True if smooth zoom handled the event, including reaching a zoom limit.
+ * @param in True to zoom in; false to zoom out.
+ * @param w Window owning the viewport.
+ * @param to_cursor Whether to preserve the map point beneath the cursor.
+ * @param notches Number of quarter-octave wheel notches.
  */
 bool TrySmoothZoomWindow(bool in, Window *w, bool to_cursor, uint notches)
 {
@@ -430,7 +419,7 @@ bool TrySmoothZoomWindow(bool in, Window *w, bool to_cursor, uint notches)
 
 	const int cursor_x = Clamp(_cursor.pos.x - vp.left, 0, vp.width);
 	const int cursor_y = Clamp(_cursor.pos.y - vp.top, 0, vp.height);
-	SmoothZoomMotion motion = it != _smooth_zoom_animations.end() ? it->second.motion : SmoothZoomMotion(old_step);
+	SmoothZoomMotion motion = it != _smooth_zoom_animations.end() ? it->second.motion : SmoothZoomMotion(old_step); ///< Wheel easing controller.
 	motion.Rebase(old_step);
 	motion.Retarget(new_step);
 	SmoothZoomAnimation animation{motion, old_step, cursor_x, cursor_y,
@@ -442,7 +431,6 @@ bool TrySmoothZoomWindow(bool in, Window *w, bool to_cursor, uint notches)
 		animation.longest_frame_ms = it->second.longest_frame_ms;
 	}
 	_smooth_zoom_animations.insert_or_assign(w, std::move(animation));
-	vp.zoom_animation = true;
 	return true;
 }
 
@@ -747,7 +735,6 @@ struct MainWindow : Window
 		this->viewport->scrollpos_y += ViewportScale(*this->viewport, delta.y);
 		this->viewport->dest_scrollpos_x = this->viewport->scrollpos_x;
 		this->viewport->dest_scrollpos_y = this->viewport->scrollpos_y;
-		if (this->viewport->zoom_step > 0) this->viewport->zoom_animation = true;
 		this->refresh_timeout.Reset();
 	}
 

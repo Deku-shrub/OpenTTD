@@ -81,7 +81,7 @@ static const uint DIRTY_BLOCK_WIDTH    = 64;
 static size_t _dirty_blocks_per_row = 0;
 static size_t _dirty_blocks_per_column = 0;
 static std::vector<uint8_t> _dirty_blocks;
-static SmoothZoomPaletteTracker _smooth_zoom_palette;
+static SmoothZoomPaletteTracker _smooth_zoom_palette; ///< Animated-palette dependencies of fractionally drawn screen pixels.
 static_assert(DIRTY_BLOCK_WIDTH == SmoothZoomPaletteTracker::BLOCK_WIDTH);
 static_assert(DIRTY_BLOCK_HEIGHT == SmoothZoomPaletteTracker::BLOCK_HEIGHT);
 
@@ -1274,7 +1274,7 @@ std::unique_ptr<uint32_t[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel 
  * The sprite is always taken at the finest zoom level and filtered down by the blitter.
  * Sub-sprite clipping is approximate: edge pixels may include up to a source step of content outside the sub-sprite.
  * @param sprite The sprite to draw.
- * @param x Left coordinate of the sprite origin, in virtual (#ZoomLevel::Min times #ZOOM_BASE) coordinates.
+ * @param x Left coordinate of the sprite origin, in virtual (#ZoomLevel::Min times `ZOOM_BASE`) coordinates.
  * @param y Top coordinate of the sprite origin, in virtual coordinates.
  * @param mode The settings for the blitter to pass.
  * @param sub Whether to only draw a sub set of the sprite.

@@ -4,6 +4,8 @@ An experimental [OpenTTD](https://github.com/OpenTTD/OpenTTD) fork with continuo
 map zoom and animated camera journeys. This repository is the home of the fork;
 the standard OpenTTD downloads do not include these changes.
 
+**[Download the latest tested build](https://github.com/Deku-shrub/OpenTTD/releases/latest)** ?
+**[Installation](docs/install_smooth_zoom.md)** ?
 **[User guide](docs/smooth_zoom_readme.md)** ·
 **[Animated examples](docs/smooth_zoom_readme.md#zoom-examples)** ·
 **[Progress and TODO](docs/smooth_zoom_todo.md)** ·
@@ -37,10 +39,15 @@ and slow zooms, toolbar controls, moving vehicles, rail, tunnels and waterways.
 
 ## Try the fork
 
-Build this repository using the [compilation instructions](COMPILING.md), then
-run the resulting game with its matching language files and an installed base
-graphics set. This is an engine modification, not a NewGRF content pack. The
-[user guide](docs/smooth_zoom_readme.md#get-started) includes the Windows demo
+Download the [latest tested build](https://github.com/Deku-shrub/OpenTTD/releases/latest)
+for Windows (64-bit or 32-bit), Ubuntu 24.04 x64 or Apple Silicon macOS.
+OpenGFX graphics are included. Follow the [installation instructions](docs/install_smooth_zoom.md)
+for your platform, then open the game and try the mouse wheel or click a map destination.
+
+Downloads are published after all platform build and test jobs pass. Each release
+includes its source revision and checksums. This is an engine modification, not
+a NewGRF content pack. Developers can [build from source](COMPILING.md); the
+[user guide](docs/smooth_zoom_readme.md#get-started) also includes a Windows demo
 launcher and populated test map.
 
 Smooth mouse-wheel zoom and fly-to navigation are **enabled by default in this

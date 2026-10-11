@@ -40,7 +40,6 @@ TEST_CASE("Camera flight respects zoom bounds and extra zoom-out limits", "[smoo
 	const double start = GENERATE(1.0, 4.0, 16.0);
 	const double arrival = GENERATE(1.0, 4.0, 32.0);
 	ViewportFlight flight({0, 0, start}, {90000, 30000, arrival}, 1, 32, 640, 100000, 100, extra);
-	bool quality_tail = false;
 	while (flight.IsActive()) {
 		flight.Advance(16);
 		const auto pose = flight.GetPose();
@@ -49,11 +48,8 @@ TEST_CASE("Camera flight respects zoom bounds and extra zoom-out limits", "[smoo
 		CHECK(pose.step <= std::max(start, arrival) * std::exp2(extra));
 		CHECK(pose.x >= 0);
 		CHECK(pose.x <= 90000);
-		if (!flight.UseFastSampling(640) && flight.IsActive()) quality_tail = true;
-		if (quality_tail) CHECK_FALSE(flight.UseFastSampling(640));
 	}
 	CHECK(flight.GetPose().step == arrival);
-	CHECK_FALSE(flight.UseFastSampling(640));
 }
 
 TEST_CASE("Flight continues panning on both sides of the zoom apex", "[smoothzoom][flight]")

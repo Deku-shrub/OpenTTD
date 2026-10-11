@@ -90,7 +90,7 @@ public:
 		int clip_right = 0;  ///< Source pixels excluded from the right edge of the sprite
 		int clip_bottom = 0; ///< Source pixels excluded from the bottom edge of the sprite
 		uint32_t palette_mask = 0; ///< Output: animated palette entries contributing to pixels actually drawn
-		bool nearest = false; ///< Fast centre sampling during interactive zoom; settled views use area filtering.
+		bool nearest = false; ///< Centre sampling when true; area filtering when false. Viewports use centre sampling throughout motion and rest.
 	};
 
 	/**
@@ -100,7 +100,10 @@ public:
 	 * @return True if this blitter supports scaled drawing and the sprite was drawn.
 	 */
 	virtual bool DrawScaled([[maybe_unused]] ScaledBlitterParams *bp, [[maybe_unused]] BlitterMode mode) { return false; }
-	/** Whether this blitter can draw fractionally scaled viewport sprites. */
+	/**
+	 * Whether this blitter can draw fractionally scaled viewport sprites.
+	 * @return True if the blitter implements fractional sprite drawing.
+	 */
 	virtual bool SupportsSmoothZoom() const { return false; }
 
 	/**

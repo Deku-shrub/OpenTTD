@@ -44,11 +44,18 @@ struct Viewport {
 
 	ZoomLevel zoom; ///< The zoom level of the viewport. When #zoom_step is set, the nearest integer level.
 	float zoom_step = 0; ///< Smooth zoom: virtual pixels per screen pixel, or 0 when using integer #zoom.
-	bool zoom_animation = false; ///< Whether interactive zoom motion is active.
 	ViewportPixelPhase pixel_phase; ///< Client-only sampling origin for pixel-aligned fractional panning.
 	std::shared_ptr<LinkGraphOverlay> overlay;
 
+	/**
+	 * Read the sampling-phase-aligned x origin.
+	 * @return Actual virtual left edge used for rendering and picking.
+	 */
 	double GetRenderLeft() const { return this->zoom_step > 0 && this->pixel_phase.step == this->zoom_step ? this->pixel_phase.left : this->virtual_left; }
+	/**
+	 * Read the sampling-phase-aligned y origin.
+	 * @return Actual virtual top edge used for rendering and picking.
+	 */
 	double GetRenderTop() const { return this->zoom_step > 0 && this->pixel_phase.step == this->zoom_step ? this->pixel_phase.top : this->virtual_top; }
 };
 

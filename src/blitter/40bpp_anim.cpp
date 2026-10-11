@@ -36,7 +36,13 @@ static inline uint8_t *ScreenToAnimationBuffer(const void *video)
 	return ::ScreenToAnimationBuffer(video, VideoDriver::GetInstance()->GetAnimBuffer(), _screen.pitch);
 }
 
-/** Resolve GPU palette metadata before blending a fractionally filtered sprite. */
+/**
+ * Resolve GPU palette metadata before blending a fractionally filtered sprite.
+ * @param dst Destination pixel.
+ * @param pixel Resolved source pixel.
+ * @param mode Blitting mode.
+ * @param remap Optional palette remapping table.
+ */
 void Blitter_40bppAnim::WriteScaledPixel(Colour *dst, const Pixel &pixel, BlitterMode mode, const uint8_t *remap)
 {
 	if (_screen_disable_anim) {

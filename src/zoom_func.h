@@ -120,20 +120,41 @@ inline int ScaleGUITrad(int value)
 	return value * _gui_scale / 100;
 }
 
-/** Wheel zoom advances by a quarter octave, bounded by the client's allowed levels. */
+/**
+ * Wheel zoom advances by a quarter octave, bounded by the client's allowed levels.
+ * @param step Current or requested virtual-pixel step.
+ * @param in True to zoom in; false to zoom out.
+ * @param minimum Closest permitted traditional zoom level.
+ * @param maximum Farthest permitted traditional zoom level.
+ * @param notches Number of quarter-octave wheel steps.
+ * @return New step clamped to the permitted levels.
+ */
 inline double GetSmoothZoomStep(double step, bool in, ZoomLevel minimum, ZoomLevel maximum, uint notches = 1)
 {
 	return std::clamp(step * std::exp2((in ? -0.25 : 0.25) * notches),
 		static_cast<double>(ScaleByZoom(1, minimum)), static_cast<double>(ScaleByZoom(1, maximum)));
 }
 
-/** Virtual scroll adjustment needed to keep a screen position fixed while changing scale. */
+/**
+ * Virtual scroll adjustment needed to keep a screen position fixed while changing scale.
+ * @param screen_position Cursor offset within the viewport in screen pixels.
+ * @param old_step Initial virtual-pixel step.
+ * @param new_step New virtual-pixel step.
+ * @return Virtual origin adjustment preserving the cursor anchor.
+ */
 inline int GetZoomAnchorOffset(int screen_position, double old_step, double new_step)
 {
 	return static_cast<int>(std::lround(screen_position * (old_step - new_step)));
 }
 
-/** Next integer zoom level in a direction, including fractional starting levels. */
+/**
+ * Next integer zoom level in a direction, including fractional starting levels.
+ * @param step Current virtual-pixel step.
+ * @param in True to zoom in; false to zoom out.
+ * @param minimum Closest permitted level.
+ * @param maximum Farthest permitted level.
+ * @return Adjacent traditional zoom level in the requested direction.
+ */
 inline ZoomLevel GetNextIntegerZoom(double step, bool in, ZoomLevel minimum, ZoomLevel maximum)
 {
 	const double level = std::log2(step);

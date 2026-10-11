@@ -144,38 +144,34 @@ TEST_CASE("Zoom motion preserves velocity when wheel targets change", "[smoothzo
 	CHECK(motion.GetStep() == 8);
 }
 
-TEST_CASE("Zoom restores settled filtering before the visible motion finishes", "[smoothzoom]")
+TEST_CASE("Zoom settles within the visible transition at different viewport sizes", "[smoothzoom]")
 {
 	for (double extent : {640.0, 1280.0, 3840.0}) {
 		SmoothZoomMotion motion(4);
 		motion.Retarget(4 * std::exp2(0.25));
-		REQUIRE(motion.UseFastSampling(extent));
-		bool quality_tail = false;
+		REQUIRE(motion.IsActive());
 		uint elapsed = 0;
 		for (; elapsed < 600 && motion.IsActive(); elapsed += 16) {
 			motion.Advance(16, extent);
-			if (!motion.UseFastSampling(extent) && motion.IsActive()) quality_tail = true;
-			if (quality_tail) CHECK_FALSE(motion.UseFastSampling(extent));
 		}
-		CHECK(quality_tail);
 		CHECK_FALSE(motion.IsActive());
 		CHECK(elapsed <= 400);
 		CHECK(motion.GetStep() == motion.GetTargetStep());
 		motion.Retarget(4);
-		CHECK(motion.UseFastSampling(extent));
+		CHECK(motion.IsActive());
 	}
 }
 
-TEST_CASE("Zoom quality transition respects momentum when passing a new target", "[smoothzoom]")
+TEST_CASE("Zoom remains active with momentum when retargeting its current scale", "[smoothzoom]")
 {
 	SmoothZoomMotion motion(4);
 	motion.Retarget(2);
 	motion.Advance(32, 3840);
 	motion.Retarget(motion.GetStep());
-	CHECK(motion.UseFastSampling(3840));
+	CHECK(motion.IsActive());
 	motion.Advance(16, 3840);
 	CHECK(motion.IsActive());
-	CHECK(motion.UseFastSampling(3840));
+	CHECK(motion.GetVelocity() != 0);
 }
 
 TEST_CASE("Zoom motion is independent of display frame partitions", "[smoothzoom]")

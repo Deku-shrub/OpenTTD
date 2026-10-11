@@ -3,6 +3,10 @@ name: CI (Windows)
 on:
   workflow_call:
     inputs:
+      package:
+        required: false
+        type: boolean
+        default: false
       arch:
         required: true
         type: string
@@ -59,6 +63,7 @@ jobs:
         echo "::group::CMake"
         cmake .. \
           -GNinja \
+          -DCMAKE_BUILD_TYPE=${{ inputs.package && 'Release' || 'Debug' }} \
           -DVCPKG_TARGET_TRIPLET=${{ inputs.arch }}-windows-static \
           -DCMAKE_TOOLCHAIN_FILE="${{ steps.vcpkg.outputs.vcpkg-cmake }}" \
           # EOF
@@ -73,3 +78,16 @@ jobs:
       run: |
         cd build
         ctest --timeout 120
+
+    - name: Package tested fork build
+      if: inputs.package
+      run: python .github/prepare-fork-package.py windows-${{ inputs.arch }}
+
+    - name: Upload fork download
+      if: inputs.package
+      uses: actions/upload-artifact@v7
+      with:
+        name: fork-windows-${{ inputs.arch }}
+        path: fork-packages/*
+        if-no-files-found: error
+        retention-days: 7

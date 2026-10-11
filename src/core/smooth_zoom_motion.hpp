@@ -13,18 +13,29 @@
 
 /** Analytically integrated critically damped motion in logarithmic zoom space. */
 class SmoothZoomMotion {
-	double position;
-	double velocity = 0;
-	double target;
-	double target_step;
-	bool active = false;
+	double position; ///< Current base-2 logarithm of the virtual-pixel step.
+	double velocity = 0; ///< Logarithmic step velocity per second.
+	double target; ///< Target logarithmic step.
+	double target_step; ///< Exact requested step, used after settling.
+	bool active = false; ///< Whether easing is still in progress.
 
 public:
+	/**
+	 * Create a settled zoom controller.
+	 * @param step Initial virtual pixels per screen pixel.
+	 */
 	explicit SmoothZoomMotion(double step) : position(std::log2(step)), target(this->position), target_step(step) {}
 
-	/** Reconcile the displayed float scale without discarding the current velocity. */
+	/**
+	 * Reconcile the displayed float scale without discarding the current velocity.
+	 * @param step Step actually displayed after float rounding.
+	 */
 	void Rebase(double step) { this->position = std::log2(step); }
 
+	/**
+	 * Change the requested step while preserving velocity.
+	 * @param step New positive virtual-pixel step.
+	 */
 	void Retarget(double step)
 	{
 		if (step == this->target_step) return;
@@ -33,7 +44,11 @@ public:
 		this->active = true;
 	}
 
-	/** Exact solution is independent of the division into display frames. */
+	/**
+	 * Exact solution is independent of the division into display frames.
+	 * @param delta_ms Elapsed real time in milliseconds.
+	 * @param screen_extent Viewport span in screen pixels; zero uses numerical settling.
+	 */
 	void Advance(unsigned int delta_ms, double screen_extent = 0)
 	{
 		if (!this->active || delta_ms == 0) return;
@@ -59,25 +74,44 @@ public:
 		}
 	}
 
+	/**
+	 * Read the current zoom step.
+	 * @return Virtual pixels per screen pixel.
+	 */
 	double GetStep() const { return this->active ? std::exp2(this->position) : this->target_step; }
+	/**
+	 * Read the requested zoom step.
+	 * @return Exact target step.
+	 */
 	double GetTargetStep() const { return this->target_step; }
+	/**
+	 * Read the current easing velocity.
+	 * @return Logarithmic step change per second.
+	 */
 	double GetVelocity() const { return this->velocity; }
+	/**
+	 * Check whether easing remains.
+	 * @return True while the transition is active.
+	 */
 	bool IsActive() const { return this->active; }
 
-	/** Restore settled filtering while the last few pixels of motion are still visible. */
-	bool UseFastSampling(double screen_extent) const
-	{
-		return this->active && (this->GetRemainingPixels(screen_extent) > 16 ||
-				this->GetFrameMovementPixels(screen_extent) > 8);
-	}
 
 private:
+	/**
+	 * Bound the remaining scale displacement.
+	 * @param screen_extent Viewport span in screen pixels.
+	 * @return Remaining displacement in screen pixels.
+	 */
 	double GetRemainingPixels(double screen_extent) const
 	{
 		return screen_extent * std::abs(std::exp2(this->target - this->position) - 1);
 	}
 
-	/** Estimated displacement over a nominal 30 ms frame, including reversal momentum. */
+	/**
+	 * Estimated displacement over a nominal 30 ms frame, including reversal momentum.
+	 * @param screen_extent Viewport span in screen pixels.
+	 * @return Estimated screen-pixel movement in 30 milliseconds.
+	 */
 	double GetFrameMovementPixels(double screen_extent) const
 	{
 		return screen_extent * std::abs(this->velocity) * std::log(2.0) * 0.03;
