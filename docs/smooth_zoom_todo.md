@@ -11,6 +11,9 @@ entries for the same behaviour.
 
 ## Current coverage follow-up
 
+- [x] Remove superseded documentation clips and per-vehicle movies; keep capture provenance and a small general-purpose gallery.
+- [ ] Refresh general zoom/flight footage on the current build using mixed scenes: road and rail traffic, stations, bridges/tunnels, terrain and labels, plus a complementary water/airport scene. Keep individual vehicle recordings in ignored local validation output.
+
 - [x] Simplify camera state by removing unused movement-quality flags and sharing vehicle arrival fitting.
 - [x] Verify all eight CI build platforms and the nightly checks on the published defaults-enabled revision.
 - [x] Finish review-branch package validation and publish the first downloadable fork release.

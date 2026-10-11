@@ -510,3 +510,12 @@ are no longer presented as current footage. The underlying speed and arrival
 settings remain supported. Corrected the flight master default to On in this
 fork. Fresh flight and toolbar footage is required before restoring those
 demonstrations; historical test observations remain as dated evidence.
+
+### Gallery scope clarification
+
+End-user clips should demonstrate diverse scenes instead of documenting each
+vehicle type separately. Individual vehicle captures remain local debugging
+artifacts; written validation coverage remains useful. Added mixed-scene capture
+requirements and an explicit current TODO for refreshed road/rail and water/airport
+overviews. Existing object footage is labelled accurately and does not claim
+mixed-vehicle coverage.

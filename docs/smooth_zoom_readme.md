@@ -342,7 +342,13 @@ They illustrate functionality using actual game frames, not performance benchmar
 
 ![Fractional pan and a stable resting view](images/smooth-zoom/fractional-pan-optimised.webp)
 
-See the [capture notes](images/smooth-zoom/README.md) for provenance.
+The object scene combines terrain, trees, NewGRF structures and map labels.
+These clips do not demonstrate every vehicle type. The gallery uses general
+scenes; individual vehicle checks are recorded in the
+[coverage notes](validation/zoom-coverage.md), rather than separate movies.
+
+See the [capture notes](images/smooth-zoom/README.md) for provenance and the
+mixed-scene requirements for future recordings.
 
 ## Try the prototype
 
