@@ -163,3 +163,9 @@ multiplication can wrap on a 32-bit build. Its oversized-source regression
 needs no source pixels or large allocation. After this correction, all 150
 local CTest cases passed. The smooth-zoom subset passed 52 cases and 77,633
 assertions. Normal-sized sprite sampling is unchanged.
+
+Renderer tests now check SSE4.1 availability before exercising the SSE4 row
+compositor and also compare the SSE2 animation renderer against the scalar
+reference. The cache-reuse test falls back to SSE2 on older CPUs. The expanded
+smooth-zoom subset passed 79,745 assertions in 52 cases. Camera test loops also
+use references to remove the two GCC range-loop copy warnings.

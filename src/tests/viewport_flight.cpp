@@ -237,7 +237,7 @@ TEST_CASE("Successive town destinations retain animated flights after arrival", 
 
 TEST_CASE("Destination fitting depends on object bounds rather than departure zoom", "[smoothzoom][flight]")
 {
-	for (const auto dimensions : {std::pair{1024.0, 640.0}, {4096.0, 1536.0}, {16384.0, 640.0}}) {
+	for (const auto &dimensions : {std::pair{1024.0, 640.0}, {4096.0, 1536.0}, {16384.0, 640.0}}) {
 		const double arrival = GetNavigationArrivalStep(dimensions.first, dimensions.second, 1280, 800, 2, 1, 32);
 		for (double start : {1.0, 3.076923, 16.0, 32.0}) {
 			ViewportFlight flight({0, 0, start}, {6000, 3000, arrival}, 1, 32, 1280, 120, 100, 2);

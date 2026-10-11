@@ -103,7 +103,7 @@ TEST_CASE("Copied fractional pixels retain their animated palette dependencies",
 
 TEST_CASE("Zoom motion settles exactly without overshooting a single target", "[smoothzoom]")
 {
-	for (const auto [start, target] : {std::pair{4.0, 2.0}, std::pair{2.0, 4.0}, std::pair{3.7, 1.0}}) {
+	for (const auto &[start, target] : {std::pair{4.0, 2.0}, std::pair{2.0, 4.0}, std::pair{3.7, 1.0}}) {
 		SmoothZoomMotion motion(start);
 		motion.Retarget(target);
 		double previous = start;

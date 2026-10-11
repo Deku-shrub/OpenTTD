@@ -22,6 +22,7 @@
 #include "../gfx_func.h"
 #include "../gfx_type.h"
 #include "../palette_func.h"
+#include "../cpu.h"
 #include "../core/backup_type.hpp"
 #include "../core/viewport_pixel_phase.hpp"
 #include "../settings_type.h"
@@ -429,8 +430,10 @@ TEST_CASE("Batched fractional rows preserve pixels and native animation metadata
 	Blitter_32bppAnim batched;
 	std::vector<Blitter *> blitters{&reference, &batched};
 #ifdef WITH_SSE
+	Blitter_32bppSSE2_Anim sse2;
 	Blitter_32bppSSE4_Anim sse4;
-	blitters.push_back(static_cast<Blitter_32bppSSE2_Anim *>(&sse4));
+	blitters.push_back(&sse2);
+	if (HasCPUIDFlag(1, 2, 19)) blitters.push_back(static_cast<Blitter_32bppSSE2_Anim *>(&sse4));
 #endif
 	for (Blitter *blitter : blitters) {
 		CAPTURE(blitter->GetName());
@@ -454,7 +457,7 @@ TEST_CASE("Batched fractional rows preserve pixels and native animation metadata
 			expected_buffer = buffer;
 			expected_mask = bp.palette_mask;
 		} else {
-			if (blitter->GetName() == "32bpp-sse4-anim" && palette_source && !default_brightness && mode == BlitterMode::Normal) {
+			if ((blitter->GetName() == "32bpp-sse4-anim" || blitter->GetName() == "32bpp-sse2-anim") && palette_source && !default_brightness && mode == BlitterMode::Normal) {
 				/* The static-colour path reuses native SSE brightness rounding. */
 				CHECK(std::equal(pixels.begin(), pixels.end(), expected_pixels.begin(), [](Colour a, Colour b) {
 					return std::abs(int(a.r) - b.r) <= 1 && std::abs(int(a.g) - b.g) <= 1 && std::abs(int(a.b) - b.b) <= 1 && a.a == b.a;
@@ -502,7 +505,9 @@ TEST_CASE("Fractional animated sprite reuse survives palette changes and evictio
 		source[zoom].resize(w * h);
 		sprites[zoom] = {static_cast<uint16_t>(h), static_cast<uint16_t>(w), 0, 0, {}, source[zoom].data()};
 	}
+	Blitter_32bppSSE2_Anim sse2;
 	Blitter_32bppSSE4_Anim sse4;
+	Blitter *sse = HasCPUIDFlag(1, 2, 19) ? static_cast<Blitter_32bppSSE2_Anim *>(&sse4) : &sse2;
 	Blitter_32bppAnim reference;
 	SmoothZoomSpriteAllocator allocator;
 	SmoothZoomSpriteAllocator reference_allocator;
@@ -516,7 +521,7 @@ TEST_CASE("Fractional animated sprite reuse survives palette changes and evictio
 		std::vector<Colour> actual = expected;
 		uint32_t expected_mask = 0;
 		std::vector<uint8_t> expected_buffer;
-		for (Blitter *blitter : std::array<Blitter *, 2>{&reference, static_cast<Blitter_32bppSSE2_Anim *>(&sse4)}) {
+		for (Blitter *blitter : std::array<Blitter *, 2>{&reference, sse}) {
 			auto &pixels = blitter == &reference ? expected : actual;
 			_screen.dst_ptr = pixels.data();
 			blitter->PostResize();
@@ -551,12 +556,12 @@ TEST_CASE("Fractional animated sprite reuse survives palette changes and evictio
 						static_cast<uint8_t>(PALETTE_ANIM_START + 2 + revision % 2)};
 			}
 		}
-		const Sprite *sprite = sse4.Encode(SpriteType::Normal, sprites, allocator);
+		const Sprite *sprite = sse->Encode(SpriteType::Normal, sprites, allocator);
 		const Sprite *reference_sprite = reference.Encode(SpriteType::Normal, sprites, reference_allocator);
 		if (previous != nullptr) REQUIRE(sprite == previous);
 		previous = sprite;
 		if (revision == 0) {
-			retained = sse4.Encode(SpriteType::Normal, sprites, retained_allocator);
+			retained = sse->Encode(SpriteType::Normal, sprites, retained_allocator);
 			retained_reference = reference.Encode(SpriteType::Normal, sprites, retained_reference_allocator);
 			compare(retained, retained_reference);
 		}
