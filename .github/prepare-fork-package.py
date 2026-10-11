@@ -27,7 +27,12 @@ def main():
     baseset.mkdir(parents=True, exist_ok=True)
     (baseset / "opengfx-8.0.tar").write_bytes(data)
     generator, extension = {"windows": ("ZIP", ".zip"), "linux": ("DEB", ".deb"), "macos": ("Bundle", ".dmg")}[args.platform.split("-")[0]]
-    subprocess.run(["cpack", "-G", generator, "-C", "Release"], cwd=args.build, check=True)
+    subprocess.run(["cpack", "-G", generator, "-C", "Release",
+                    "-D", "CPACK_PACKAGE_VENDOR=Deku-shrub/OpenTTD",
+                    "-D", "CPACK_PACKAGE_CONTACT=Deku-shrub",
+                    "-D", "CPACK_PACKAGE_HOMEPAGE_URL=https://github.com/Deku-shrub/OpenTTD",
+                    "-D", "CPACK_PACKAGE_DESCRIPTION_SUMMARY=OpenTTD Smooth Zoom development fork"],
+                   cwd=args.build, check=True)
     packages = list((args.build / "bundles").glob("*" + extension))
     if len(packages) != 1:
         raise RuntimeError(f"Expected one package, found {packages}")
