@@ -11,6 +11,18 @@ the standard OpenTTD downloads do not include these changes.
 **[Progress and TODO](docs/smooth_zoom_todo.md)** ·
 **[Testing and compatibility](docs/validation/zoom-coverage.md)**
 
+## Download and play
+
+| System | Latest tested build |
+| --- | --- |
+| Windows | [64-bit ZIP](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-windows-x64.zip) · [32-bit ZIP](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-windows-x86.zip) |
+| Linux | [Ubuntu 24.04 x64 package](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-linux-x64.deb) |
+| macOS | [Apple Silicon disk image](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-macos-arm64.dmg) |
+
+OpenGFX graphics are included. Follow the [installation guide](docs/install_smooth_zoom.md),
+then try the mouse wheel or select a map destination. Smooth zoom and flights are
+enabled for new configurations.
+
 ## What it adds
 
 - **Smooth mouse-wheel zoom:** eased transitions between fractional zoom levels,

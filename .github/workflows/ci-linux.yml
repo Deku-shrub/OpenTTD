@@ -127,4 +127,4 @@ jobs:
         name: fork-linux-x64
         path: fork-packages/*
         if-no-files-found: error
-        retention-days: 7
+        retention-days: 1

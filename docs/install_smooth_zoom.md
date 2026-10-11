@@ -20,3 +20,5 @@ These are experimental development builds. Releases identify the exact source re
 Existing saves require no camera-specific conversion, but the underlying OpenTTD version still determines save compatibility. Back up saves before using a development engine; an older engine may not load saves written by a newer version. Read the [compatibility notes](smooth_zoom_readme.md#existing-saves-rollback-and-mod-compatibility).
 
 For multiplayer, all participants should use packages from the same fork release. The initial `fb5123084a` release has a Linux revision-stamp mismatch with Windows/macOS; use a subsequent corrected release for cross-platform multiplayer. CI now checks clean, matching engine identities before publication.
+
+To compile a matching multiplayer client, use a clean Git checkout of the release's `BUILD.txt` source revision in a repository cloned with `git clone --no-tags`. Release tags are created after the binaries are built; rebuilding a tagged checkout can change OpenTTD's network identity. GitHub's automatic source ZIPs omit Git revision metadata. Matching source and revision identity matter as well as matching content.

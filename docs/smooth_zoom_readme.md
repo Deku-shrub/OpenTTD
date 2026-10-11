@@ -146,7 +146,8 @@ during a flight. Infrastructure, representative moving vehicles and camera
 cancellation have been checked. Save-format declarations and the savegame
 version remain unchanged; the only save/load adaptation converts the camera
 view to the existing integer representation. The latest full Release suite
-passes 68,807 assertions across 140 cases. The graphics-set matrix and stock
+passes 68,744 assertions across 142 unit cases, plus all four upstream
+regression suites (146 local CTest tests). The graphics-set matrix and stock
 save round trip are recorded in the [coverage notes](validation/zoom-coverage.md).
 Source references:
 [camera save/load](../src/saveload/misc_sl.cpp),

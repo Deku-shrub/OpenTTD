@@ -90,4 +90,4 @@ jobs:
         name: fork-windows-${{ inputs.arch }}
         path: fork-packages/*
         if-no-files-found: error
-        retention-days: 7
+        retention-days: 1
