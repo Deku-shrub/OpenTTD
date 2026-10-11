@@ -34,8 +34,10 @@ const Blitter_32bppSSE2::CachedColourSprite *Blitter_32bppSSE2::GetScaledColourS
 	constexpr size_t entry_limit = 128 * 1024;
 	const auto &info = sprite->infos[zoom];
 	const size_t count = static_cast<size_t>(info.sprite_width) * height;
-	const size_t bytes = count * (sizeof(Colour) + sizeof(uint32_t)) + sizeof(CachedColourSprite) + 64;
-	if (bytes > entry_limit) return nullptr;
+	constexpr size_t overhead = sizeof(CachedColourSprite) + 64;
+	/* Reject large textures before multiplying their storage on 32-bit builds. */
+	if (count > (entry_limit - overhead) / (sizeof(Colour) + sizeof(uint32_t))) return nullptr;
+	const size_t bytes = count * (sizeof(Colour) + sizeof(uint32_t)) + overhead;
 	const std::pair key{sprite->identity, zoom};
 	auto it = this->scaled_colour_sprites.find(key);
 	const bool fresh = it == this->scaled_colour_sprites.end();

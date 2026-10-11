@@ -472,6 +472,18 @@ TEST_CASE("Batched fractional rows preserve pixels and native animation metadata
 }
 
 #ifdef WITH_SSE
+TEST_CASE("Large fractional sources cannot wrap the animated cache budget", "[smoothzoom]")
+{
+	Blitter_32bppSSE_Base::SpriteData source{};
+	source.infos[ZoomLevel::Min].sprite_width = 32768;
+	Blitter_32bppSSE2 blitter;
+	/* No output or source pixels are needed. The cache must reject this size
+	 * before allocating colours or reading the absent encoded rows. */
+	Blitter::ScaledBlitterParams bp{&source, nullptr, 32768, 16384, 0, 0, 1, 0, 0, nullptr, 0};
+	bp.nearest = true;
+	CHECK(blitter.DrawScaled(&bp, BlitterMode::Normal));
+}
+
 TEST_CASE("Fractional animated sprite reuse survives palette changes and eviction", "[smoothzoom]")
 {
 	AutoRestoreBackup animation_backup(_screen_disable_anim, false);

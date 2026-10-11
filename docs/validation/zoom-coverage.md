@@ -132,3 +132,34 @@ py -3 docs/validation/run-save-roundtrip.py --stock <path-to-stock-openttd.exe>
 The fractional view is client state. The save retains an integer zoom value.
 This test used OpenGFX without NewGRFs. A save that uses NewGRFs still needs
 those NewGRFs available when loaded, as in stock OpenTTD.
+
+## Rendering optimisation checks, 11 October 2026
+
+The fractional row changes passed all eleven OpenGFX configurations listed
+above. All supported configurations also passed pan-versus-complete-redraw
+checks at 130%, 84% and 66.7%. OpenGFX2 Classic and High Def each passed the
+SSE4 rendering, stable-rest, pan redraw and save/load checks. These repeat the
+functional checks after the row compositor and animated-colour cache changes.
+They do not establish smooth foreground playback.
+
+The complete local suite passed 149 CTest cases. The smooth-zoom subset passed
+51 cases with 77,632 assertions, including palette refresh, repeated draws,
+sprite re-encoding at the same address and bounded-cache eviction.
+
+[All eight platform builds and tests](https://github.com/Deku-shrub/OpenTTD/actions/runs/38178692367)
+passed on `04833375bd`. The
+[Doxygen comparison](https://github.com/Deku-shrub/OpenTTD/actions/runs/38178691465)
+added no warnings. Source-description and English-string checks passed.
+The [published release](https://github.com/Deku-shrub/OpenTTD/releases/tag/build-38178692367-04833375bdf8)
+contains Windows x64/x86, Linux x64 and macOS arm64 packages. All four manifests
+identify `04833375bdf855b2a666e2a8706d114acc45eedc` with no local modifications.
+
+Foreground smoothness, fitted-arrival appearance and replacement promotional
+footage remain open. Windows was locked during the desktop-capture attempt.
+See the [performance and capture notes](promotional-captures.md).
+
+A follow-up cache-budget guard rejects large textures before storage-size
+multiplication can wrap on a 32-bit build. Its oversized-source regression
+needs no source pixels or large allocation. After this correction, all 150
+local CTest cases passed. The smooth-zoom subset passed 52 cases and 77,633
+assertions. Normal-sized sprite sampling is unchanged.

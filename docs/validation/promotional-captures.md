@@ -94,3 +94,10 @@ passed. OpenGFX software, SSE4 and OpenGL runtime checks passed fractional
 rendering, unchanged static land after rest, save/load and agreement between
 pan redraws and complete redraws at 130%, 84% and 66.7%. The 8bpp renderer
 retained native rendering and safely rejected unsupported fractional requests.
+
+The remaining seven local configurations also passed: simple, optimized, SSE2,
+1920 x 1080 software, 200% interface scale, Arabic and Japanese. OpenGFX2 Classic
+and High Def each passed the SSE4 checks. The published `04833375bd` revision
+passed all eight platform jobs and the Doxygen comparison. See the
+[coverage checkpoint](zoom-coverage.md#rendering-optimisation-checks-11-october-2026)
+for the CI and download links.
