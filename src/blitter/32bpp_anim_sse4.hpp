@@ -47,6 +47,14 @@ public:
 	}
 
 protected:
+	void WriteScaledColourRow(Colour *destination, const Colour *source, const int *columns, int first, int last) override;
+
+	uint32_t DrawScaledNearestRow(Colour *destination, const Blitter_32bppSSE4::Pixel *source, const int *columns,
+			int first, int last, BlitterMode mode, const uint8_t *remap) override
+	{
+		return Blitter_32bppSSE2_Anim::DrawScaledNearestRow(destination, source, columns, first, last, mode, remap);
+	}
+
 	void WriteScaledPixel(Colour *dst, const Blitter_32bppSSE4::Pixel &pixel, BlitterMode mode, const uint8_t *remap) override
 	{
 		Blitter_32bppSSE2_Anim::WriteScaledPixel(dst, pixel, mode, remap);

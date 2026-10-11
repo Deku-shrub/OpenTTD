@@ -55,6 +55,36 @@ void Blitter_40bppAnim::WriteScaledPixel(Colour *dst, const Pixel &pixel, Blitte
 	*anim = 0;
 }
 
+uint32_t Blitter_40bppAnim::DrawScaledNearestRow(Colour *destination, const Pixel *source, const int *columns,
+		int first, int last, BlitterMode mode, const uint8_t *remap)
+{
+	if (mode != BlitterMode::Normal && mode != BlitterMode::ColourRemap) {
+		return Blitter_32bppSimple::DrawScaledNearestRow(destination, source, columns, first, last, mode, remap);
+	}
+	uint8_t *animation = !_screen_disable_anim ? ScreenToAnimationBuffer(destination) : nullptr;
+	const auto write = [&](int x, Colour colour, uint8_t alpha) {
+		if (animation != nullptr) {
+			if (alpha < 255) destination[x] = RealizeBlendedColour(animation[x], destination[x]);
+			animation[x] = 0;
+		}
+		destination[x] = ComposeColourPA(colour, alpha, destination[x]);
+	};
+	return mode == BlitterMode::Normal ? this->DrawScaledColourRow<false>(source, columns, first, last, remap, write) :
+			this->DrawScaledColourRow<true>(source, columns, first, last, remap, write);
+}
+
+void Blitter_40bppAnim::WriteScaledColourRow(Colour *destination, const Colour *source, const int *columns, int first, int last)
+{
+	uint8_t *animation = !_screen_disable_anim ? ScreenToAnimationBuffer(destination) : nullptr;
+	CompositeScaledColourRow(source, columns, first, last, [&](int x, Colour colour) {
+		if (animation != nullptr) {
+			if (colour.a < 255) destination[x] = RealizeBlendedColour(animation[x], destination[x]);
+			animation[x] = 0;
+		}
+		destination[x] = ComposeColourPA(colour, colour.a, destination[x]);
+	});
+}
+
 void Blitter_40bppAnim::SetPixel(void *video, int x, int y, PixelColour colour)
 {
 	if (_screen_disable_anim) {

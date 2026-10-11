@@ -17,6 +17,9 @@ entries for the same behaviour.
 - [x] Record 16 full-HD comparison and mixed-scene takes from a downloaded working network. Keep footage and individual vehicle stills in ignored local output. See [capture notes](validation/promotional-captures.md).
 - [ ] Select and compress current mixed-scene excerpts for the end-user gallery after reviewing the promotional footage.
 - [ ] Investigate low camera cadence in the dense title-game network at 1080p, separating rendering cost from recording overhead. A default town flight produced 22 updates in 1.89 seconds without recording, versus 10 during recording.
+- [ ] Resolve the smoothness failures reported in all ten enhanced promotional scenarios. Repeat zoom-out, town and vehicle flights, fitted city arrival, manual takeover and mixed-network scenes without recording before replacing the footage.
+- [x] Batch fractional sprite rows, reuse native SSE colours and skip transparent margins. Add four-pixel opaque and binary-alpha SSE4 composition with exact animation metadata tests.
+- [x] Test a bounded resolved-colour cache for animated SSE sprites, including palette refresh, reused encoding addresses and eviction. Wide-view cadence and foreground footage still need review.
 
 - [x] Simplify camera state by removing unused movement-quality flags and sharing vehicle arrival fitting.
 - [x] Verify all eight CI build platforms and the nightly checks on the published defaults-enabled revision.

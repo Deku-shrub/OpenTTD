@@ -49,3 +49,48 @@ visible. Capture metadata and checksums stay beside the footage.
 
 Select broad scenes for any later documentation excerpts. Compress those
 separately and retain only current behaviour in the end-user gallery.
+
+## Smoothness QA
+
+User review found poor smoothness in all ten enhanced scenarios. Manual takeover
+worked, but the city arrival also appeared to rise vertically rather than follow
+the expected route. These takes remain debugging evidence and are not approved
+promotional footage.
+
+Uncaptured repeats on the same network at 1920 x 1080 reproduced the stalls.
+The city zoom-out produced 14 camera updates over 1324 ms, with a 130 ms maximum
+interval. The rail zoom-out produced 13 over 1368 ms, with a 161 ms maximum.
+Town and fitted-city flights each produced 22 updates, with maximum intervals
+of 169 ms and 151 ms. Rendering and camera-path investigation remains open.
+
+Rendering optimisation checks on 11 October used the same paused network and
+1920 x 1080 viewport, without video recording. Row batching, native SSE colours,
+transparent margins and four-pixel opaque/binary-alpha composition reduced the
+city zoom-out to 41 updates in 1301 ms (53 ms maximum), the rail zoom-out to 28
+in 1330 ms (74 ms maximum), the town flight to 63 in 1889 ms (68 ms maximum),
+and the fitted city arrival to 61 in 2145 ms (81 ms maximum).
+
+A bounded cache of resolved animated SSE colours was then tested twice. City
+zoom-outs produced 48 and 42 updates, rail zoom-outs 27 and 30, town flights
+74 and 64, and fitted arrivals 55 and 75. Maximum fitted-arrival intervals
+varied from 144 to 56 ms. The cache uses a 4 MiB accounting limit, a 128 KiB
+entry limit and at most 256 entries. Large sprites retain the scanline path.
+Regression tests cover palette changes, repeated draws, re-encoding at the same
+address and eviction. These measurements show progress, but wide rail views
+still averaged 45-47 ms between camera updates. The smoothness issue remains open.
+
+Camera-centre measurements followed the direct town-to-town segment within
+0.55 screen pixels. This does not close the reported vertical appearance of
+the city arrival. It still needs review in foreground footage.
+
+GDI recording with software or AMD AMF encoding reduced camera cadence in the
+previous tests. A GPU desktop-duplication capture was attempted, but stopped
+before recording because Windows was showing its lock screen. Foreground
+smoothness and replacement promotional captures remain unverified.
+
+Local validation of the rendering changes passed all 149 CTest cases, including
+51 smooth-zoom cases and 77,632 assertions. The source-description checker
+passed. OpenGFX software, SSE4 and OpenGL runtime checks passed fractional
+rendering, unchanged static land after rest, save/load and agreement between
+pan redraws and complete redraws at 130%, 84% and 66.7%. The 8bpp renderer
+retained native rendering and safely rejected unsupported fractional requests.

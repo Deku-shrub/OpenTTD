@@ -14,11 +14,67 @@
 #include "../settings_type.h"
 #include "32bpp_sse2.hpp"
 #include "32bpp_sse_func.hpp"
+#include <atomic>
 
 #include "../safeguards.h"
 
 /** Instantiation of the SSE2 32bpp blitter factory. */
 static FBlitter_32bppSSE2 iFBlitter_32bppSSE2;
+
+/**
+ * Resolve repeated animated sprites once per palette change without mutating encoded data.
+ * @param sprite Encoded source sprite.
+ * @param zoom Selected source mipmap.
+ * @param height Mipmap height.
+ * @return Cached colours and exact per-pixel dependencies, or null for a large sprite.
+ */
+const Blitter_32bppSSE2::CachedColourSprite *Blitter_32bppSSE2::GetScaledColourSprite(const SpriteData *sprite, ZoomLevel zoom, int height)
+{
+	constexpr size_t limit = 4 * 1024 * 1024;
+	constexpr size_t entry_limit = 128 * 1024;
+	const auto &info = sprite->infos[zoom];
+	const size_t count = static_cast<size_t>(info.sprite_width) * height;
+	const size_t bytes = count * (sizeof(Colour) + sizeof(uint32_t)) + sizeof(CachedColourSprite) + 64;
+	if (bytes > entry_limit) return nullptr;
+	const std::pair key{sprite->identity, zoom};
+	auto it = this->scaled_colour_sprites.find(key);
+	const bool fresh = it == this->scaled_colour_sprites.end();
+	if (fresh) {
+		while (this->scaled_colour_bytes + bytes > limit || this->scaled_colour_sprites.size() >= 256) {
+			auto oldest = std::min_element(this->scaled_colour_sprites.begin(), this->scaled_colour_sprites.end(),
+					[](const auto &a, const auto &b) { return a.second.used < b.second.used; });
+			this->scaled_colour_bytes -= oldest->second.bytes;
+			this->scaled_colour_sprites.erase(oldest);
+		}
+		it = this->scaled_colour_sprites.try_emplace(key).first;
+		it->second.colours.resize(count);
+		it->second.masks.resize(count);
+		it->second.bytes = bytes;
+		this->scaled_colour_bytes += bytes;
+	}
+	auto &cached = it->second;
+	cached.used = ++this->scaled_colour_used;
+	if (!fresh && std::equal(cached.palette.begin(), cached.palette.end(), _cur_palette.palette + PALETTE_ANIM_START)) return &cached;
+	std::copy_n(_cur_palette.palette + PALETTE_ANIM_START, PALETTE_ANIM_SIZE, cached.palette.begin());
+	const MapValue *mapping = reinterpret_cast<const MapValue *>(sprite->data + info.mv_offset);
+	for (int y = 0; y < height; ++y) {
+		const Colour *source = reinterpret_cast<const Colour *>(sprite->data + info.sprite_offset + static_cast<size_t>(y) * info.sprite_line_size) + META_LENGTH;
+		for (int x = 0; x < info.sprite_width; ++x, ++mapping) {
+			const size_t offset = static_cast<size_t>(y) * info.sprite_width + x;
+			Colour colour = source[x];
+			uint32_t mask = 0;
+			if (colour.a != 0 && mapping->m >= PALETTE_ANIM_START && mapping->m < PALETTE_ANIM_START + PALETTE_ANIM_SIZE) {
+				const uint8_t alpha = colour.a;
+				colour = AdjustBrightness(this->LookupColourInPalette(mapping->m), mapping->v);
+				colour.a = alpha;
+				mask = uint32_t{1} << (mapping->m - PALETTE_ANIM_START);
+			}
+			cached.colours[offset] = colour;
+			cached.masks[offset] = mask;
+		}
+	}
+	return &cached;
+}
 
 /** SSE sprites already contain dense pixels, so fractional drawing needs no RLE cache. */
 bool Blitter_32bppSSE2::DrawScaled(ScaledBlitterParams *bp, BlitterMode mode)
@@ -29,6 +85,66 @@ bool Blitter_32bppSSE2::DrawScaled(ScaledBlitterParams *bp, BlitterMode mode)
 	const auto &info = sprite->infos[zoom];
 	const int width = info.sprite_width;
 	const int height = UnScaleByZoom(bp->sprite_height, zoom);
+	if (bp->nearest) {
+		const bool static_colours = sprite->flags.Test(SpriteFlag::NoAnim) &&
+				(mode == BlitterMode::Normal || (mode == BlitterMode::ColourRemap && sprite->flags.Test(SpriteFlag::NoRemap)));
+		const CachedColourSprite *cached = !static_colours && mode == BlitterMode::Normal ? this->GetScaledColourSprite(sprite, zoom, height) : nullptr;
+		if (!static_colours && mode == BlitterMode::Normal && cached == nullptr) {
+			if (this->scaled_colour_row.size() < static_cast<size_t>(width)) this->scaled_colour_row.resize(width);
+		} else if (!static_colours && mode != BlitterMode::Normal && this->scaled_rows.size() < static_cast<size_t>(width)) {
+			this->scaled_rows.resize(width);
+		}
+		return this->DrawScaledNearestRows(bp, width, height, ScaleByZoom(1, zoom),
+				[&](int y, Colour *destination, const int *columns, int first, int last) -> uint32_t {
+					const Colour *source = reinterpret_cast<const Colour *>(sprite->data + info.sprite_offset + static_cast<size_t>(y) * info.sprite_line_size);
+					/* Native SSE rows already describe their empty margins. Skipping
+					 * those samples matters for ground diamonds and sparse trees. */
+					const int source_first = source[0].data;
+					const int source_last = width - source[1].data;
+					if (source_first >= source_last) return 0;
+					if (columns[first] < source_first) first = static_cast<int>(std::lower_bound(columns + first, columns + last, source_first) - columns);
+					if (first >= last) return 0;
+					if (columns[last - 1] >= source_last) last = static_cast<int>(std::lower_bound(columns + first, columns + last, source_last) - columns);
+					if (first >= last) return 0;
+					source += META_LENGTH;
+					if (static_colours) {
+						this->WriteScaledColourRow(destination, source, columns, first, last);
+						return 0;
+					}
+					if (cached != nullptr) {
+						const size_t offset = static_cast<size_t>(y) * width;
+						uint32_t mask = 0;
+						for (int x = first; x < last; ++x) mask |= cached->masks[offset + columns[x]];
+						this->WriteScaledColourRow(destination, cached->colours.data() + offset, columns, first, last);
+						return mask;
+					}
+					const MapValue *mapping = reinterpret_cast<const MapValue *>(sprite->data + info.mv_offset) + static_cast<size_t>(y) * width;
+					if (mode == BlitterMode::Normal) {
+						uint32_t mask = 0;
+						Colour *row = this->scaled_colour_row.data();
+						/* Only animated entries need a new palette lookup each tick. */
+						for (int x = first; x < last; ++x) {
+							const int column = columns[x];
+							Colour colour = source[column];
+							const MapValue value = mapping[column];
+							if (colour.a != 0 && value.m >= PALETTE_ANIM_START && value.m < PALETTE_ANIM_START + PALETTE_ANIM_SIZE) {
+								const uint8_t alpha = colour.a;
+								colour = AdjustBrightness(this->LookupColourInPalette(value.m), value.v);
+								colour.a = alpha;
+								mask |= uint32_t{1} << (value.m - PALETTE_ANIM_START);
+							}
+							row[column] = colour;
+						}
+						this->WriteScaledColourRow(destination, row, columns, first, last);
+						return mask;
+					}
+					Pixel *row = this->scaled_rows.data();
+					for (int x = columns[first]; x <= columns[last - 1]; ++x) {
+						row[x] = {source[x].r, source[x].g, source[x].b, source[x].a, mapping[x].m, mapping[x].v};
+					}
+					return this->DrawScaledNearestRow(destination, row, columns, first, last, mode, bp->remap);
+				});
+	}
 	return this->DrawScaledRows(bp, mode, width, height, ScaleByZoom(1, zoom), [&](int y, Pixel *row) {
 		const Colour *colour = reinterpret_cast<const Colour *>(sprite->data + info.sprite_offset +
 				static_cast<size_t>(y) * info.sprite_line_size) + META_LENGTH;
@@ -55,6 +171,8 @@ Sprite *Blitter_32bppSSE_Base::Encode(SpriteType sprite_type, const SpriteLoader
 
 	/* Calculate sizes and allocate. */
 	SpriteData sd{};
+	static std::atomic<uint64_t> next_identity{1};
+	sd.identity = next_identity.fetch_add(1, std::memory_order_relaxed);
 	uint all_sprites_size = 0;
 	for (ZoomLevel z = zoom_min; z <= zoom_max; z++) {
 		const SpriteLoader::Sprite *src_sprite = &sprite[z];

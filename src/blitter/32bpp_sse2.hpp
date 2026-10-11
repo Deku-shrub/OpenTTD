@@ -26,6 +26,7 @@
 
 #include "../cpu.h"
 #include "32bpp_sse_type.h"
+#include <unordered_map>
 
 /** Base methods for 32bpp SSE blitters. */
 class Blitter_32bppSSE_Base {
@@ -76,6 +77,7 @@ public:
 	};
 	struct SpriteData {
 		SpriteFlags flags{};
+		uint64_t identity = 0; ///< Changes on re-encoding even when the sprite cache reuses its address.
 		SpriteCollMap<SpriteInfo> infos{};
 		uint8_t data[]; ///< Data, all zoomlevels.
 	};
@@ -85,6 +87,29 @@ public:
 
 /** The SSE2 32 bpp blitter (without palette animation). */
 class Blitter_32bppSSE2 : public Blitter_32bppSimple, public Blitter_32bppSSE_Base {
+private:
+	std::vector<Colour> scaled_colour_row; ///< Reusable scanline with current animated palette colours.
+	/** Resolved colours for one small animated mipmap. */
+	struct CachedColourSprite {
+		std::vector<Colour> colours; ///< Dense RGBA pixels without native row metadata.
+		std::vector<uint32_t> masks; ///< Animated palette entry contributing to each pixel.
+		std::array<Colour, PALETTE_ANIM_SIZE> palette; ///< Palette values used to resolve the colours.
+		uint64_t used = 0; ///< Last use for bounded eviction.
+		size_t bytes = 0; ///< Charged storage including entry overhead.
+	};
+	/** Hash an encoding identity and mipmap level without retaining sprite pointers. */
+	struct ColourSpriteHash {
+		/**
+		 * @param key Encoding identity and selected mipmap.
+		 * @return Hash for the resolved-colour cache.
+		 */
+		size_t operator()(const std::pair<uint64_t, ZoomLevel> &key) const { return std::hash<uint64_t>{}((key.first << 3) ^ to_underlying(key.second)); }
+	};
+	std::unordered_map<std::pair<uint64_t, ZoomLevel>, CachedColourSprite, ColourSpriteHash> scaled_colour_sprites; ///< Bounded cache for repeated animated sprites.
+	size_t scaled_colour_bytes = 0; ///< Charged cache storage.
+	uint64_t scaled_colour_used = 0; ///< Monotonic cache-use counter.
+	const CachedColourSprite *GetScaledColourSprite(const SpriteData *sprite, ZoomLevel zoom, int height);
+
 public:
 	void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom) override;
 	bool DrawScaled(ScaledBlitterParams *bp, BlitterMode mode) override;

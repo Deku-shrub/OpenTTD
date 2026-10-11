@@ -21,6 +21,48 @@
 /** Instantiation of the SSE4 32bpp blitter factory. */
 static FBlitter_32bppSSE4_Anim iFBlitter_32bppSSE4_Anim;
 
+GNU_TARGET("sse4.1")
+void Blitter_32bppSSE4_Anim::WriteScaledColourRow(Colour *destination, const Colour *source, const int *columns, int first, int last)
+{
+	uint16_t *animation = !_screen_disable_anim && this->anim_buf != nullptr ? this->ScreenToAnimationBuffer(destination) : nullptr;
+	int x = first;
+	/* Opaque samples need neither destination reads nor alpha blending. Copy
+	 * four together and clear their animation metadata with one store. */
+	for (; x + 4 <= last; x += 4) {
+		const Colour samples[] = {source[columns[x]], source[columns[x + 1]], source[columns[x + 2]], source[columns[x + 3]]};
+		const __m128i colours = _mm_set_epi32(samples[3].data, samples[2].data, samples[1].data, samples[0].data);
+		if ((samples[0].a & samples[1].a & samples[2].a & samples[3].a) == 255) {
+			_mm_storeu_si128(reinterpret_cast<__m128i *>(destination + x), colours);
+			if (animation != nullptr) _mm_storel_epi64(reinterpret_cast<__m128i *>(animation + x), _mm_setzero_si128());
+		} else if ((samples[0].a == 0 || samples[0].a == 255) && (samples[1].a == 0 || samples[1].a == 255) &&
+				(samples[2].a == 0 || samples[2].a == 255) && (samples[3].a == 0 || samples[3].a == 255)) {
+			const __m128i alpha = _mm_shuffle_epi8(colours, _mm_set_epi8(15, 15, 15, 15, 11, 11, 11, 11, 7, 7, 7, 7, 3, 3, 3, 3));
+			const __m128i transparent = _mm_cmpeq_epi8(alpha, _mm_setzero_si128());
+			const __m128i background = _mm_loadu_si128(reinterpret_cast<const __m128i *>(destination + x));
+			_mm_storeu_si128(reinterpret_cast<__m128i *>(destination + x), _mm_blendv_epi8(colours, background, transparent));
+			if (animation != nullptr) {
+				/* Transparent samples must retain the background's palette entry. */
+				const __m128i animation_mask = _mm_shuffle_epi8(transparent, _mm_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1, 13, 12, 9, 8, 5, 4, 1, 0));
+				const __m128i previous = _mm_loadl_epi64(reinterpret_cast<const __m128i *>(animation + x));
+				_mm_storel_epi64(reinterpret_cast<__m128i *>(animation + x), _mm_and_si128(animation_mask, previous));
+			}
+		} else {
+			for (int i = 0; i < 4; ++i) {
+				const Colour colour = samples[i];
+				if (colour.a == 0) continue;
+				destination[x + i] = Blitter_32bppAnim::ComposeColourPA(colour, colour.a, destination[x + i]);
+				if (animation != nullptr) animation[x + i] = 0;
+			}
+		}
+	}
+	for (; x < last; ++x) {
+		const Colour colour = source[columns[x]];
+		if (colour.a == 0) continue;
+		destination[x] = Blitter_32bppAnim::ComposeColourPA(colour, colour.a, destination[x]);
+		if (animation != nullptr) animation[x] = 0;
+	}
+}
+
 /**
  * Draws a sprite to a (screen) buffer. It is templated to allow faster operation.
  *

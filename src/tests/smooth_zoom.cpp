@@ -11,7 +11,11 @@
 #include "../3rdparty/catch2/catch.hpp"
 #include "../blitter/32bpp_simple.hpp"
 #include "../blitter/32bpp_optimized.hpp"
+#include "../blitter/32bpp_anim.hpp"
 #include "../blitter/32bpp_sse2.hpp"
+#ifdef WITH_SSE
+#include "../blitter/32bpp_anim_sse4.hpp"
+#endif
 #ifdef WITH_OPENGL
 #include "../blitter/40bpp_anim.hpp"
 #endif
@@ -30,6 +34,26 @@
 class SmoothZoomTestBlitter : public Blitter_32bppSimple {
 public:
 	using Blitter_32bppSimple::Pixel;
+};
+
+/** Retain the per-pixel compositor as an independent reference for row batching. */
+class SmoothZoomReferenceRowBlitter : public Blitter_32bppAnim {
+protected:
+	uint32_t DrawScaledNearestRow(Colour *destination, const Pixel *source, const int *columns,
+			int first, int last, BlitterMode mode, const uint8_t *remap) override
+	{
+		uint32_t mask = 0;
+		for (int x = first; x < last; ++x) {
+			if (columns[x] < 0) continue;
+			Pixel pixel = source[columns[x]];
+			this->ResolveScaledPixel(pixel, mode, remap);
+			if (pixel.a == 0) continue;
+			this->WriteScaledPixel(destination + x, pixel, mode, remap);
+			if (mode == BlitterMode::TransparentRemap) mask = std::numeric_limits<uint32_t>::max() >> (32 - PALETTE_ANIM_SIZE);
+			else if (pixel.m >= PALETTE_ANIM_START && pixel.m < PALETTE_ANIM_START + PALETTE_ANIM_SIZE) mask |= uint32_t{1} << (pixel.m - PALETTE_ANIM_START);
+		}
+		return mask;
+	}
 };
 
 TEST_CASE("Fractional pixel scrolling matches a complete sprite repaint", "[smoothzoom]")
@@ -94,6 +118,47 @@ TEST_CASE("Motion sampling selects pixel centres without touching pitch guards",
 	REQUIRE(blitter.DrawScaled(&bp, BlitterMode::Normal));
 	CHECK(output[0] == sentinel);
 	CHECK(output[1] == Colour(0, 0, 200));
+}
+
+TEST_CASE("Binary viewport sampling agrees with floating-point centre coordinates", "[smoothzoom]")
+{
+	const double step = GENERATE(static_cast<double>(4.0f / 1.3f), static_cast<double>(4.0f / 0.84f),
+			1.5, 6.0, static_cast<double>(15.99f), 1.3);
+	const double displacement = GENERATE(0.0, -1e-9, 1e-9, -0.25, 0.125,
+			-1.0 / (1U << 30), 1.0 / (1U << 30), -1.0 / (1U << 29), 1.0 / (1U << 29));
+	const int clip_left = GENERATE(0, 1, 3);
+	SmoothZoomTestBlitter blitter;
+	std::array<SmoothZoomTestBlitter::Pixel, 65 * 33> source;
+	for (size_t i = 0; i < source.size(); ++i) {
+		source[i] = {static_cast<uint8_t>(i * 17), static_cast<uint8_t>(i * 37), static_cast<uint8_t>(i * 61), 255, 0, 0};
+	}
+	constexpr int width = 9, height = 6, pitch = 12;
+	const Colour background(13, 29, 41);
+	std::array<Colour, pitch * height> actual, expected;
+	actual.fill(background);
+	expected.fill(background);
+	Blitter::ScaledBlitterParams bp{source.data(), nullptr, 65, 33, -step * 0.5 + displacement,
+			0.25, step, width, height, actual.data(), pitch};
+	bp.nearest = true;
+	bp.clip_left = clip_left;
+	bp.clip_top = 2;
+	bp.clip_right = 3;
+	bp.clip_bottom = 1;
+	REQUIRE(blitter.DrawScaled(&bp, BlitterMode::Normal));
+	const auto centre = [](double value) {
+		const double boundary = std::floor(value * 32 + 0.5) / 32;
+		return std::abs(value - boundary) <= 1e-9 ? boundary : value;
+	};
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			const double sx = centre(bp.src_x + (x + 0.5) * step);
+			const double sy = centre(bp.src_y + (y + 0.5) * step);
+			if (sx < clip_left || sx >= 62 || sy < 2 || sy >= 32) continue;
+			const auto &pixel = source[static_cast<int>(std::floor(sy)) * 65 + static_cast<int>(std::floor(sx))];
+			expected[y * pitch + x] = Colour(pixel.r, pixel.g, pixel.b);
+		}
+	}
+	CHECK(actual == expected);
 }
 
 TEST_CASE("Motion palette dependencies follow the sampled remapped pixel", "[smoothzoom]")
@@ -305,13 +370,194 @@ TEST_CASE("Fractional filtering resolves each company colour before averaging", 
 /** Own one encoded test sprite without involving the global sprite cache. */
 class SmoothZoomSpriteAllocator : public SpriteAllocator {
 	std::unique_ptr<uint8_t[]> data;
+	size_t capacity = 0;
 protected:
 	void *AllocatePtr(size_t size) override
 	{
-		this->data = std::make_unique<uint8_t[]>(size);
+		if (size > this->capacity) {
+			this->data = std::make_unique<uint8_t[]>(size);
+			this->capacity = size;
+		}
 		return this->data.get();
 	}
 };
+
+TEST_CASE("Batched fractional rows preserve pixels and native animation metadata", "[smoothzoom]")
+{
+	const BlitterMode mode = GENERATE(BlitterMode::Normal, BlitterMode::ColourRemap, BlitterMode::CrashRemap,
+			BlitterMode::BlackRemap, BlitterMode::Transparent, BlitterMode::TransparentRemap);
+	const bool animated_source = GENERATE(false, true);
+	const bool palette_source = GENERATE(false, true);
+	const bool default_brightness = GENERATE(false, true);
+	const int source_alpha = GENERATE(0, 1, 2, 3);
+	CAPTURE(mode, animated_source, palette_source, default_brightness, source_alpha);
+	AutoRestoreBackup animation_backup(_screen_disable_anim, false);
+	AutoRestoreBackup screen_backup(_screen);
+	AutoRestoreBackup palette_backup(_cur_palette);
+	AutoRestoreBackup zoom_min_backup(_settings_client.gui.zoom_min, ZoomLevel::Min);
+	AutoRestoreBackup zoom_max_backup(_settings_client.gui.zoom_max, ZoomLevel::Max);
+	_cur_palette.palette[42] = Colour(30, 90, 160);
+	_cur_palette.palette[47] = Colour(220, 40, 80);
+	_cur_palette.palette[PALETTE_ANIM_START + 2] = Colour(0, 240, 140);
+	std::array<uint8_t, 256> remap;
+	for (size_t i = 0; i < remap.size(); ++i) remap[i] = static_cast<uint8_t>(i);
+	remap[42] = 0;
+	remap[PALETTE_ANIM_START + 2] = 47;
+	SpriteLoader::SpriteCollection sprites;
+	SpriteCollMap<std::vector<SpriteLoader::CommonPixel>> source;
+	for (ZoomLevel zoom = ZoomLevel::Min; zoom <= ZoomLevel::Max; ++zoom) {
+		const int width = UnScaleByZoom(65, zoom), height = UnScaleByZoom(33, zoom);
+		auto &pixels = source[zoom];
+		pixels.resize(width * height);
+		for (size_t i = 0; i < pixels.size(); ++i) {
+			const uint8_t index = !palette_source ? 0 : animated_source && i % 3 == 1 ? PALETTE_ANIM_START + 2 : i % 3 == 0 ? 42 : 0;
+			const bool palette_only = default_brightness && index != 0;
+			pixels[i] = {static_cast<uint8_t>(palette_only ? 0 : i * 17), static_cast<uint8_t>(palette_only ? 0 : i * 37), static_cast<uint8_t>(palette_only ? 0 : i * 61),
+					static_cast<uint8_t>(source_alpha == 0 ? 255 : source_alpha == 3 ? i : i % 7 < 2 ? 0 : source_alpha == 2 && i % 7 == 2 ? 96 : 255),
+					index};
+		}
+		sprites[zoom] = {static_cast<uint16_t>(height), static_cast<uint16_t>(width), 0, 0, {}, pixels.data()};
+	}
+	constexpr int width = 25, pitch = 29, height = 8;
+	_screen.width = width;
+	_screen.height = height;
+	_screen.pitch = pitch;
+	std::vector<Colour> expected_pixels;
+	std::vector<uint8_t> expected_buffer;
+	uint32_t expected_mask = 0;
+	SmoothZoomReferenceRowBlitter reference;
+	Blitter_32bppAnim batched;
+	std::vector<Blitter *> blitters{&reference, &batched};
+#ifdef WITH_SSE
+	Blitter_32bppSSE4_Anim sse4;
+	blitters.push_back(static_cast<Blitter_32bppSSE2_Anim *>(&sse4));
+#endif
+	for (Blitter *blitter : blitters) {
+		CAPTURE(blitter->GetName());
+		std::vector<Colour> pixels(pitch * height, Colour(10, 20, 30));
+		_screen.dst_ptr = pixels.data();
+		blitter->PostResize();
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) blitter->SetPixel(pixels.data(), x, y, PixelColour{PALETTE_ANIM_START + 2});
+		}
+		SmoothZoomSpriteAllocator allocator;
+		const Sprite *sprite = blitter->Encode(SpriteType::Normal, sprites, allocator);
+		Blitter::ScaledBlitterParams bp{sprite->data, remap.data(), sprite->width, sprite->height,
+				-0.65, 0.1, 1.3, width, height, pixels.data(), pitch};
+		bp.nearest = true;
+		bp.clip_left = 1;
+		REQUIRE(blitter->DrawScaled(&bp, mode));
+		std::vector<uint8_t> buffer(blitter->BufferSize(width, height));
+		blitter->CopyToBuffer(pixels.data(), buffer.data(), width, height);
+		if (blitter == &reference) {
+			expected_pixels = pixels;
+			expected_buffer = buffer;
+			expected_mask = bp.palette_mask;
+		} else {
+			if (blitter->GetName() == "32bpp-sse4-anim" && palette_source && !default_brightness && mode == BlitterMode::Normal) {
+				/* The static-colour path reuses native SSE brightness rounding. */
+				CHECK(std::equal(pixels.begin(), pixels.end(), expected_pixels.begin(), [](Colour a, Colour b) {
+					return std::abs(int(a.r) - b.r) <= 1 && std::abs(int(a.g) - b.g) <= 1 && std::abs(int(a.b) - b.b) <= 1 && a.a == b.a;
+				}));
+			} else {
+				CHECK(pixels == expected_pixels);
+			}
+			for (int y = 0; y < height; ++y) {
+				const size_t offset = y * width * (sizeof(Colour) + sizeof(uint16_t)) + width * sizeof(Colour);
+				CHECK(std::equal(buffer.begin() + offset, buffer.begin() + offset + width * sizeof(uint16_t), expected_buffer.begin() + offset));
+			}
+			CHECK(bp.palette_mask == expected_mask);
+		}
+	}
+}
+
+#ifdef WITH_SSE
+TEST_CASE("Fractional animated sprite reuse survives palette changes and eviction", "[smoothzoom]")
+{
+	AutoRestoreBackup animation_backup(_screen_disable_anim, false);
+	AutoRestoreBackup screen_backup(_screen);
+	AutoRestoreBackup palette_backup(_cur_palette);
+	AutoRestoreBackup zoom_min_backup(_settings_client.gui.zoom_min, ZoomLevel::Min);
+	AutoRestoreBackup zoom_max_backup(_settings_client.gui.zoom_max, ZoomLevel::Max);
+	constexpr int width = 7, height = 5, pitch = 9;
+	_screen.width = width;
+	_screen.height = height;
+	_screen.pitch = pitch;
+	SpriteLoader::SpriteCollection sprites;
+	SpriteCollMap<std::vector<SpriteLoader::CommonPixel>> source;
+	for (ZoomLevel zoom = ZoomLevel::Min; zoom <= ZoomLevel::Max; ++zoom) {
+		const int w = UnScaleByZoom(8, zoom), h = UnScaleByZoom(8, zoom);
+		source[zoom].resize(w * h);
+		sprites[zoom] = {static_cast<uint16_t>(h), static_cast<uint16_t>(w), 0, 0, {}, source[zoom].data()};
+	}
+	Blitter_32bppSSE4_Anim sse4;
+	Blitter_32bppAnim reference;
+	SmoothZoomSpriteAllocator allocator;
+	SmoothZoomSpriteAllocator reference_allocator;
+	SmoothZoomSpriteAllocator retained_allocator;
+	SmoothZoomSpriteAllocator retained_reference_allocator;
+	const Sprite *retained = nullptr;
+	const Sprite *retained_reference = nullptr;
+	const Sprite *previous = nullptr;
+	auto compare = [&](const Sprite *sprite, const Sprite *reference_sprite) {
+		std::vector<Colour> expected(pitch * height, Colour(10, 20, 30));
+		std::vector<Colour> actual = expected;
+		uint32_t expected_mask = 0;
+		std::vector<uint8_t> expected_buffer;
+		for (Blitter *blitter : std::array<Blitter *, 2>{&reference, static_cast<Blitter_32bppSSE2_Anim *>(&sse4)}) {
+			auto &pixels = blitter == &reference ? expected : actual;
+			_screen.dst_ptr = pixels.data();
+			blitter->PostResize();
+			for (int y = 0; y < height; ++y) {
+				for (int x = 0; x < width; ++x) blitter->SetPixel(pixels.data(), x, y, PixelColour{PALETTE_ANIM_START + 2});
+			}
+			const Sprite *encoded = blitter == &reference ? reference_sprite : sprite;
+			Blitter::ScaledBlitterParams bp{encoded->data, nullptr, encoded->width, encoded->height,
+					-0.65, 0.1, 1.3, width, height, pixels.data(), pitch};
+			bp.nearest = true;
+			REQUIRE(blitter->DrawScaled(&bp, BlitterMode::Normal));
+			std::vector<uint8_t> buffer(blitter->BufferSize(width, height));
+			blitter->CopyToBuffer(pixels.data(), buffer.data(), width, height);
+			if (blitter == &reference) {
+				expected_mask = bp.palette_mask;
+				expected_buffer = buffer;
+			} else {
+				CHECK(actual == expected);
+				CHECK(buffer == expected_buffer);
+				CHECK(bp.palette_mask == expected_mask);
+			}
+		}
+	};
+	/* Re-encoding uses the same allocation. A retained sprite crosses the
+	 * entry limit and must still draw correctly after being evicted. */
+	for (int revision = 0; revision < 300; ++revision) {
+		CAPTURE(revision);
+		for (ZoomLevel zoom = ZoomLevel::Min; zoom <= ZoomLevel::Max; ++zoom) {
+			auto &pixels = source[zoom];
+			for (size_t i = 0; i < pixels.size(); ++i) {
+				pixels[i] = {0, 0, 0, static_cast<uint8_t>((i + revision) % 3 == 0 ? 0 : (i + revision) % 3 == 1 ? 96 : 255),
+						static_cast<uint8_t>(PALETTE_ANIM_START + 2 + revision % 2)};
+			}
+		}
+		const Sprite *sprite = sse4.Encode(SpriteType::Normal, sprites, allocator);
+		const Sprite *reference_sprite = reference.Encode(SpriteType::Normal, sprites, reference_allocator);
+		if (previous != nullptr) REQUIRE(sprite == previous);
+		previous = sprite;
+		if (revision == 0) {
+			retained = sse4.Encode(SpriteType::Normal, sprites, retained_allocator);
+			retained_reference = reference.Encode(SpriteType::Normal, sprites, retained_reference_allocator);
+			compare(retained, retained_reference);
+		}
+		for (int palette = 0; palette < 2; ++palette) {
+			_cur_palette.palette[PALETTE_ANIM_START + 2] = palette == 0 ? Colour(200, 40, 80) : Colour(0, 240, 140);
+			_cur_palette.palette[PALETTE_ANIM_START + 3] = palette == 0 ? Colour(80, 160, 240) : Colour(240, 80, 160);
+			compare(sprite, reference_sprite);
+			compare(sprite, reference_sprite);
+		}
+	}
+	compare(retained, retained_reference);
+}
+#endif
 
 TEST_CASE("Fractional encoded sprite decoding agrees with integer blitting at every mipmap", "[smoothzoom]")
 {
@@ -368,7 +614,7 @@ TEST_CASE("Fractional encoded sprite decoding agrees with integer blitting at ev
 			if ((partial_alpha || palette_pixels) && blitter->GetName() == "32bpp-sse2") {
 				/* Native SSE brightness and alpha arithmetic round differently
 				 * from their scalar counterparts. Allow only one RGB unit for
-				 * those cases; opaque non-palette sprites remain byte-exact. */
+				 * those cases. Opaque non-palette sprites remain byte-exact. */
 				CHECK(std::equal(scaled.begin(), scaled.end(), reference.begin(), [](Colour a, Colour b) {
 					return std::abs(int(a.r) - b.r) <= 1 && std::abs(int(a.g) - b.g) <= 1 &&
 							std::abs(int(a.b) - b.b) <= 1 && a.a == b.a;

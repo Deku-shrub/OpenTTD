@@ -175,8 +175,8 @@ void Blitter_32bppSimple::WriteScaledPixel(Colour *dst, const Pixel &p, BlitterM
 /**
  * Remove arithmetic noise near pixel and sub-sprite clipping boundaries.
  * Every clip boundary in a selected mipmap is a multiple of 1 / 32. Separate
- * dirty rectangles can reach the same coordinate through different additions;
- * treating an almost exact boundary consistently prevents missing edge pixels.
+ * dirty rectangles can reach the same coordinate through different additions.
+ * Treating an almost exact boundary consistently prevents missing edge pixels.
  * @param value Source coordinate before arithmetic-noise correction.
  * @return Coordinate snapped only when extremely close to a clipping-grid boundary.
  */
@@ -187,6 +187,86 @@ static double SnapScaledSpriteCoordinate(double value)
 	 * ties are outside that tolerance, so floor avoids the slower round call. */
 	const double boundary = std::floor(value * grid + 0.5) / grid;
 	return std::abs(value - boundary) <= 1e-9 ? boundary : value;
+}
+
+uint32_t Blitter_32bppSimple::DrawScaledNearestRow(Colour *destination, const Pixel *source, const int *columns,
+		int first, int last, BlitterMode mode, const uint8_t *remap)
+{
+	const auto write = [&](int x, Colour colour, uint8_t alpha) { destination[x] = ComposeColourPA(colour, alpha, destination[x]); };
+	if (mode == BlitterMode::Normal) return this->DrawScaledColourRow<false>(source, columns, first, last, remap, write);
+	if (mode == BlitterMode::ColourRemap) return this->DrawScaledColourRow<true>(source, columns, first, last, remap, write);
+	uint32_t mask = 0;
+	for (int x = first; x < last; ++x) {
+		if (columns[x] < 0) continue;
+		Pixel pixel = source[columns[x]];
+		this->ResolveScaledPixel(pixel, mode, remap);
+		if (pixel.a == 0) continue;
+		this->WriteScaledPixel(destination + x, pixel, mode, remap);
+		if (mode == BlitterMode::TransparentRemap) mask = std::numeric_limits<uint32_t>::max() >> (32 - PALETTE_ANIM_SIZE);
+		else if (pixel.m >= PALETTE_ANIM_START && pixel.m < PALETTE_ANIM_START + PALETTE_ANIM_SIZE) mask |= uint32_t{1} << (pixel.m - PALETTE_ANIM_START);
+	}
+	return mask;
+}
+
+void Blitter_32bppSimple::WriteScaledColourRow(Colour *destination, const Colour *source, const int *columns, int first, int last)
+{
+	CompositeScaledColourRow(source, columns, first, last, [&](int x, Colour colour) {
+		destination[x] = ComposeColourPA(colour, colour.a, destination[x]);
+	});
+}
+
+/**
+ * Share clipping and centre coordinates between decoded and already-coloured sprites.
+ * @param bp Fractional source and destination parameters.
+ * @param width Selected source mipmap width.
+ * @param height Selected source mipmap height.
+ * @param factor Virtual pixels per mipmap pixel.
+ * @param context Opaque row-compositor context.
+ * @param draw_row Callback compositing one source row at the selected columns.
+ * @return True when the sprite was handled.
+ */
+bool Blitter_32bppSimple::DrawScaledNearestRows(ScaledBlitterParams *bp, int width, int height, double factor,
+		const void *context, uint32_t (*draw_row)(const void *, int, Colour *, const int *, int, int))
+{
+	bp->palette_mask = 0;
+	const double step = bp->step / factor;
+	const double clip_left = bp->clip_left / factor;
+	const double clip_top = bp->clip_top / factor;
+	const double clip_right = bp->clip_right == 0 ? width : (bp->sprite_width - bp->clip_right) / factor;
+	const double clip_bottom = bp->clip_bottom == 0 ? height : (bp->sprite_height - bp->clip_bottom) / factor;
+	assert(step >= 1 && step <= 32);
+	if (width <= 0 || height <= 0 || bp->width <= 0 || bp->height <= 0) return true;
+	/* Centre sampling avoids constructing area-filter scanlines.
+	 * Fractional viewports use it during motion and at rest to keep detail stable. */
+	const int destination_width = bp->width;
+	const int destination_height = bp->height;
+	const int destination_pitch = bp->pitch;
+	if (this->scaled_nearest_columns.size() < static_cast<size_t>(destination_width)) this->scaled_nearest_columns.resize(destination_width);
+	int first_column = destination_width;
+	int last_column = 0;
+	const double origin_x = bp->src_x / factor;
+	const double origin_y = bp->src_y / factor;
+	for (int x = 0; x < destination_width; x++) {
+		const double centre = SnapScaledSpriteCoordinate(origin_x + (x + 0.5) * step);
+		const int cx = static_cast<int>(std::floor(centre));
+		this->scaled_nearest_columns[x] = -1;
+		if (cx < 0 || cx >= width || centre < clip_left || centre >= clip_right) continue;
+		this->scaled_nearest_columns[x] = cx;
+		first_column = std::min(first_column, x);
+		last_column = x + 1;
+	}
+	if (first_column >= last_column) return true;
+	const int *columns = this->scaled_nearest_columns.data();
+	Colour *destination = static_cast<Colour *>(bp->dst);
+	uint32_t palette_mask = 0;
+	for (int y = 0; y < destination_height; y++, destination += destination_pitch) {
+		const double centre = SnapScaledSpriteCoordinate(origin_y + (y + 0.5) * step);
+		const int cy = static_cast<int>(std::floor(centre));
+		if (cy < 0 || cy >= height || centre < clip_top || centre >= clip_bottom) continue;
+		palette_mask |= draw_row(context, cy, destination, columns, first_column, last_column);
+	}
+	bp->palette_mask = palette_mask;
+	return true;
 }
 
 /**
@@ -220,54 +300,14 @@ bool Blitter_32bppSimple::DrawScaledRows(ScaledBlitterParams *bp, BlitterMode mo
 	assert(step >= 1 && step <= 32);
 	if (width <= 0 || height <= 0 || bp->width <= 0 || bp->height <= 0) return true;
 	if (bp->nearest) {
-		/* Centre sampling avoids constructing area-filter scanlines.
-		 * Fractional viewports use it during motion and at rest to keep detail stable. */
-		const int destination_width = bp->width;
-		const int destination_height = bp->height;
-		const int destination_pitch = bp->pitch;
-		const uint8_t *remap = bp->remap;
 		if (this->scaled_rows.size() < static_cast<size_t>(width)) this->scaled_rows.resize(width);
-		if (this->scaled_columns.size() < static_cast<size_t>(destination_width)) this->scaled_columns.resize(destination_width);
-		int first_column = destination_width;
-		int last_column = 0;
-		const double origin_x = bp->src_x / factor;
-		const double origin_y = bp->src_y / factor;
-		for (int x = 0; x < destination_width; x++) {
-			const double centre = SnapScaledSpriteCoordinate(origin_x + (x + 0.5) * step);
-			const int cx = static_cast<int>(std::floor(centre));
-			this->scaled_columns[x].centre = -1;
-			if (cx < 0 || cx >= width || centre < clip_left || centre >= clip_right) continue;
-			this->scaled_columns[x].centre = cx;
-			first_column = std::min(first_column, x);
-			last_column = x + 1;
-		}
-		if (first_column >= last_column) return true;
-		const ScaledColumn *columns = this->scaled_columns.data();
 		Pixel *source_row = this->scaled_rows.data();
-		Colour *destination = static_cast<Colour *>(bp->dst);
 		int cached_row = -1;
-		uint32_t palette_mask = 0;
-		for (int y = 0; y < destination_height; y++, destination += destination_pitch) {
-			const double centre = SnapScaledSpriteCoordinate(origin_y + (y + 0.5) * step);
-			const int cy = static_cast<int>(std::floor(centre));
-			if (cy < 0 || cy >= height || centre < clip_top || centre >= clip_bottom) continue;
-			if (cy != cached_row) {
-				read_row(context, cy, source_row);
-				cached_row = cy;
-			}
-			for (int x = first_column; x < last_column; x++) {
-				const int cx = columns[x].centre;
-				if (cx < 0) continue;
-				Pixel pixel = source_row[cx];
-				this->ResolveScaledPixel(pixel, mode, remap);
-				if (pixel.a == 0) continue;
-				this->WriteScaledPixel(destination + x, pixel, mode, remap);
-				palette_mask |= mode == BlitterMode::TransparentRemap ?
-						std::numeric_limits<uint32_t>::max() >> (32 - PALETTE_ANIM_SIZE) : animated_mask(pixel, 1);
-			}
-		}
-		bp->palette_mask = palette_mask;
-		return true;
+		return this->DrawScaledNearestRows(bp, width, height, factor,
+				[&](int y, Colour *destination, const int *columns, int first, int last) {
+					if (y != cached_row) { read_row(context, y, source_row); cached_row = y; }
+					return this->DrawScaledNearestRow(destination, source_row, columns, first, last, mode, bp->remap);
+				});
 	}
 	const int row_count = static_cast<int>(std::ceil(step)) + 1;
 	const int destination_width = bp->width;

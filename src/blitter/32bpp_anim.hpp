@@ -33,6 +33,9 @@ static inline T * ScreenToAnimationBuffer(const void *video, T *animation_buffer
 /** The optimised 32 bpp blitter with palette animation. */
 class Blitter_32bppAnim : public Blitter_32bppOptimized {
 protected:
+	void WriteScaledColourRow(Colour *destination, const Colour *source, const int *columns, int first, int last) override;
+	uint32_t DrawScaledNearestRow(Colour *destination, const Pixel *source, const int *columns,
+			int first, int last, BlitterMode mode, const uint8_t *remap) override;
 	void WriteScaledPixel(Colour *dst, const Pixel &pixel, BlitterMode mode, const uint8_t *remap) override;
 	uint16_t *anim_buf;    ///< In this buffer we keep track of the 8bpp indexes so we can do palette animation
 	std::unique_ptr<uint16_t[]> anim_alloc; ///< The raw allocated buffer, not necessarily aligned correctly

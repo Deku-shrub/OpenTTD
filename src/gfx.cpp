@@ -1271,8 +1271,7 @@ std::unique_ptr<uint32_t[]> DrawSpriteToRgbaBuffer(SpriteID spriteId, ZoomLevel 
 
 /**
  * Draw a viewport sprite at a fractional zoom step (smooth zoom).
- * The sprite is always taken at the finest zoom level and filtered down by the blitter.
- * Sub-sprite clipping is approximate: edge pixels may include up to a source step of content outside the sub-sprite.
+ * The blitter selects a source mipmap that preserves sub-sprite clipping.
  * @param sprite The sprite to draw.
  * @param x Left coordinate of the sprite origin, in virtual (#ZoomLevel::Min times `ZOOM_BASE`) coordinates.
  * @param y Top coordinate of the sprite origin, in virtual coordinates.

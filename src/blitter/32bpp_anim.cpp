@@ -33,6 +33,30 @@ void Blitter_32bppAnim::WriteScaledPixel(Colour *dst, const Pixel &pixel, Blitte
 	if (!_screen_disable_anim && this->anim_buf != nullptr) *this->ScreenToAnimationBuffer(dst) = 0;
 }
 
+uint32_t Blitter_32bppAnim::DrawScaledNearestRow(Colour *destination, const Pixel *source, const int *columns,
+		int first, int last, BlitterMode mode, const uint8_t *remap)
+{
+	if (mode != BlitterMode::Normal && mode != BlitterMode::ColourRemap) {
+		return Blitter_32bppSimple::DrawScaledNearestRow(destination, source, columns, first, last, mode, remap);
+	}
+	uint16_t *animation = !_screen_disable_anim && this->anim_buf != nullptr ? this->ScreenToAnimationBuffer(destination) : nullptr;
+	const auto write = [&](int x, Colour colour, uint8_t alpha) {
+		destination[x] = ComposeColourPA(colour, alpha, destination[x]);
+		if (animation != nullptr) animation[x] = 0;
+	};
+	return mode == BlitterMode::Normal ? this->DrawScaledColourRow<false>(source, columns, first, last, remap, write) :
+			this->DrawScaledColourRow<true>(source, columns, first, last, remap, write);
+}
+
+void Blitter_32bppAnim::WriteScaledColourRow(Colour *destination, const Colour *source, const int *columns, int first, int last)
+{
+	uint16_t *animation = !_screen_disable_anim && this->anim_buf != nullptr ? this->ScreenToAnimationBuffer(destination) : nullptr;
+	CompositeScaledColourRow(source, columns, first, last, [&](int x, Colour colour) {
+		destination[x] = ComposeColourPA(colour, colour.a, destination[x]);
+		if (animation != nullptr) animation[x] = 0;
+	});
+}
+
 template <BlitterMode mode>
 inline void Blitter_32bppAnim::Draw(const Blitter::BlitterParams *bp, ZoomLevel zoom)
 {

@@ -16,6 +16,10 @@
 
 /** The optimized 40 bpp blitter (for OpenGL video driver). */
 class Blitter_40bppAnim : public Blitter_32bppOptimized {
+protected:
+	void WriteScaledColourRow(Colour *destination, const Colour *source, const int *columns, int first, int last) override;
+	uint32_t DrawScaledNearestRow(Colour *destination, const Pixel *source, const int *columns,
+			int first, int last, BlitterMode mode, const uint8_t *remap) override;
 public:
 
 	void SetPixel(void *video, int x, int y, PixelColour colour) override;

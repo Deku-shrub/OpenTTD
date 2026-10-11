@@ -34,6 +34,7 @@ protected:
 	void DrawPixel(Colour *dst, const Pixel *src, BlitterMode mode, const uint8_t *remap);
 	/** Scratch scanlines; optimized blitters need at most three rows of the selected mipmap. */
 	std::vector<Pixel> scaled_rows;
+	std::vector<int> scaled_nearest_columns; ///< Compact source indices for centre sampling.
 	/** Horizontal sampling footprint, shared by all output rows of one sprite. */
 	struct ScaledColumn {
 		int first; ///< First source column in the sampling footprint.
@@ -42,6 +43,99 @@ protected:
 		double coverage; ///< Source-space footprint width.
 		bool edge; ///< Whether the footprint touches a transparent or clipped edge.
 	};
+	/**
+	 * Resolve sampled colours with format-specific output selected once per row.
+	 * @tparam Remap Whether to apply the source palette remapping table.
+	 * @tparam WritePixel Callable writing a resolved colour and alpha at an output column.
+	 * @param source Decoded source scanline.
+	 * @param columns Source columns selected for the output scanline.
+	 * @param first First output column to draw.
+	 * @param last Exclusive last output column to draw.
+	 * @param remap Optional palette remapping table.
+	 * @param write_pixel Output-format callback.
+	 * @return Animated palette entries used by the scanline.
+	 */
+	template <bool Remap, typename WritePixel>
+	uint32_t DrawScaledColourRow(const Pixel *source, const int *columns, int first, int last,
+			const uint8_t *remap, const WritePixel &write_pixel)
+	{
+		uint32_t mask = 0;
+		for (int x = first; x < last; ++x) {
+			if (columns[x] < 0) continue;
+			const Pixel &pixel = source[columns[x]];
+			if (pixel.a == 0) continue;
+			uint8_t index = pixel.m;
+			Colour colour(pixel.r, pixel.g, pixel.b);
+			if (index != 0) {
+				if constexpr (Remap) index = remap[index];
+				if (index == 0) continue;
+				colour = AdjustBrightness(this->LookupColourInPalette(index), pixel.v);
+				if (index >= PALETTE_ANIM_START && index < PALETTE_ANIM_START + PALETTE_ANIM_SIZE) mask |= uint32_t{1} << (index - PALETTE_ANIM_START);
+			}
+			write_pixel(x, colour, pixel.a);
+		}
+		return mask;
+	}
+	/**
+	 * Composite a centre-sampled scanline without per-pixel output-format dispatch.
+	 * @param destination Destination scanline.
+	 * @param source Decoded source scanline.
+	 * @param columns Selected source columns.
+	 * @param first First output column to draw.
+	 * @param last Exclusive last output column to draw.
+	 * @param mode Blitting mode.
+	 * @param remap Optional palette remapping table.
+	 * @return Animated palette entries used by the scanline.
+	 */
+	virtual uint32_t DrawScaledNearestRow(Colour *destination, const Pixel *source, const int *columns,
+			int first, int last, BlitterMode mode, const uint8_t *remap);
+	/**
+	 * Sample native colours without decoding or resolving their static palettes again.
+	 * @tparam WritePixel Output-format callback type.
+	 * @param source Already-coloured source scanline.
+	 * @param columns Selected source columns.
+	 * @param first First output column.
+	 * @param last Exclusive last output column.
+	 * @param write_pixel Callback writing a sampled colour.
+	 */
+	template <typename WritePixel>
+	static void CompositeScaledColourRow(const Colour *source, const int *columns, int first, int last, const WritePixel &write_pixel)
+	{
+		for (int x = first; x < last; ++x) {
+			if (columns[x] < 0) continue;
+			const Colour colour = source[columns[x]];
+			if (colour.a != 0) write_pixel(x, colour);
+		}
+	}
+	/**
+	 * Composite precoloured samples and update destination-format metadata.
+	 * @param destination Destination scanline.
+	 * @param source Source scanline with palette colours already resolved.
+	 * @param columns Selected source columns.
+	 * @param first First output column.
+	 * @param last Exclusive last output column.
+	 */
+	virtual void WriteScaledColourRow(Colour *destination, const Colour *source, const int *columns, int first, int last);
+	bool DrawScaledNearestRows(ScaledBlitterParams *bp, int width, int height, double factor,
+			const void *context, uint32_t (*draw_row)(const void *, int, Colour *, const int *, int, int));
+	/**
+	 * Adapt a row compositor without allocating a callable for each sprite.
+	 * @tparam DrawRow Row-compositor type.
+	 * @param bp Fractional source and destination parameters.
+	 * @param width Source mipmap width.
+	 * @param height Source mipmap height.
+	 * @param factor Virtual pixels per mipmap pixel.
+	 * @param draw_row Row-compositor callback.
+	 * @return True when the sprite was handled.
+	 */
+	template <typename DrawRow>
+	bool DrawScaledNearestRows(ScaledBlitterParams *bp, int width, int height, double factor, const DrawRow &draw_row)
+	{
+		return this->DrawScaledNearestRows(bp, width, height, factor, &draw_row,
+				[](const void *context, int y, Colour *destination, const int *columns, int first, int last) {
+					return (*static_cast<const DrawRow *>(context))(y, destination, columns, first, last);
+				});
+	}
 	/** Premultiplied, horizontally filtered source pixel. */
 	struct ScaledFilteredPixel {
 		double r; ///< Premultiplied red contribution.
