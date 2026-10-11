@@ -13,7 +13,8 @@ entries for the same behaviour.
 
 - [x] Simplify camera state by removing unused movement-quality flags and sharing vehicle arrival fitting.
 - [x] Verify all eight CI build platforms and the nightly checks on the published defaults-enabled revision.
-- [ ] Finish review-branch package validation and publish the first downloadable fork release.
+- [x] Finish review-branch package validation and publish the first downloadable fork release.
+- [ ] Verify the corrected clean Linux revision and matching identities in the next release; add publication guards against cross-platform revision mismatches.
 - [x] Confirm the final Doxygen comparison adds no warnings against the upstream base.
 
 - [x] Enable smooth zoom and the flight master by default for this dedicated fork; retain per-category switches and existing saved configuration values. Earlier opt-in checkpoints below describe historical defaults.

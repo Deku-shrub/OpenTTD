@@ -3,7 +3,9 @@
 
 import argparse
 import hashlib
+import json
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import zipfile
@@ -14,6 +16,21 @@ def main():
     parser.add_argument("platform", choices=("windows-x64", "windows-x86", "linux-x64", "macos-arm64"))
     parser.add_argument("--build", type=Path, default=Path("build"))
     args = parser.parse_args()
+    source_revision = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    generated = (args.build / "generated" / "rev.cpp").read_text(encoding="utf-8")
+    metadata = {"platform": args.platform}
+    for name, pattern in {
+        "revision": r'_openttd_revision = "([^"]+)"',
+        "revision_hash": r'_openttd_revision_hash = "([^"]+)"',
+        "revision_modified": r'_openttd_revision_modified = (\d+)',
+        "revision_tagged": r'_openttd_revision_tagged = (\d+)',
+    }.items():
+        match = re.search(pattern, generated)
+        if not match:
+            raise RuntimeError(f"Missing generated build metadata: {name}")
+        metadata[name] = match[1]
+    if metadata["revision_modified"] != "0" or metadata["revision_hash"] != source_revision:
+        raise RuntimeError("Release packages require a clean build of the checked-out source revision")
     with tempfile.TemporaryDirectory(prefix="openttd-graphics-") as temporary:
         download = Path(temporary) / "opengfx.zip"
         subprocess.run(["curl", "--fail", "--location", "--retry", "3", "--max-time", "120",
@@ -40,6 +57,7 @@ def main():
     output = Path("fork-packages")
     output.mkdir(exist_ok=True)
     (output / package.name).write_bytes(package.read_bytes())
+    (output / f"build-{args.platform}.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

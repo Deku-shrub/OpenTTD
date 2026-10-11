@@ -146,6 +146,7 @@ jobs:
         for asset in windows-x64.zip windows-x86.zip linux-x64.deb macos-arm64.dmg; do
           test -s "downloads/smooth-zoom-$asset"
         done
+        python3 .github/verify-fork-packages.py downloads "$BUILD_SHA"
         cd downloads
         sha256sum smooth-zoom-* > SHA256SUMS.txt
         printf 'Source revision: %s\nCI run: %s/actions/runs/%s\n' "$BUILD_SHA" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" > BUILD.txt

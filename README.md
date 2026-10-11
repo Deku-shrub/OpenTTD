@@ -4,8 +4,8 @@ An experimental [OpenTTD](https://github.com/OpenTTD/OpenTTD) fork with continuo
 map zoom and animated camera journeys. This repository is the home of the fork;
 the standard OpenTTD downloads do not include these changes.
 
-**[Download the latest tested build](https://github.com/Deku-shrub/OpenTTD/releases/latest)** ?
-**[Installation](docs/install_smooth_zoom.md)** ?
+**[Download the latest tested build](https://github.com/Deku-shrub/OpenTTD/releases/latest)** ·
+**[Installation](docs/install_smooth_zoom.md)** ·
 **[User guide](docs/smooth_zoom_readme.md)** ·
 **[Animated examples](docs/smooth_zoom_readme.md#zoom-examples)** ·
 **[Progress and TODO](docs/smooth_zoom_todo.md)** ·
@@ -75,8 +75,9 @@ upstream revision `fab8089e6bed2be570b6b0a2cb9f19a5db16a7da`, preserved as the
 
 `master` contains the fork's implementation. `upstream-master` preserves the
 upstream checkpoint taken during fork setup; it is not an automatically updated
-mirror. The original standalone repository and its CI history are retained at
-[OpenTTD-standalone-backup](https://github.com/Deku-shrub/OpenTTD-standalone-backup).
+mirror. The original branches and commits are preserved in this fork. The former
+standalone backup repository is no longer available; its historical CI logs
+were not copied during migration.
 
 ### Status and reporting issues
 

@@ -8,10 +8,11 @@ Reviewed 10 October 2026 against OpenTTD's contribution guide, coding style and 
 All three existing branches were restored without rewriting their commit history.
 `upstream-base` records the original base `fab8089e6bed2be570b6b0a2cb9f19a5db16a7da`;
 `upstream-master` records the setup checkpoint `d48d693d7ff09b643846e23a5f033cf3582ab27f`.
-The original standalone repository remains at
-[OpenTTD-standalone-backup](https://github.com/Deku-shrub/OpenTTD-standalone-backup),
-including its historical CI runs. Repository-level run history is not copied to
-the native fork.
+The original standalone repository was retained during migration. It is no
+longer available as of 11 October 2026 (API 404 and absent from the owner's
+repository list). The original `main` and `feature/smooth-zoom` branches and the
+master commit history are preserved here. Historical CI logs were not copied.
+
 
 - [Diff from original base](https://github.com/Deku-shrub/OpenTTD/compare/upstream-base...master)
 - [Comparison against current upstream](https://github.com/OpenTTD/OpenTTD/compare/master...Deku-shrub:master)
@@ -27,9 +28,10 @@ changes, and no upstream pull request was created.
 - Reviewed all 299 open CodeQL alerts against lines changed from the original upstream base. Nine findings overlap added lines, all `cpp/equality-on-floats`: exact copied scale/state values, integer-valued destination coordinates, and unchanged-target checks. These comparisons deliberately detect identical state; approximate equality would incorrectly reuse a sampling phase or ignore a distinct target. No new memory-safety/security finding overlapped added lines. Existing upstream/vendor alerts remain open; this review does not claim the whole engine is free of defects.
 - Removed obsolete motion-quality flags and their redundant sampling-selection methods. Viewports already use the same centre sampling while moving and at rest. Shared vehicle arrival fitting now serves both initial navigation and moving-target updates.
 - The first documentation comparison found 228 new warning blocks. Added API, member, parameter and return documentation. The next comparison reduced this to one missing shared-helper declaration comment; that declaration is now documented and the [final comparison passed](https://github.com/Deku-shrub/OpenTTD/actions/runs/38122911730), with no new source, AI or Game Script documentation warnings.
-- Camera cleanup validation: complete Windows x64 Release rebuild, source-description check and all **146 CTest tests passed** (22.89 seconds), including the four upstream regression suites. The rebuilt software, SSE and GPU renderers pass stable-rest and copied-pan versus full-redraw checks at 130%, 84% and 66?%. The Windows ZIP was extracted and launched using only its bundled graphics and language files; smooth zoom and flights were enabled for its fresh profile.
+- Camera cleanup validation: complete Windows x64 Release rebuild, source-description check and all **146 CTest tests passed** (22.89 seconds), including the four upstream regression suites. The rebuilt software, SSE and GPU renderers pass stable-rest and copied-pan versus full-redraw checks at 130%, 84% and 66⅔%. The Windows ZIP was extracted and launched using only its bundled graphics and language files; smooth zoom and flights were enabled for its fresh profile.
+- The first [published release](https://github.com/Deku-shrub/OpenTTD/releases/tag/build-38124425417-fb5123084a64) passed all platform jobs and publication. Every public package checksum was verified; both Windows architectures launched with isolated bundled resources. Linux package contents and declared dependencies were inspected. Its packaging inspection exposed a modified-source stamp caused by temporarily renaming `vcpkg.json`; that prevents cross-platform multiplayer with clean Windows/macOS builds. The correction uses classic vcpkg mode without modifying tracked files. Packages now carry generated engine-revision manifests, and publication rejects dirty, wrong-source or mismatched identities. Corrected release verification is pending.
 - [Review-branch CI](https://github.com/Deku-shrub/OpenTTD/actions/runs/38123425250) passed all eight platform jobs and produced all four package artifacts. Publication will be verified after promotion to master. Windows x64/x86 portable ZIPs, Ubuntu 24.04 x64 DEB and Apple Silicon macOS DMG include checksum-verified OpenGFX 8.0. Packages are built after their tests pass; publication waits for the entire platform matrix. Each release records its source revision and checksums. Manual review-branch builds produce artifacts without publishing releases.
-- The standalone backup repository can be deleted if its historical CI run logs are no longer needed. Its branches are preserved in this native fork; it had no issues, releases, stars or forks at migration. No repository deletion was performed.
+- The standalone backup is already unavailable. Its migrated branches were rechecked in this fork; no repository deletion was performed by this development run.
 
 ## Submission eligibility
 

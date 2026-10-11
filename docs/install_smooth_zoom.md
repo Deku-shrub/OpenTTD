@@ -18,3 +18,5 @@ The toolbar zoom percentage shows your scale. Click it to stop and snap to a tra
 These are experimental development builds. Releases identify the exact source revision, include SHA-256 checksums and link to their installation instructions. Publication waits for every platform build and test job to pass. A failed build leaves the previous download available.
 
 Existing saves require no camera-specific conversion, but the underlying OpenTTD version still determines save compatibility. Back up saves before using a development engine; an older engine may not load saves written by a newer version. Read the [compatibility notes](smooth_zoom_readme.md#existing-saves-rollback-and-mod-compatibility).
+
+For multiplayer, all participants should use packages from the same fork release. The initial `fb5123084a` release has a Linux revision-stamp mismatch with Windows/macOS; use a subsequent corrected release for cross-platform multiplayer. CI now checks clean, matching engine identities before publication.

@@ -65,12 +65,10 @@ jobs:
 
         echo "::group::Install vcpkg dependencies"
 
-        # Disable vcpkg integration, as we mostly use system libraries.
-        mv vcpkg.json vcpkg-disabled.json
-
+        # Use classic mode for breakpad; other dependencies come from apt.
         # We only use breakpad from vcpkg, as its CMake files
         # are a bit special. So the Ubuntu's variant doesn't work.
-        ${{ steps.vcpkg.outputs.vcpkg }} install breakpad
+        ${{ steps.vcpkg.outputs.vcpkg }} install breakpad --classic
 
         echo "::endgroup::"
       env:
@@ -100,7 +98,7 @@ jobs:
         cd build
 
         echo "::group::CMake"
-        cmake .. -DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake ${{ inputs.extra-cmake-parameters }}
+        cmake .. -DVCPKG_MANIFEST_MODE=OFF -DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake ${{ inputs.extra-cmake-parameters }}
         echo "::endgroup::"
 
         echo "::group::Build"
@@ -114,9 +112,6 @@ jobs:
           cd build
           ctest -j $(nproc) --timeout 120
         )
-
-        # Re-enable vcpkg.
-        mv vcpkg-disabled.json vcpkg.json
 
         # Check no tracked files have been modified.
         git diff --exit-code
