@@ -104,7 +104,7 @@ a savegame or short recording helps with visual issues.
 ## OpenTTD documentation
 
 The information below describes the upstream game. Official downloads are the
-unmodified OpenTTD releases; build this fork to use smooth zoom and flights.
+unmodified OpenTTD releases; download this fork's builds to use smooth zoom and flights.
 
 ### Table of contents
 

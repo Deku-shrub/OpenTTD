@@ -1,5 +1,10 @@
 # Smooth zoom and fly navigation: user guide
 
+[Download and install](install_smooth_zoom.md) ? [Online guide and animations](https://github.com/Deku-shrub/OpenTTD/blob/master/docs/smooth_zoom_readme.md)
+
+The small downloadable game packages include these written guides. Animated examples and test-map tools are available in the online guide and repository.
+
+
 [Fork homepage](../README.md) · [Progress and TODO](smooth_zoom_todo.md) ·
 [Test coverage](validation/zoom-coverage.md)
 
