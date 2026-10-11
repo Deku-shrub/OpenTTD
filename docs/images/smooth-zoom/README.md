@@ -38,3 +38,7 @@ labels. It is not a mixed-vehicle demonstration. The next gallery refresh should
 add a current-build overview containing road and rail traffic alongside stations,
 bridges or tunnels, with waterways or an airport in a complementary broad view.
 Do not bring back the separate bus, train, ship, aircraft or helicopter movies.
+
+Keep the user guide text-only, with descriptive click-to-open links and clip
+sizes. The homepage may embed one representative preview. Avoid embedding the
+whole gallery in reading or installation pages.

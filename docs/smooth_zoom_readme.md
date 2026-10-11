@@ -337,10 +337,10 @@ the savegame format; loading cancels a pending journey.
 These recordings show the current fractional rendering and panning behaviour.
 They were captured after the sampling-phase fix included in published builds.
 They illustrate functionality using actual game frames, not performance benchmarks.
+Clips open on demand so the guide loads without downloading animated images.
 
-![NewGRF objects and scaling labels during zoom](images/smooth-zoom/newgrf-objects.webp)
-
-![Fractional pan and a stable resting view](images/smooth-zoom/fractional-pan-optimised.webp)
+- [Watch zooming around NewGRF objects and scaling labels](images/smooth-zoom/newgrf-objects.webp) (5.2 MB)
+- [Watch fractional panning and a stable resting view](images/smooth-zoom/fractional-pan-optimised.webp) (2.1 MB)
 
 The object scene combines terrain, trees, NewGRF structures and map labels.
 These clips do not demonstrate every vehicle type. The gallery uses general
