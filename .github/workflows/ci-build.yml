@@ -159,7 +159,7 @@ jobs:
         if [ "$current" = "$BUILD_SHA" ]; then latest=true; fi
         if gh release view "$tag" > /dev/null 2>&1; then
           gh release upload "$tag" downloads/* --clobber
-          gh release edit "$tag" --latest="$latest" --notes-file release-notes.md
         else
-          gh release create "$tag" downloads/* --target "$BUILD_SHA" --latest="$latest" --title "Smooth Zoom development build ${BUILD_SHA:0:12}" --notes-file release-notes.md
+          gh release create "$tag" downloads/* --draft --target "$BUILD_SHA" --title "Smooth Zoom development build ${BUILD_SHA:0:12}" --notes-file release-notes.md
         fi
+        gh release edit "$tag" --draft=false --latest="$latest" --notes-file release-notes.md
