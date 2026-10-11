@@ -28,17 +28,18 @@ def main():
     (baseset / "opengfx-8.0.tar").write_bytes(data)
     generator, extension = {"windows": ("ZIP", ".zip"), "linux": ("DEB", ".deb"), "macos": ("Bundle", ".dmg")}[args.platform.split("-")[0]]
     subprocess.run(["cpack", "-G", generator, "-C", "Release",
+                    "-D", f"CPACK_PACKAGE_FILE_NAME=smooth-zoom-{args.platform}",
                     "-D", "CPACK_PACKAGE_VENDOR=Deku-shrub/OpenTTD",
                     "-D", "CPACK_PACKAGE_CONTACT=Deku-shrub",
                     "-D", "CPACK_PACKAGE_HOMEPAGE_URL=https://github.com/Deku-shrub/OpenTTD",
                     "-D", "CPACK_PACKAGE_DESCRIPTION_SUMMARY=OpenTTD Smooth Zoom development fork"],
                    cwd=args.build, check=True)
-    packages = list((args.build / "bundles").glob("*" + extension))
-    if len(packages) != 1:
-        raise RuntimeError(f"Expected one package, found {packages}")
+    package = args.build / "bundles" / f"smooth-zoom-{args.platform}{extension}"
+    if not package.is_file() or package.stat().st_size == 0:
+        raise RuntimeError(f"Missing package: {package}")
     output = Path("fork-packages")
     output.mkdir(exist_ok=True)
-    (output / f"smooth-zoom-{args.platform}{extension}").write_bytes(packages[0].read_bytes())
+    (output / package.name).write_bytes(package.read_bytes())
 
 
 if __name__ == "__main__":
