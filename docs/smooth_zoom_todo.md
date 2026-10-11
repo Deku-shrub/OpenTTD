@@ -12,7 +12,9 @@ entries for the same behaviour.
 ## Current coverage follow-up
 
 - [x] Remove superseded documentation clips and per-vehicle movies; keep capture provenance and a small general-purpose gallery.
-- [ ] Refresh general zoom/flight footage on the current build using mixed scenes: road and rail traffic, stations, bridges/tunnels, terrain and labels, plus a complementary water/airport scene. Keep individual vehicle recordings in ignored local validation output.
+- [x] Record 16 full-HD comparison and mixed-scene takes from a downloaded working network. Keep footage and individual vehicle stills in ignored local output; see [capture notes](validation/promotional-captures.md).
+- [ ] Select and compress current mixed-scene excerpts for the end-user gallery after reviewing the promotional footage.
+- [ ] Investigate low camera cadence in the dense title-game network at 1080p, separating rendering cost from recording overhead. A default town flight produced 22 updates in 1.89 seconds without recording, versus 10 during recording.
 
 - [x] Simplify camera state by removing unused movement-quality flags and sharing vehicle arrival fitting.
 - [x] Verify all eight CI build platforms and the nightly checks on the published defaults-enabled revision.
