@@ -3,13 +3,18 @@
 [Fork homepage](../README.md) · [User guide](smooth_zoom_readme.md) ·
 [CI requirements and results](validation/upstream-readiness.md)
 
-Updated 10 October 2026. Checkpoint and regular commits are now authorized.
+Updated 11 October 2026. Checkpoint and regular commits are now authorized.
 Current cross-renderer and graphics-set results are in
 [the coverage notes](validation/zoom-coverage.md). The dated sections below
 retain historical checkpoints; later checked items supersede earlier pending
 entries for the same behaviour.
 
 ## Current coverage follow-up
+
+- [x] Simplify camera state by removing unused movement-quality flags and sharing vehicle arrival fitting.
+- [x] Verify all eight CI build platforms and the nightly checks on the published defaults-enabled revision.
+- [ ] Finish review-branch package validation and publish the first downloadable fork release.
+- [x] Confirm the final Doxygen comparison adds no warnings against the upstream base.
 
 - [x] Enable smooth zoom and the flight master by default for this dedicated fork; retain per-category switches and existing saved configuration values. Earlier opt-in checkpoints below describe historical defaults.
 

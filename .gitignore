@@ -7,3 +7,5 @@ docs/source/*
 /out
 /vcpkg_installed
 __pycache__/
+
+/fork-packages

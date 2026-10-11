@@ -57,6 +57,9 @@ install(FILES
         COMPONENT docs)
 
 install(FILES
+                ${CMAKE_SOURCE_DIR}/docs/install_smooth_zoom.md
+                ${CMAKE_SOURCE_DIR}/docs/smooth_zoom_readme.md
+                ${CMAKE_SOURCE_DIR}/docs/smooth_zoom_controls.md
                 ${CMAKE_SOURCE_DIR}/docs/admin_network.md
                 ${CMAKE_SOURCE_DIR}/docs/debugging_desyncs.md
                 ${CMAKE_SOURCE_DIR}/docs/desync.md
