@@ -425,7 +425,7 @@ Release logs: `build-smoothzoom/build-fractional-landing.log`, `validation-fract
 
 Labels render into reusable black/white scratch rasters to recover premultiplied coverage, then bilinear samples are composited onto the existing world. Offscreen drawing must guard both `_screen_disable_anim` and `_screen.pitch`, because rectangle primitives use the global pitch. An initial GUI stall exposed the missing pitch guard; it was corrected before commit. Covered screen pixels clear their underlying palette-animation entries. No persistent label cache is added; changing names, colours and fonts is reflected on the next redraw.
 
-GUI evidence at 960 x 600: station/sign screenshots at 130%/200%, town at 400%, wide labels at 12.5%; station enlarged-edge click opens Drennwell West, sign click opens its editor, town edge click opens Bafinghill. Labels/land are identical across captures 700 ms apart. New `labels-map.webp` and `labels-town.webp` animations are linked from the guide. Regression cases cover bounded continuous scale and recovered text coverage. Broader font/language/NewGRF and waypoint visual coverage remains on the TODO list.
+GUI evidence at 960 x 600: station/sign screenshots at 130%/200%, town at 400%, wide labels at 12.5%; station enlarged-edge click opens Drennwell West, sign click opens its editor, town edge click opens Bafinghill. Labels/land are identical across captures 700 ms apart. New `labels-map.webp` and `labels-town.webp` animations were linked from the guide at that stage (removed in the current-clip audit). Regression cases cover bounded continuous scale and recovered text coverage. Broader font/language/NewGRF and waypoint visual coverage remains on the TODO list.
 
 ## Graphics-set coverage and GPU label correction
 
@@ -451,7 +451,7 @@ an isolated profile. This replaces the earlier untested save-format expectation.
 company colours and Unicode signs. Its source requires a UTF-8 BOM. Segoe UI
 renders Arabic/Latin; Yu Gothic renders Japanese. Tram 10, a truck and four
 trains show changing locations and nonzero speeds in the AI debug window.
-`newgrf-tram.webp` records the moving scene during zoom.
+A historical tram recording showed the moving scene during zoom; it was removed in the current-clip audit.
 
 Capture-free fractional pan profiling still finds a substantial full-viewport
 redraw cost: about 47 drawing FPS at 960 x 600 and 16 at 1920 x 1080 at 130%,
@@ -499,3 +499,14 @@ The final launcher smoke test exposed an INI encoding error: Windows PowerShell
 `Set-Content -Encoding UTF8` added a BOM, hiding the first group header from the
 config parser. The launcher now uses an explicit BOM-free UTF-8 writer. The
 1280 x 800 prototype launches normally and accepts 130% zoom after this fix.
+
+## 11 October 2026: current-only documentation clips
+
+Removed earlier development movies and settings screenshots from user and
+validation documentation and deleted their obsolete assets. Kept the two clips
+introduced with the final sampling-phase fix (`7a4389b6c0`), with provenance in
+`images/smooth-zoom/README.md`. Older speed presets and fixed-arrival examples
+are no longer presented as current footage. The underlying speed and arrival
+settings remain supported. Corrected the flight master default to On in this
+fork. Fresh flight and toolbar footage is required before restoring those
+demonstrations; historical test observations remain as dated evidence.

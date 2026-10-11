@@ -42,12 +42,8 @@ Zooming around NewGRF objects, trees and map labels:
 
 <img src="docs/images/smooth-zoom/newgrf-objects.webp" alt="Animated smooth zoom around a gasometer, forests and map labels" width="720">
 
-Flying between map locations with simultaneous pan and zoom:
-
-<img src="docs/images/smooth-zoom/flight.webp" alt="Animated flight from the town directory with simultaneous zoom and pan" width="720">
-
-[More examples](docs/smooth_zoom_readme.md#zoom-examples) cover small, large, fast
-and slow zooms, toolbar controls, moving vehicles, rail, tunnels and waterways.
+[More examples](docs/smooth_zoom_readme.md#zoom-examples) show fractional
+panning and zooming with NewGRF objects and map labels.
 
 ## Try the fork
 

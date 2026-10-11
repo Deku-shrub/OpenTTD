@@ -4,7 +4,6 @@
 
 The small downloadable game packages include these written guides. Animated examples and test-map tools are available in the online guide and repository.
 
-
 [Fork homepage](../README.md) · [Progress and TODO](smooth_zoom_todo.md) ·
 [Test coverage](validation/zoom-coverage.md)
 
@@ -191,11 +190,7 @@ and snap to that traditional level. The button is hidden if the toolbar is too
 narrow to accommodate it. An older prototype build will still jump directly
 between wheel targets.
 
-This close-up shows the percentage changing during a small zoom-out, followed
-by a click on the percentage to snap back to **100%**. The existing plus and
-minus buttons continue to select traditional levels.
-
-![Zoom controls: current percentage and click-to-snap](images/smooth-zoom/controls.webp)
+The existing plus and minus buttons continue to select traditional levels.
 
 For a specific fractional magnification, enter:
 
@@ -214,7 +209,6 @@ at Basic settings level; Expert settings expose the category overrides.
 All destination categories default to on beneath the enabled master switch.
 Use Expert settings only to opt out particular categories. Existing saved
 configuration values remain in effect: enable any category you previously disabled.
-![Main Fly-to switch at Basic settings level](images/smooth-zoom/flight-master-settings.png)
 
 Alternatively, enter `set gui.fly_navigation 1` in the console. It requires a
 supported 32bpp blitter; the mouse-wheel smooth-zoom setting is independent.
@@ -252,7 +246,7 @@ the filter and expand **Graphics** to see all of these options together.
 
 | Option | Default | Effect |
 | --- | --- | --- |
-| Fly-to navigation | Off | Master switch for all navigation flights. |
+| Fly-to navigation | On in this fork | Master switch for all navigation flights. |
 | Fly to map locations | On, subject to master switch | Enables town-directory, town-location and uncategorised map-location flights, including console `scrollto`. Console setting: `gui.fly_towns`. |
 | Flight speed | 120% | Perceptual path speed (1.2 by default); range 25-400%. Duration grows with path length rather than map distance. |
 | Flight duration scale | 100% | Scale the whole journey; range 25-200%. |
@@ -260,15 +254,11 @@ the filter and expand **Graphics** to see all of these options together.
 | Maximum extra flight zoom-out | 2 levels | Longer trips reveal more of the route, up to this allowance; range 0-3. Zero removes the extra pull-back. |
 | Town arrival zoom | Fit target automatically | Override automatic fitting with a fixed level from 400% to 12.5%, or Keep current zoom. |
 
-![Flight speed, duration scale and curvature controls](images/smooth-zoom/flight-pacing-settings.png)
-
 Every category has an Expert override, enabled by default. All require **Fly-to navigation**;
 none requires **Fly to map locations** or another category to be enabled.
 
 Expert settings provide independent category overrides; scroll for the remaining
 options. All are enabled by default under the main switch.
-
-![Current independent flight controls](images/smooth-zoom/flight-target-settings.png)
 
 | Switch | Navigation covered | Console setting |
 | --- | --- | --- |
@@ -342,124 +332,17 @@ therefore interrupts the flight. `scrollto instant 50 50` bypasses the flight. D
 `set gui.fly_navigation 0`. Flights are local display effects and do not change
 the savegame format; loading cancels a pending journey.
 
-This recording from 10 October 2026 shows selecting a town in the directory,
-zooming and panning together across the map and arriving at 100%. The simulation is
-paused; flight motion still runs. The looping WebP uses actual captured frames
-and timing, and is a demonstration rather than a performance benchmark.
-
-![Town-directory flight: simultaneous zoom and pan](images/smooth-zoom/flight.webp)
-
-This recording selects three different towns in succession. All journeys stay
-animated, including the longer third route that previously jumped instantly.
-Starting at 25%, all three fit their destination at 100% in this viewport.
-
-![Three consecutive town-directory flights](images/smooth-zoom/repeat-town.webp)
-
-The vehicle centre button also fits its destination: this bus flight starts
-at 25% and arrives at 200%. In the same 960 × 600 test viewport, an airport
-station arrived at 100%, a small road station at 200%, and a coal mine at 200%.
-These values depend on object size and viewport dimensions.
-
-![Vehicle flight from 25 percent to a fitted 200 percent arrival](images/smooth-zoom/target-fit-vehicle.webp)
-
-These recordings compare the same route with the perceptual flight model.
-The fast configuration uses 200% speed and 100% duration scale; the gentler
-configuration uses 120% speed and 100% duration scale. Curvature is 142 in both.
-The default journey completed in about 1.47 seconds and the faster one in about
-0.89 seconds in this paused fixture. The motions overlap throughout, with still
-frames at either end of each clip. The recorded static land crop had no changes
-after arrival; this is representative evidence, not exhaustive artefact coverage.
-
-![Fast town navigation](images/smooth-zoom/flight-fast.webp)
-
-![Gentle town navigation along the same route](images/smooth-zoom/flight-gentle.webp)
-
-The following example selects Barringhill with a fixed 50% arrival zoom,
-using the fast configuration.
-
-![Town navigation with a fixed 50 percent arrival](images/smooth-zoom/flight-wide-arrival.webp)
-
 ## Zoom examples
 
-### Moving vehicles
+These recordings show the current fractional rendering and panning behaviour.
+They were captured after the sampling-phase fix included in published builds.
+They illustrate functionality using actual game frames, not performance benchmarks.
 
-These recordings use a separate 2050 validation world containing a bus, truck,
-four base rail technologies, ship, aircraft and helicopter. They demonstrate
-moving sprites during fractional zoom; they do not establish exhaustive vehicle
-or NewGRF coverage. Vehicle movies use WebP compression, so use raw game
-screenshots when assessing individual pixel artefacts.
+![NewGRF objects and scaling labels during zoom](images/smooth-zoom/newgrf-objects.webp)
 
-![Road vehicles during zoom](images/smooth-zoom/vehicles-road.webp)
+![Fractional pan and a stable resting view](images/smooth-zoom/fractional-pan-optimised.webp)
 
-![Following a bus while zooming, with a separate vehicle viewport](images/smooth-zoom/vehicle-follow.webp)
-
-![Trains during zoom](images/smooth-zoom/vehicles-train.webp)
-
-![Ship during zoom](images/smooth-zoom/vehicles-ship.webp)
-
-![Aircraft and their airport surroundings during zoom](images/smooth-zoom/vehicles-air.webp)
-
-![Following a helicopter while zooming, with a separate vehicle viewport](images/smooth-zoom/vehicles-helicopter.webp)
-
-### Infrastructure examples
-
-These recordings from 10 October 2026 use a saved validation world containing
-no vehicles. Each starts at 130%, zooms out eight quarter-octave wheel notches
-to 32.5%, and returns to 130%. They show the existing fractional renderer
-handling additional base-game infrastructure; they do not establish coverage
-of every NewGRF or moving sprite.
-
-![Rail tracks, station, depot, signal and nearby bridge during zoom](images/smooth-zoom/static-rail.webp)
-
-![Tunnel portals and sloping terrain during zoom](images/smooth-zoom/static-tunnel.webp)
-
-![Airport and nearby road depot and bus stop during zoom](images/smooth-zoom/static-airport.webp)
-
-![Dock and shoreline during zoom](images/smooth-zoom/static-coast.webp)
-
-A later-year fixture extends these checks to the four base rail technologies,
-road bridges, a lock and additional tunnel portals:
-
-![Later-year rail infrastructure during zoom](images/smooth-zoom/static-rail-types.webp)
-
-![Lock and nearby tunnel portals during zoom](images/smooth-zoom/static-waterways.webp)
-
-![Road bridges and nearby infrastructure during zoom](images/smooth-zoom/static-road-bridge.webp)
-
-The final static example includes deliberately raised terrain, road and rail
-foundations, and a steep hill. The base-game fixture has no available tram
-road type, so tram coverage needs a suitable tram NewGRF.
-
-![Road and rail foundations and steep terrain during zoom](images/smooth-zoom/static-foundations.webp)
-
-### Wheel and toolbar examples
-
-These looping recordings show the prototype from 9 October 2026. The game is
-paused to make the zoom movement easier to see. They use actual captured frames,
-at approximately 20 frames per second, with the captured timing preserved;
-they illustrate the controls rather than measure rendering performance. Each
-example returns to its starting magnification. Open the animated WebP images
-in a browser if your document viewer only displays a still frame.
-
-**Small change:** one wheel notch zooms from 100% to about 84%, then one notch
-returns to 100%.
-
-![Small zoom change: one notch out and back](images/smooth-zoom/small.webp)
-
-**Fast input:** four rapidly spaced wheel notches zoom from 100% to 200%, then
-four reverse notches return to 100%. Further input keeps the motion going.
-
-![Fast wheel input: double magnification and return](images/smooth-zoom/fast.webp)
-
-**Slow input:** four wheel notches spaced roughly 300 ms apart zoom from 100%
-to 50%, then reverse. This shows smaller individual changes.
-
-![Slow wheel input: four spaced notches out and back](images/smooth-zoom/slow.webp)
-
-**Large change:** eight rapid notches zoom from 100% to 25%, then eight reverse
-notches return to 100%, crossing several traditional levels.
-
-![Large zoom change: quarter magnification and return](images/smooth-zoom/big.webp)
+See the [capture notes](images/smooth-zoom/README.md) for provenance.
 
 ## Try the prototype
 
@@ -490,24 +373,6 @@ change was 87 ms after posting release, while final input/frame updates complete
 it then remained identical for the rest of the one-second observation. A native
 snap and a subsequent wheel transition also passed the settling check.
 
-### Fractional landing stability
-
-The latest fix also removes the sampler change during wheel and flight endings,
-not just after ordinary panning. These paused-fixture captures deliberately end
-at fractional levels. The wheel example starts at 130%; the flight uses the
-explicit Keep current zoom override and lands at 130%.
-
-![Fractional wheel landing with consistent sampling](images/smooth-zoom/fractional-wheel-landing.webp)
-
-![Flight landing at 130 percent without a late filter change](images/smooth-zoom/fractional-flight-landing.webp)
-
-At 960 x 600, the recorded static-land crop's last change occurred at 565 ms
-in the wheel example, followed by about 2.4 seconds unchanged. The flight crop's
-last change occurred at 1,974 ms, followed by about 3 seconds unchanged.
-These observations cover this paused fixture, rather than every mod or moving
-scene. Release checks passed 16,024 assertions in 135 cases, including fractional
-landing-tail bounds and redraw partitioning at 130% and 84%.
-
 ### Map text and labels
 
 Town names, station and waypoint labels, custom signs and their frames now
@@ -529,10 +394,6 @@ population and station icons when enabled. Interface font settings still provide
 the base size; toolbar and window text follow the interface size setting.
 Legacy blitters without smooth zoom support retain their original labels.
 
-![Station labels and custom signs scaling during zoom](images/smooth-zoom/labels-map.webp)
-
-![Town labels scaling during zoom](images/smooth-zoom/labels-town.webp)
-
 The paused fixture was checked at 12.5%, 84%, 130%, 200% and 400%. Clicking a
 station near its enlarged edge, a custom sign and a town name opened the expected
 windows. Static labels and scenery were identical in captures 700 ms apart after
@@ -553,8 +414,5 @@ and avoids a later change when that scenery is redrawn. On the test machine,
 130% panning improved from about 47 to 60 FPS at 960 × 600, and from about
 16 to 58 FPS at 1920 × 1080. Changing the zoom still redraws the view.
 
-![Fractional pan followed by a stable resting view](images/smooth-zoom/fractional-pan-optimised.webp)
-
-The extended validation world also includes moving trams and NewGRF objects:
-
-![NewGRF gasometer, forests and labels during zoom](images/smooth-zoom/newgrf-objects.webp)
+The extended validation world also includes moving trams and NewGRF objects;
+see the current zoom example above.

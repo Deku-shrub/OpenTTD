@@ -70,12 +70,10 @@ were checked with Yu Gothic at 130%. A font without the
 requested characters displays missing-glyph boxes; scaling cannot supply absent
 glyphs. In the unpaused fixture, tram 10 changed tile from 3257 to 3254 at speed
 40; the truck and four trains also reported changing positions and nonzero
-speeds in the AI debug window. The clip below exercises their infrastructure,
+speeds in the AI debug window. Those historical checks exercised infrastructure,
 company colours, wires and trees while zooming. Changing vehicle and animated
 world pixels are expected; this is not a paused-scene settling comparison.
 Interface-language checks above are separate from these custom-sign checks.
-
-![Moving NewGRF tram and rail scene during zoom](../images/smooth-zoom/newgrf-tram.webp)
 
 The extended fixture also builds eight objects, including a gasometer,
 substations, a transmitter, a lighthouse and forests. The objects and their
