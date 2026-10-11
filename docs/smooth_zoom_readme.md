@@ -8,7 +8,7 @@ what is complete and what still needs work.
 
 This experimental fork adds eased fractional mouse-wheel zoom, a compact toolbar
 percentage/snap control, scaling labels and simultaneous pan-and-zoom flights.
-Smooth zoom and flights are disabled by default and require a supported 32bpp
+Smooth zoom and flights are enabled by default in this fork and require a supported 32bpp
 blitter. Fractional rendering can be slower than ordinary integer zoom.
 
 ## Get started
@@ -18,11 +18,18 @@ Clone or download [this fork](https://github.com/Deku-shrub/OpenTTD), then follo
 Run the resulting game with the matching language files and an installed base
 graphics set. Official OpenTTD releases do not contain this fork's features.
 
-Enable **Smooth mouse-wheel zoom** in **Game Options > Advanced**; select the
+Find **Smooth mouse-wheel zoom** in **Game Options > Advanced**; select the
 Expert/all-settings filter and search for **smooth**. For animated navigation,
-search for **fly** and enable **Fly-to navigation**. See the
+search for **fly** and check **Fly-to navigation**. See the
 [zoom controls](#enable-smooth-mouse-wheel-zoom) and [flight settings](#fly-to-a-location)
 below for the full controls and per-destination overrides.
+
+Both master switches and all destination categories default to **On** in this
+fork. Existing configuration files retain saved values, including **Off**;
+the defaults apply when those entries are absent. You can disable either master
+switch or individual flight categories normally. An eventual upstream proposal
+would be expected to use disabled master defaults, if such a contribution
+becomes eligible and is accepted; this fork deliberately showcases the features.
 
 For a populated Windows demonstration, run the checked-in launcher from the
 repository root, supplying your own built executable and installed OpenGFX 8.0
@@ -52,7 +59,7 @@ Keep the terminal open while playing. The checked-in launcher opens
 stations, a bus, truck, four train types, ship, aircraft and helicopter, plus
 infrastructure and industries. All flight categories
 and smooth wheel zoom are enabled in its isolated demo configuration. Ordinary
-installation defaults remain opt-in. Unpause to move the vehicles.
+installation defaults enable the features too. Unpause to move the vehicles.
 
 Use the toolbar's station and vehicle company menus to select the fixture
 company: the initial human company has no fleet. Vehicle lists contain names
@@ -195,10 +202,10 @@ smooth wheel controls, use `set gui.smooth_zoom 0`.
 
 ## Fly to a location
 
-Flight navigation is a separate, opt-in feature. In **Game Options > Advanced**,
+Flight navigation has a separate master switch, enabled by default in this fork. In **Game Options > Advanced**,
 search for **fly** and enable **Fly-to navigation**. The master switch is visible
 at Basic settings level; Expert settings expose the category overrides.
-All destination categories default to on beneath the disabled master switch.
+All destination categories default to on beneath the enabled master switch.
 Use Expert settings only to opt out particular categories. Existing saved
 configuration values remain in effect: enable any category you previously disabled.
 ![Main Fly-to switch at Basic settings level](images/smooth-zoom/flight-master-settings.png)

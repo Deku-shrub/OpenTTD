@@ -56,7 +56,7 @@ TEST_CASE("Flight categories remain independent under the master switch", "[smoo
 	CHECK(IsViewportFlightEnabled(settings, ViewportFlightTarget::Other));
 }
 
-TEST_CASE("Enabling the main flight switch allows all default destination categories", "[smoothzoom][flight]")
+TEST_CASE("Fork defaults enable smooth zoom and all flight destination categories", "[smoothzoom][flight]")
 {
 	const auto default_value = [](std::string_view name) {
 		const SettingDesc *setting = GetSettingFromName(name);
@@ -64,9 +64,10 @@ TEST_CASE("Enabling the main flight switch allows all default destination catego
 		REQUIRE(setting->IsIntSetting());
 		return static_cast<const IntSettingDesc *>(setting)->GetDefaultValue();
 	};
-	CHECK(default_value("gui.fly_navigation") == 0);
+	CHECK(default_value("gui.smooth_zoom") == 1);
+	CHECK(default_value("gui.fly_navigation") == 1);
 	GUISettings settings{};
-	settings.fly_navigation = true;
+	settings.fly_navigation = default_value("gui.fly_navigation");
 	settings.fly_towns = default_value("gui.fly_towns");
 	settings.fly_vehicles = default_value("gui.fly_vehicles");
 	settings.fly_stations = default_value("gui.fly_stations");

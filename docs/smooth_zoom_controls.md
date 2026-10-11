@@ -1,6 +1,6 @@
 # Smooth zoom controls
 
-Smooth zoom is an optional client graphics setting. It is disabled by default,
+Smooth zoom is an optional client graphics setting, enabled by default in this fork. It
 does not change network game settings, and is stored in the local configuration
 as `gui.smooth_zoom`. Find **Smooth mouse-wheel zoom** in **Game Options → Advanced**,
 select **Expert / all settings**, and search for **smooth**. It is not in
@@ -39,7 +39,7 @@ viewports use different fractional scales.
 
 Savegames retain the existing integer zoom format. Saving a fractional viewport
 records its nearest integer level and adjusts the position to preserve its
-centre. Loading resets fractional zoom; the opt-in client setting remains
+centre. Loading resets fractional zoom; the client setting remains
 available for subsequent wheel events. This requires no savegame format change.
 
 ## Verification

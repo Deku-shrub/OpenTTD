@@ -11,6 +11,8 @@ entries for the same behaviour.
 
 ## Current coverage follow-up
 
+- [x] Enable smooth zoom and the flight master by default for this dedicated fork; retain per-category switches and existing saved configuration values. Earlier opt-in checkpoints below describe historical defaults.
+
 - [x] OpenGFX: eleven renderer, resolution, interface-scale and language configurations.
 - [x] OpenGFX2 Classic 0.8: the same eleven configurations.
 - [x] OpenGFX2 High Def 0.8: eleven configurations, with repeated runs consolidated.

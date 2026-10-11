@@ -43,10 +43,11 @@ graphics set. This is an engine modification, not a NewGRF content pack. The
 [user guide](docs/smooth_zoom_readme.md#get-started) includes the Windows demo
 launcher and populated test map.
 
-In **Game Options → Advanced**, search for **smooth** and enable **Smooth
-mouse-wheel zoom** (use the Expert/all-settings filter). Search for **fly** and
-enable **Fly-to navigation** if you also want animated journeys. Both features
-are opt-in and require a supported 32bpp renderer.
+Smooth mouse-wheel zoom and fly-to navigation are **enabled by default in this
+fork** and require a supported 32bpp renderer. In **Game Options → Advanced**,
+search for **smooth** (use the Expert/all-settings filter) or **fly** to adjust
+or disable them. Existing configuration choices are preserved; enable the
+switches there if you previously turned them off.
 
 Existing saved games can use these features without converting the map, as long
 as this OpenTTD version can load the save. Camera options are local, and the
