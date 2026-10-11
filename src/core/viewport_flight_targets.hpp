@@ -29,7 +29,7 @@ enum class ViewportFlightTarget {
 };
 
 /**
- * The master switch gates each category; other destinations are not a fallback permission.
+ * Each category needs its own switch so disabling one does not enable a fallback flight.
  * @tparam Settings Settings type exposing flight switch members.
  * @param settings Client camera switches.
  * @param target Category of the initiating navigation action.

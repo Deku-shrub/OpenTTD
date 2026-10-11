@@ -2114,13 +2114,13 @@ STR_CONFIG_SETTING_FLY_PAN_SPEED                               :Flight speed: {S
 STR_CONFIG_SETTING_FLY_PAN_SPEED_HELPTEXT                       :Perceptual path speed. Higher values shorten flights. Duration is bounded to 300-2200 ms; longer trips are accelerated to the time limit. Applies to new flights
 STR_CONFIG_SETTING_FLY_PAN_SPEED_VALUE                         :{NUM}% of a viewport per second
 STR_CONFIG_SETTING_FLY_DURATION_SCALE                           :Flight duration scale: {STRING2}
-STR_CONFIG_SETTING_FLY_DURATION_SCALE_HELPTEXT                   :Scale the duration of the whole simultaneous zoom-and-pan journey. Higher values give gentler flights. Longer trips are accelerated to the time limit. Applies to new flights
+STR_CONFIG_SETTING_FLY_DURATION_SCALE_HELPTEXT                   :Scale the duration of the whole flight. Higher values give gentler flights. Longer trips are accelerated to the time limit. Applies to new flights
 STR_CONFIG_SETTING_FLY_DURATION_SCALE_VALUE                     :{NUM}%
 STR_CONFIG_SETTING_FLY_CURVE                                  :Flight curvature: {STRING2}
 STR_CONFIG_SETTING_FLY_CURVE_HELPTEXT                         :Zoom/pan trade-off multiplied by 100. 142 is the standard curve; lower values give flatter flights, higher values pull back more. Short hops do not pull back. Curvature is reduced automatically to respect zoom limits
 STR_CONFIG_SETTING_FLY_CURVE_VALUE                            :{NUM} / 100
 STR_CONFIG_SETTING_FLY_ZOOM_OUT                                :Maximum extra flight zoom-out: {STRING2}
-STR_CONFIG_SETTING_FLY_ZOOM_OUT_HELPTEXT                        :Maximum additional zoom-out beyond the wider of the departure and arrival views. Longer journeys automatically reveal more of the route. Zero disables the extra zoom-out. The configured viewport zoom limits are always respected
+STR_CONFIG_SETTING_FLY_ZOOM_OUT_HELPTEXT                        :Maximum additional zoom-out beyond the wider of the departure and arrival views. Longer flights reveal more of the route. Zero disables the extra zoom-out. The configured viewport zoom limits are always respected
 STR_CONFIG_SETTING_FLY_ZOOM_OUT_VALUE                          :{NUM} levels
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM                               :Town arrival zoom: {STRING2}
 STR_CONFIG_SETTING_FLY_TOWN_ZOOM_HELPTEXT                       :Fit the destination automatically by default, as with other objects. Optionally choose a fixed town arrival zoom or explicitly keep the current zoom. Viewport zoom limits take precedence

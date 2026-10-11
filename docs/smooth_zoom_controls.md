@@ -2,9 +2,9 @@
 
 Smooth zoom is an optional client graphics setting, enabled by default in this fork. It
 does not change network game settings, and is stored in the local configuration
-as `gui.smooth_zoom`. Find **Smooth mouse-wheel zoom** in **Game Options → Advanced**,
-select **Expert / all settings**, and search for **smooth**. It is not in
-**Game Options → Graphics**. You can also enable it in the console with
+as `gui.smooth_zoom`. Find Smooth mouse-wheel zoom in Game Options > Advanced,
+select Expert / all settings, and search for smooth. It is not in
+Game Options > Graphics. You can also enable it in the console with
 `set gui.smooth_zoom 1`. See [setup and use](smooth_zoom_readme.md) for the prepared
 Windows prototype launch command.
 
@@ -24,10 +24,10 @@ requested direction. Exact integer levels return to the existing integer
 rendering path. Disabling the setting rounds active fractional viewports to
 their nearest permitted integer level and preserves their centre.
 
-The main toolbar shows a compact percentage button, for example **84%**.
-Its tooltip shows the nearest traditional level, such as **100%**. Click the
+The main toolbar shows a compact percentage button, for example 84%.
+Its tooltip shows the nearest traditional level, such as 100%. Click the
 button to stop an active transition and snap to that traditional level,
-preserving the viewed centre. The existing +/− buttons select adjacent levels.
+preserving the viewed centre. The existing +/- buttons select adjacent levels.
 The readout appears beside the zoom buttons when there is room; at very narrow
 widths, the existing split toolbar keeps its zoom buttons available.
 

@@ -135,12 +135,12 @@ public:
 		const double w0 = this->start.step, w1 = this->destination.step;
 		const double base = std::max(w0, w1);
 		const double cap = std::min(max_step, base * std::exp2(std::max(0.0, extra_levels)));
-		/* Short hops keep the chosen zoom, or interpolate an explicit arrival zoom without a bob. */
+		/* Short hops need no extra pull-back, even when the arrival zoom differs. */
 		this->flat = this->distance < w0 || cap <= base || this->distance < 1e-6;
 		if (!this->flat) {
 			this->MakeCurve(curve);
 			if (this->peak_step > cap) {
-				/* Flatten the simultaneous curve rather than introducing three separate stages. */
+				/* Lower curvature keeps pan and zoom simultaneous within the zoom-out cap. */
 				this->MakeCurve(0.05);
 				if (this->peak_step > cap) {
 					this->flat = true;
@@ -167,8 +167,7 @@ public:
 			}
 		}
 		const double raw_ms = 1000 * this->path_length / std::max(0.01, speed_percent / 100) * duration_percent / 100;
-		/* Keep enabled navigation animated, accelerating long routes to the time cap.
-		 * An automatic cut after a town arrival looks like the feature stopped working. */
+		/* Accelerate long routes to the time cap so enabled flights do not become instant jumps. */
 		this->duration_ms = std::clamp(raw_ms, 300.0, 2200.0);
 	}
 

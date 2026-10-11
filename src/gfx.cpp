@@ -1288,7 +1288,6 @@ static void GfxBlitterFractional(const Sprite *sprite, int x, int y, BlitterMode
 	x += sprite->x_offs;
 	y += sprite->y_offs;
 
-	/* Source rectangle, in sprite pixels. */
 	int sl = 0, st = 0, sr = sprite->width, sb = sprite->height;
 	if (sub != nullptr) {
 		constexpr int base = static_cast<int>(ZOOM_BASE);
@@ -1299,7 +1298,6 @@ static void GfxBlitterFractional(const Sprite *sprite, int x, int y, BlitterMode
 		if (sl >= sr || st >= sb) return;
 	}
 
-	/* Destination rectangle, in destination pixels, clipped to the dpi. */
 	const int dest_width = dpi->pixel_width;
 	const int dest_height = dpi->pixel_height;
 	const int dx0 = std::max(0, static_cast<int>(std::floor((x + sl - dpi->virtual_left) / step)));
@@ -1320,10 +1318,8 @@ static void GfxBlitterFractional(const Sprite *sprite, int x, int y, BlitterMode
 	bp.clip_bottom = sprite->height - sb;
 	bp.src_y = dpi->virtual_top + dy0 * step - y;
 	bp.step = step;
-	/* Use one sampler throughout fractional camera motion and rest. Switching
-	 * to area filtering in the easing tail changes fine detail at apparent
-	 * arrival, and subsequent partial redraws can make that look like jitter.
-	 * The encoded sprite mipmap still supplies the appropriate source detail. */
+	/* Switching filters at rest changes fine detail and makes partial redraws
+	 * look like jitter. Keep the sampler fixed; mipmaps provide the source detail. */
 	bp.nearest = true;
 	bp.width = dx1 - dx0;
 	bp.height = dy1 - dy0;

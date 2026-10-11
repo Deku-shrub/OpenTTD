@@ -1,6 +1,6 @@
 # Smooth zoom progress
 
-[Fork homepage](../README.md) · [User guide](smooth_zoom_readme.md) ·
+[Fork homepage](../README.md) | [User guide](smooth_zoom_readme.md) |
 [CI requirements and results](validation/upstream-readiness.md)
 
 Updated 11 October 2026. Checkpoint and regular commits are now authorized.
@@ -94,7 +94,7 @@ subjective smoothness.
 - [x] Compact percentage control inspected at 1280x800 and 640x480; clicking
       during motion cancels at an exact traditional level. Both zoom limits pass.
 - [ ] Reduce remaining frame gaps in dense, widely zoomed-out scenes. Ordinary
-      town checks average 28–36 ms between updates; an extreme multi-notch zoom
+      town checks average 28-36 ms between updates; an extreme multi-notch zoom
       to 0.125x averaged 44 ms with a 99 ms maximum gap on this machine.
 - [ ] Assess perceived smoothness in an unlocked foreground game.
 - [ ] User confirmation that the delayed second stabilization is gone; a small
@@ -171,12 +171,12 @@ subjective smoothness.
       out/return demonstrations for rail, tunnel, airport and dock/shoreline.
       Clips are included in the user README and pass distinct-frame checks.
 - [x] Record fast and gentle flights along the same route, plus a fixed 50%
-      town arrival. Verified actual journeys: 1.08 s, 2.74 s and 0.74 s.
+      town arrival. Verified actual flights: 1.08 s, 2.74 s and 0.74 s.
 - [x] Validate native-zoom flight pixel scrolling optimization after rebuild;
       Historical measurements below used the superseded staged flight. The
       simultaneous arc redraws at fractional scales; remeasure its performance.
       fractional phases still redraw completely. Town-directory occlusion passes.
-      Capture-free long journey: 187 frames / 3.12 s, maximum interval 35 ms;
+      Capture-free long flight: 187 frames / 3.12 s, maximum interval 35 ms;
       native pan averages 16.1 ms, maximum 21 ms. Landing matches instant-jump
       viewport pixels exactly. Overlay views conservatively redraw completely.
 - [x] Build and inspect later-year base rail technologies, road bridges/tunnels,
@@ -201,7 +201,7 @@ subjective smoothness.
 - [x] Validate motion sampling for continuously moving follow cameras after rebuild;
       paused views restore area filtering without a settling timer. A bus-follow
       recording was refreshed; a paused land crop matches an exposed-area redraw.
-      Four-notch updates measured 22–24 ms average intervals, maximum 37–39 ms,
+      Four-notch updates measured 22-24 ms average intervals, maximum 37-39 ms,
       during capture. This is representative coverage, not every vehicle state.
 - [ ] Other dynamic sprites: animated industries, buildings and effects.
 - [ ] Bridges, foundations, steep slopes and clipped source sprites in-game.
@@ -271,7 +271,7 @@ Latest evidence: `validation-fast-motion-full.txt`, `benchmark-fast-boundary.txt
 single transition had three updates in 305 ms (maximum gap 157 ms). The final
 terrain capture run had 12 updates in 398 ms (maximum gap 36 ms); the capture-free
 coastal four-notch run had 21 updates in 573 ms (maximum gap 35 ms). Moving-image
-centre sampling is about 3–4 times faster than settled area filtering in the
+centre sampling is about 3-4 times faster than settled area filtering in the
 synthetic benchmark. Captures confirm filtering returns after settling; they
 cannot establish subjective smoothness. No game error dialogs were found.
 
@@ -297,7 +297,7 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [ ] Runtime moving vehicle news references and all other vehicle approaches.
 - [x] Initial 2048-square direct-cut check completed; superseded by the
       animated long-trip policy. Cross-map model regression now checks an
-      active 2200 ms journey and exact arrival.
+      active 2200 ms flight and exact arrival.
 - [ ] Subjective tuning on a 2048-square map.
 
 ## Retrofit and compatibility
@@ -335,7 +335,7 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [x] Refresh Basic master / Expert override screenshots and consecutive-town animation.
 - [x] Remove the post-pan / stopped-follow area-filter redraw: retain the same
       fractional sampler at rest, without adding a cache. Document the fine-detail tradeoff.
-- [x] Inspect the immediate release interval, not only times beyond 300 ms:
+- [x] Inspect the immediate release interval, including times before 300 ms:
       last static-land change at 87 ms while final updates completed, then stable.
 - [x] Native snap and subsequent wheel settling remain valid; all 13,700 assertions pass.
 - [ ] Broader pan-performance checks at larger resolutions and with complex NewGRFs.
@@ -345,7 +345,7 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [ ] Standalone optional clouds effect layer mod to make large fly-outs feel more realistic; investigate depth, transparency and a bounded rendering budget.
 - [x] Smooth scaling for signs and labels, including readable text, positioning and click targets throughout fractional zoom (see implementation notes below).
 
-## Destination arrival fitting — 10 October 2026
+## Destination arrival fitting: 10 October 2026
 
 - [x] Choose arrival zoom from destination size rather than departure zoom; fit within 80% of the viewport, use native levels and respect zoom limits.
 - [x] Fit station spreads, industry footprints, estimated town extents and complete vehicle consists, including offscreen parts.
@@ -372,7 +372,7 @@ cannot establish subjective smoothness. No game error dialogs were found.
 - [x] GUI checks at 12.5%, 84%, 130%, 200%, 400%; station edge click, custom sign editor and town window pass. Settled labels stay unchanged across 700 ms captures.
 - [x] Add station/sign and town scaling animations to the user guide.
 - [ ] Broader multilingual/RTL, unusual fonts, high interface scales, dense NewGRF station names and waypoint-specific visual checks.
-# Upstream requirements audit — 10 October 2026
+# Upstream requirements audit: 10 October 2026
 
 - [x] Research contribution policy, coding style and CI requirements; record [submission limits and technical checks](validation/upstream-readiness.md).
 - [x] Register six new core headers in the CMake source inventory.

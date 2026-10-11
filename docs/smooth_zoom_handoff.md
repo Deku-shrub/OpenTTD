@@ -1,6 +1,9 @@
 # Smooth zoom development handoff
 
-## Latest flight timing and height update - 10 October 2026
+These dated checkpoints record development history. Later entries supersede
+earlier behaviour and test results. See the user guide for current controls.
+
+## Flight timing and height checkpoint - 10 October 2026
 
 The current flight uses the van Wijk-Nuij perceptual path rather than the earlier
 quadratic Bezier. Virtual distance is normalised by viewport width; `asinh`
@@ -11,7 +14,7 @@ handles short hops, pure zoom and zero extra allowance. Duration is perceptual
 path length / speed (default 1.2), times a configurable percent multiplier;
 animated duration is bounded to 300-2200 ms; longer trips accelerate to the cap.
 `fly_duration_scale` replaces obsolete `fly_zoom_duration`; `fly_curve` stores
-rho multiplied by 100. These preferences apply on the next journey.
+rho multiplied by 100. These preferences apply on the next flight.
 
 The existing smooth-scroll preference gates flights. Any actual key press
 cancels a flight before its normal action; mouse navigation can still retarget.
@@ -57,7 +60,7 @@ Saved worlds and capture tools are in ignored `build-smoothzoom`. In particular,
 measured about 60 drawing FPS at fractional zoom without capture; that is a
 single-scene result, not a guarantee.
 
-## Git workflow — 10 October 2026
+## Git workflow: 10 October 2026
 
 The user superseded the earlier no-commit instruction and authorized checkpoint
 and regular development commits. Keep `origin` pointed at the private repository
@@ -172,7 +175,7 @@ checks confirmed intermediate scales, rapid four-notch targets and reversal,
 The readout was inspected at 640×480 and ordinary widths. Remaining dynamic
 sprite and interaction checks are explicitly unchecked in the checklist.
 
-The earlier sampler benchmark measured about 41–57 ms per destination megapixel
+The earlier sampler benchmark measured about 41-57 ms per destination megapixel
 for the tested fractional cases; this is not an end-to-end frame-time measure.
 The Windows desktop was locked: use the helper's `-PrintWindow` capture option
 to inspect the test game's own window surface. The helper now uses physical
@@ -183,8 +186,8 @@ produced only three updates in 305 ms, with a 157 ms maximum gap. Idle near-60 F
 does not establish smooth zoom. The compact UI, velocity-preserving controller
 and motion sampler are now in the rebuilt executable. The final complete suite
 passed 10,035 assertions in 114 cases; the sampler benchmark passed 96 assertions.
-The motion sampler is about 3–4 times faster than area filtering. Ordinary town
-checks average 28–36 ms between updates; a coastal four-notch run produced 21
+The motion sampler is about 3-4 times faster than area filtering. Ordinary town
+checks average 28-36 ms between updates; a coastal four-notch run produced 21
 updates in 573 ms with a 35 ms maximum gap. An extreme zoom to 0.125x still had a
 99 ms maximum gap. This is a better candidate, not proof of fully smooth motion.
 The compact readout was inspected at 1280x800 and 640x480, live snap cancellation
@@ -241,7 +244,7 @@ Flights share eased progress between centre interpolation and a quadratic
 parabola in logarithmic zoom. Position and zoom change simultaneously. Endpoint
 scales, extra pull-back and client zoom limits bound the curve. Nearby same-scale
 trips retain their zoom. The pan contribution to total duration is bounded at
-150–4,000 ms. New destination requests restart
+150-4,000 ms. New destination requests restart
 from the displayed centre and scale without a position jump, preserving the
 intended landing zoom for general destinations; velocity continuity
 on flight retargeting is not implemented. Manual scrolling, wheel/buttons/snap,
@@ -251,7 +254,7 @@ Runtime checks confirmed paused town-list flights with wheel zoom disabled,
 automatic 100% and fixed 50% arrivals, general destinations retaining arrival
 zoom, smallmap navigation, Escape/wheel/feature-disable interruption, instant
 jumps, and 8bpp legacy fallback. Flags and timing values were inspected in
-Game Options → Advanced, Expert category. Generic retargeting now retains the
+Game Options > Advanced, Expert category. Generic retargeting now retains the
 original 100% landing zoom rather than the temporary 25% travel view; runtime
 rechecked successfully. Changing viewport zoom limits cancels the captured
 flight, and in-flight loading of the isolated save restored its native 100%
@@ -293,7 +296,7 @@ Pillow installed in ignored `build-smoothzoom/capture-deps`. Launch the isolated
 game at 960x600, enable smooth zoom and reset with `smoothzoom 1` before each
 scenario (`small`, `fast`, `slow`, `big`, `controls`). The helper checks the PID
 and executable identity before posting input or recording. `PrintWindow` with
-`PW_CLIENTONLY` (1) captured the game in 7–15 ms here; full-content flags (3)
+`PW_CLIENTONLY` (1) captured the game in 7-15 ms here; full-content flags (3)
 took about 230 ms and must not be used for these motion demonstrations. Capture
 the game window only. Raw timing JSON and still-frame checks stay in the ignored
 directory; use the committed-path documentation assets for the final guide.
@@ -348,7 +351,7 @@ script redirects) still defaults to Other. Documented as a category/validation g
 
 A reproduced first/second/third town sequence planned 1438, 2200 and 0 ms under
 old timing policy. The 0 ms was the automatic long-trip cut, not an exhausted
-flag. Enabled long journeys now accelerate to the 2200 ms cap rather than cut;
+flag. Enabled long flights now accelerate to the 2200 ms cap rather than cut;
 manual instant requests and disabled-flight fallback still work. This supersedes
 the prior >2500 ms direct-jump policy described earlier. The full Release suite
 passes 13,649 assertions / 131 cases. A longer industry navigation captured 66%
@@ -401,7 +404,7 @@ wheel-settled land was identical across captures 700 ms apart. Release build and
 13,700 assertions in 132 cases passed. Raw evidence: pan-consistent-land.json and
 stable-filter-wheel-*.png in ignored build-smoothzoom.
 
-## Automatic destination fitting — 10 October 2026
+## Automatic destination fitting: 10 October 2026
 
 The shared navigation path now calculates target arrival scale before starting a flight. This supersedes the prior default of retaining departure zoom. Identified objects fit within 80% of the viewport, at a traditional zoom level no closer than 200%, subject to user zoom limits. Coordinate-only destinations default to 100%.
 

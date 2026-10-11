@@ -1,21 +1,21 @@
-# OpenTTD — Smooth Zoom & Fly Navigation
+# OpenTTD: Smooth Zoom and Fly Navigation
 
 An experimental [OpenTTD](https://github.com/OpenTTD/OpenTTD) fork with continuous
-map zoom and animated camera journeys. This repository is the home of the fork;
+map zoom and animated camera flights. This repository is the home of the fork;
 the standard OpenTTD downloads do not include these changes.
 
-**[Download the latest tested build](https://github.com/Deku-shrub/OpenTTD/releases/latest)** ·
-**[Installation](docs/install_smooth_zoom.md)** ·
-**[User guide](docs/smooth_zoom_readme.md)** ·
-**[Animated examples](docs/smooth_zoom_readme.md#zoom-examples)** ·
-**[Progress and TODO](docs/smooth_zoom_todo.md)** ·
-**[Testing and compatibility](docs/validation/zoom-coverage.md)**
+[Download the latest tested build](https://github.com/Deku-shrub/OpenTTD/releases/latest) |
+[Installation](docs/install_smooth_zoom.md) |
+[User guide](docs/smooth_zoom_readme.md) |
+[Animated examples](docs/smooth_zoom_readme.md#zoom-examples) |
+[Progress and TODO](docs/smooth_zoom_todo.md) |
+[Testing and compatibility](docs/validation/zoom-coverage.md)
 
 ## Download and play
 
 | System | Latest tested build |
 | --- | --- |
-| Windows | [64-bit ZIP](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-windows-x64.zip) · [32-bit ZIP](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-windows-x86.zip) |
+| Windows | [64-bit ZIP](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-windows-x64.zip) / [32-bit ZIP](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-windows-x86.zip) |
 | Linux | [Ubuntu 24.04 x64 package](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-linux-x64.deb) |
 | macOS | [Apple Silicon disk image](https://github.com/Deku-shrub/OpenTTD/releases/latest/download/smooth-zoom-macos-arm64.dmg) |
 
@@ -25,16 +25,16 @@ enabled for new configurations.
 
 ## What it adds
 
-- **Smooth mouse-wheel zoom:** eased transitions between fractional zoom levels,
+- Smooth mouse-wheel zoom: eased transitions between fractional zoom levels,
   with the map position beneath the cursor kept in place.
-- **Compact zoom controls:** a toolbar percentage shows the current scale; click
+- Compact zoom controls: a toolbar percentage shows the current scale; click
   it to stop the transition and snap to a traditional zoom level.
-- **Fly-to navigation:** pan and zoom simultaneously to towns, vehicles, stations,
+- Fly-to navigation: pan and zoom simultaneously to towns, vehicles, stations,
   industries, news/events and other map destinations. A master switch enables
   flights, with optional per-category overrides and adjustable pacing.
-- **Immediate manual control:** scrolling or zooming cancels an active flight
+- Immediate manual control: scrolling or zooming cancels an active flight
   from its current camera position.
-- **Scaling map labels:** town and station labels and signs scale with the view.
+- Scaling map labels: town and station labels and signs scale with the view.
 
 ### See it in motion
 
@@ -45,22 +45,15 @@ Zooming around NewGRF objects, trees and map labels:
 [More examples](docs/smooth_zoom_readme.md#zoom-examples) show fractional
 panning and zooming with NewGRF objects and map labels.
 
-## Try the fork
-
-Download the [latest tested build](https://github.com/Deku-shrub/OpenTTD/releases/latest)
-for Windows (64-bit or 32-bit), Ubuntu 24.04 x64 or Apple Silicon macOS.
-OpenGFX graphics are included. Follow the [installation instructions](docs/install_smooth_zoom.md)
-for your platform, then open the game and try the mouse wheel or click a map destination.
-
 Downloads are published after all platform build and test jobs pass. Each release
 includes its source revision and checksums. This is an engine modification, not
 a NewGRF content pack. Developers can [build from source](COMPILING.md); the
 [user guide](docs/smooth_zoom_readme.md#get-started) also includes a Windows demo
 launcher and populated test map.
 
-Smooth mouse-wheel zoom and fly-to navigation are **enabled by default in this
-fork** and require a supported 32bpp renderer. In **Game Options → Advanced**,
-search for **smooth** (use the Expert/all-settings filter) or **fly** to adjust
+Smooth mouse-wheel zoom and fly-to navigation are enabled by default in this
+fork and require a supported 32bpp renderer. In Game Options > Advanced,
+search for smooth (use the Expert/all-settings filter) or fly to adjust
 or disable them. Existing configuration choices are preserved; enable the
 switches there if you previously turned them off.
 
@@ -259,7 +252,6 @@ If you want to compile OpenTTD from source, instructions can be found in [COMPIL
 'Unofficial' channels
 
 - the OpenTTD wiki has a [page listing OpenTTD communities](https://wiki.openttd.org/en/Community/Community) including some in languages other than English
-
 
 ### 2.1) Multiplayer games
 

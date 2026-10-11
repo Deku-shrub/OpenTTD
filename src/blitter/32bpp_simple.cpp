@@ -220,8 +220,8 @@ bool Blitter_32bppSimple::DrawScaledRows(ScaledBlitterParams *bp, BlitterMode mo
 	assert(step >= 1 && step <= 32);
 	if (width <= 0 || height <= 0 || bp->width <= 0 || bp->height <= 0) return true;
 	if (bp->nearest) {
-		/* During camera motion, sample centres without constructing area-filter
-		 * scanlines. The settled redraw still uses the area filter below. */
+		/* Centre sampling avoids constructing area-filter scanlines.
+		 * Fractional viewports use it during motion and at rest to keep detail stable. */
 		const int destination_width = bp->width;
 		const int destination_height = bp->height;
 		const int destination_pitch = bp->pitch;

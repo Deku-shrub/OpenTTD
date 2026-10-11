@@ -1,7 +1,7 @@
 # Smooth zoom validation fixtures
 
-[Fork homepage](../../README.md) · [User guide](../smooth_zoom_readme.md) ·
-[Graphics coverage](zoom-coverage.md) · [CI requirements and results](upstream-readiness.md)
+[Fork homepage](../../README.md) | [User guide](../smooth_zoom_readme.md) |
+[Graphics coverage](zoom-coverage.md) | [CI requirements and results](upstream-readiness.md)
 
 ## Quick navigation demo
 
@@ -62,7 +62,7 @@ observational comparison. No land-crop changes occurred beyond 300 ms after
 release. Raw timings/captures are in ignored build-smoothzoom/pan-*.json and
 followed-paused-*.png. Larger-resolution and NewGRF performance checks remain open.
 
-## Target fitting validation — 10 October 2026
+## Target fitting validation: 10 October 2026
 
 Release build passed 13,722 assertions in 134 cases, including departure-independent fitting, viewport size limits and offscreen vehicle consist extent. Logs: `build-smoothzoom/build-target-fit-final.log` and `build-smoothzoom/validation-target-fit.txt` (local ignored artifacts).
 

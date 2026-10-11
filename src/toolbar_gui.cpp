@@ -1533,7 +1533,6 @@ class NWidgetMainToolbarContainer : public NWidgetToolbarContainer {
 
 	const WidgetID *GetButtonArrangement(uint &width, uint &arrangeable_count, uint &button_count, uint &spacer_count) const override
 	{
-		/* Reserve the text control's width before choosing the existing icon arrangement. */
 		const bool show_zoom = width >= 14 * this->smallest_x + this->zoom_width;
 		if (show_zoom) width -= this->zoom_width;
 		const WidgetID *icons = this->GetImageButtonArrangement(width, arrangeable_count, button_count, spacer_count);

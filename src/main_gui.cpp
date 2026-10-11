@@ -100,10 +100,9 @@ bool DoZoomInOutWindow(ZoomStateChange how, Window *w)
 	assert(w != nullptr);
 	if (how != ZOOM_NONE) CancelViewportSmoothZoomAnimation(w);
 
-	/* Fractional zoom buttons move to the next integer level in the requested direction. */
 	if (how != ZOOM_NONE && w->viewport != nullptr && w->viewport->zoom_step > 0) {
 		ViewportData &vp = *w->viewport;
-		const ZoomLevel target = GetNextIntegerZoom(vp.zoom_step, how == ZOOM_IN, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max); ///< Category that authorises this flight.
+		const ZoomLevel target = GetNextIntegerZoom(vp.zoom_step, how == ZOOM_IN, _settings_client.gui.zoom_min, _settings_client.gui.zoom_max);
 		const float target_step = static_cast<float>(ScaleByZoom(1, target));
 		if (target_step == vp.zoom_step) return false;
 		SetViewportSmoothZoom(w, static_cast<float>(ZOOM_BASE) / target_step);
@@ -230,7 +229,7 @@ void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle)
 	const Vehicle *front = selected->GetMovingFront();
 	const Viewport &vp = *w->viewport;
 	const auto destination = it->second.path.GetDestination();
-	const auto target = it->second.target; ///< Category that authorises this flight.
+	const auto target = it->second.target;
 	/* The exact ID disambiguates overlapping vehicles and trains in shared depots.
 	 * This runs in the initiating click, before any flight frame is advanced. */
 	if (!TryStartViewportFlight(w, {static_cast<int>(destination.x), static_cast<int>(destination.y)}, GetVehicleNavigationArrivalScale(front, vp), target)) {
@@ -309,7 +308,7 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 	flight.path.Advance(delta_ms, std::max(vp.width, vp.height));
 	auto pose = flight.path.GetPose();
 	if (flight.vehicle != VehicleID::Invalid()) {
-		const Vehicle *vehicle = Vehicle::GetIfValid(flight.vehicle); ///< Optional exact moving vehicle target.
+		const Vehicle *vehicle = Vehicle::GetIfValid(flight.vehicle);
 		if (vehicle == nullptr) { CancelViewportFlight(w); return; }
 		const Vehicle *front = vehicle->GetMovingFront();
 		const Point live = RemapCoords(front->x_pos, front->y_pos, front->z_pos);
@@ -419,7 +418,7 @@ bool TrySmoothZoomWindow(bool in, Window *w, bool to_cursor, uint notches)
 
 	const int cursor_x = Clamp(_cursor.pos.x - vp.left, 0, vp.width);
 	const int cursor_y = Clamp(_cursor.pos.y - vp.top, 0, vp.height);
-	SmoothZoomMotion motion = it != _smooth_zoom_animations.end() ? it->second.motion : SmoothZoomMotion(old_step); ///< Wheel easing controller.
+	SmoothZoomMotion motion = it != _smooth_zoom_animations.end() ? it->second.motion : SmoothZoomMotion(old_step);
 	motion.Rebase(old_step);
 	motion.Retarget(new_step);
 	SmoothZoomAnimation animation{motion, old_step, cursor_x, cursor_y,
