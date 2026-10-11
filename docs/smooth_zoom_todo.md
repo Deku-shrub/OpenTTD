@@ -3,7 +3,7 @@
 [Fork homepage](../README.md) | [User guide](smooth_zoom_readme.md) |
 [CI requirements and results](validation/upstream-readiness.md)
 
-Updated 11 October 2026. Checkpoint and regular commits are now authorized.
+Updated 12 October 2026. Checkpoint and regular commits are now authorized.
 Current cross-renderer and graphics-set results are in
 [the coverage notes](validation/zoom-coverage.md). The dated sections below
 retain historical checkpoints. Later checked items supersede earlier pending
@@ -20,6 +20,9 @@ entries for the same behaviour.
 - [ ] Resolve the smoothness failures reported in all ten enhanced promotional scenarios. Repeat zoom-out, town and vehicle flights, fitted city arrival, manual takeover and mixed-network scenes without recording before replacing the footage.
 - [x] Batch fractional sprite rows, reuse native SSE colours and skip transparent margins. Add four-pixel opaque and binary-alpha SSE4 composition with exact animation metadata tests.
 - [x] Test a bounded resolved-colour cache for animated SSE sprites, including palette refresh, reused encoding addresses and eviction. Wide-view cadence and foreground footage still need review.
+- [x] Guard cache accounting against 32-bit storage-size overflow. Make SSE4 tests respect CPU support, cover SSE2 composition and remove camera-test range-loop copy warnings.
+- [x] Verify all eight platform jobs and clean package identities on `e761771dd8`. Source and Doxygen checks passed. See the [release checkpoint](validation/zoom-coverage.md#release-checkpoint-12-october-2026).
+- [ ] Review the final revision's pending [CodeQL scan](https://github.com/Deku-shrub/OpenTTD/actions/runs/38181538017) and address any new findings.
 
 - [x] Simplify camera state by removing unused movement-quality flags and sharing vehicle arrival fitting.
 - [x] Verify all eight CI build platforms and the nightly checks on the published defaults-enabled revision.

@@ -169,3 +169,30 @@ compositor and also compare the SSE2 animation renderer against the scalar
 reference. The cache-reuse test falls back to SSE2 on older CPUs. The expanded
 smooth-zoom subset passed 79,745 assertions in 52 cases. Camera test loops also
 use references to remove the two GCC range-loop copy warnings.
+
+## Release checkpoint, 12 October 2026
+
+[All eight platform jobs and package publication](https://github.com/Deku-shrub/OpenTTD/actions/runs/38181538021)
+passed for `e761771dd8`. Windows x64 and x86 each passed 150 CTest cases.
+The [final Doxygen comparison](https://github.com/Deku-shrub/OpenTTD/actions/runs/38181537992)
+added no warnings, and source-description/string checks passed. Compiler logs
+confirmed that the two camera-test range-loop warnings were removed. The
+remaining compiler warnings are in unchanged road and industry code.
+
+The [latest tested release](https://github.com/Deku-shrub/OpenTTD/releases/tag/build-38181538021-e761771dd8b8)
+has four packages. Their manifests all identify clean revision
+`e761771dd8b8b485dd142ef60128b55c81bb2512`.
+
+[Intel macOS and MinGW checks](https://github.com/Deku-shrub/OpenTTD/actions/runs/38179809173)
+passed on the rendering commit `04833375bd`. Its
+[CodeQL scan](https://github.com/Deku-shrub/OpenTTD/actions/runs/38178692288)
+passed and added no alerts relative to the preceding fork scan. Existing alerts
+remain in the repository. The
+[final revision's CodeQL scan](https://github.com/Deku-shrub/OpenTTD/actions/runs/38181538017)
+was still running at this checkpoint.
+
+The original fitted-city trace reached the intended Chindingwell destination.
+It recorded only ten camera updates in 2141 ms, with a 429 ms maximum interval.
+This confirms poor cadence in that take, without resolving its reported
+vertical appearance. Foreground review and replacement captures remain blocked
+by the Windows lock screen. The owned test games have been closed.
