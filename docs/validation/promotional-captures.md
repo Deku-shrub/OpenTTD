@@ -153,3 +153,11 @@ scale and takeover assertions passed for these clips. Dense rail zoom-out still
 averaged 54.1 ms between updates while recording. The clips remain QA output
 pending visual review. The original footage has not been overwritten, and no
 new clips have been embedded in end-user documentation.
+
+Further capture work was deferred after the input timing review. The one-octave
+wheel demonstrations spaced four events 333 ms apart, allowing individual
+transitions to settle. They should be replaced with overlapping input for a
+continuous gesture. Matching feature-disabled takes are also still required for
+the new foreground set. Performance work now takes priority. See the
+[dense-view follow-up](zoom-coverage.md#dense-view-follow-up-12-october-2026) for
+the uncaptured comparison and remaining frame-rate limit.

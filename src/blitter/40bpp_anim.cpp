@@ -67,7 +67,12 @@ uint32_t Blitter_40bppAnim::DrawScaledNearestRow(Colour *destination, const Pixe
 			if (alpha < 255) destination[x] = RealizeBlendedColour(animation[x], destination[x]);
 			animation[x] = 0;
 		}
-		destination[x] = ComposeColourPA(colour, alpha, destination[x]);
+		if (alpha == 255) {
+			colour.a = 255;
+			destination[x] = colour;
+		} else {
+			destination[x] = ComposeColourPA(colour, alpha, destination[x]);
+		}
 	};
 	return mode == BlitterMode::Normal ? this->DrawScaledColourRow<false>(source, columns, first, last, remap, write) :
 			this->DrawScaledColourRow<true>(source, columns, first, last, remap, write);
@@ -81,7 +86,8 @@ void Blitter_40bppAnim::WriteScaledColourRow(Colour *destination, const Colour *
 			if (colour.a < 255) destination[x] = RealizeBlendedColour(animation[x], destination[x]);
 			animation[x] = 0;
 		}
-		destination[x] = ComposeColourPA(colour, colour.a, destination[x]);
+		if (colour.a == 255) destination[x] = colour;
+		else destination[x] = ComposeColourPA(colour, colour.a, destination[x]);
 	});
 }
 

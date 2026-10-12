@@ -29,13 +29,14 @@ void Blitter_32bppSSE4_Anim::WriteScaledColourRow(Colour *destination, const Col
 	/* Opaque samples need neither destination reads nor alpha blending. Copy
 	 * four together and clear their animation metadata with one store. */
 	for (; x + 4 <= last; x += 4) {
-		const Colour samples[] = {source[columns[x]], source[columns[x + 1]], source[columns[x + 2]], source[columns[x + 3]]};
-		const __m128i colours = _mm_set_epi32(samples[3].data, samples[2].data, samples[1].data, samples[0].data);
-		if ((samples[0].a & samples[1].a & samples[2].a & samples[3].a) == 255) {
+		const Colour colour0 = source[columns[x]], colour1 = source[columns[x + 1]];
+		const Colour colour2 = source[columns[x + 2]], colour3 = source[columns[x + 3]];
+		const __m128i colours = _mm_set_epi32(colour3.data, colour2.data, colour1.data, colour0.data);
+		if ((colour0.a & colour1.a & colour2.a & colour3.a) == 255) {
 			_mm_storeu_si128(reinterpret_cast<__m128i *>(destination + x), colours);
 			if (animation != nullptr) _mm_storel_epi64(reinterpret_cast<__m128i *>(animation + x), _mm_setzero_si128());
-		} else if ((samples[0].a == 0 || samples[0].a == 255) && (samples[1].a == 0 || samples[1].a == 255) &&
-				(samples[2].a == 0 || samples[2].a == 255) && (samples[3].a == 0 || samples[3].a == 255)) {
+		} else if ((colour0.a == 0 || colour0.a == 255) && (colour1.a == 0 || colour1.a == 255) &&
+				(colour2.a == 0 || colour2.a == 255) && (colour3.a == 0 || colour3.a == 255)) {
 			const __m128i alpha = _mm_shuffle_epi8(colours, _mm_set_epi8(15, 15, 15, 15, 11, 11, 11, 11, 7, 7, 7, 7, 3, 3, 3, 3));
 			const __m128i transparent = _mm_cmpeq_epi8(alpha, _mm_setzero_si128());
 			const __m128i background = _mm_loadu_si128(reinterpret_cast<const __m128i *>(destination + x));
@@ -47,18 +48,25 @@ void Blitter_32bppSSE4_Anim::WriteScaledColourRow(Colour *destination, const Col
 				_mm_storel_epi64(reinterpret_cast<__m128i *>(animation + x), _mm_and_si128(animation_mask, previous));
 			}
 		} else {
-			for (int i = 0; i < 4; ++i) {
-				const Colour colour = samples[i];
-				if (colour.a == 0) continue;
-				destination[x + i] = Blitter_32bppAnim::ComposeColourPA(colour, colour.a, destination[x + i]);
+			const auto compose = [&](int i, Colour colour) {
+				if (colour.a == 0) return;
+				if (colour.a == 255) destination[x + i] = colour;
+				else destination[x + i] = Blitter_32bppAnim::ComposeColourPA(colour, colour.a, destination[x + i]);
 				if (animation != nullptr) animation[x + i] = 0;
-			}
+			};
+			compose(0, colour0);
+			compose(1, colour1);
+			compose(2, colour2);
+			compose(3, colour3);
 		}
 	}
 	for (; x < last; ++x) {
 		const Colour colour = source[columns[x]];
 		if (colour.a == 0) continue;
-		destination[x] = Blitter_32bppAnim::ComposeColourPA(colour, colour.a, destination[x]);
+		/* Most wide-view rows end with opaque samples. Avoid reading their
+		 * background before the alpha shortcut inside ComposeColourPA. */
+		if (colour.a == 255) destination[x] = colour;
+		else destination[x] = Blitter_32bppAnim::ComposeColourPA(colour, colour.a, destination[x]);
 		if (animation != nullptr) animation[x] = 0;
 	}
 }

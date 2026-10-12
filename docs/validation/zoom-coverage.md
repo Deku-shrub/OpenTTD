@@ -211,3 +211,43 @@ town flight produced 52 camera updates with an 86 ms maximum interval. At
 30 fps it produced 56 updates, with a 73 ms maximum interval using AMD encoding
 and 78 ms using software encoding. Recording overhead remains measurable.
 These local recordings are QA output, rather than approved promotional takes.
+
+## Dense-view follow-up, 12 October 2026
+
+The rail scene was profiled without recording at 1920 x 1080 with the SSE4
+animation blitter and Windows driver. CPU samples were resolved against the
+exact executable's linker map. Pixel composition dominated the identified game
+code, particularly short row tails. Opaque samples still read the destination
+before the compositor's internal alpha shortcut.
+
+The retained change copies opaque fractional pixels without reading the
+background. Resolved palette colours retain the compositor's 255 output alpha.
+SSE samples use individual values instead of a temporary array. In the Windows
+release build, this removed per-row stack-buffer setup and cookie checks.
+Translucent blending, transparent pixels and animation metadata keep their
+previous behaviour. Cache size, native drawing and saved settings are unchanged.
+
+The benchmark used eight wheel notches over one second, from 100% to 25%,
+anchored at the viewport centre. The same original executable was tested before
+and after the optimized build to check timing drift. No recorder or video
+encoder ran during these measurements.
+
+| Traffic | Original mean interval (ms) | Optimized mean interval (ms) | Reduction | Optimized camera updates per second |
+| --- | ---: | ---: | ---: | ---: |
+| Paused, warm | 37.2 | 34.4 | 7.7% | 29.1 |
+| Moving | 39.0 | 36.6 | 6.0% | 27.3 |
+
+These are means of per-run averages. Paused figures exclude the first cold run
+of each group. The comparison includes six warm paused and eight moving runs
+of the original executable, and three warm paused and four moving runs of the
+optimized build. The first paused run improved from a mean 42.5 ms to 38.8 ms.
+An optimized moving run still had a 57 ms maximum interval. The gain does not
+establish consistently smooth wide-view rendering.
+
+The local build passed all 150 CTest cases. The smooth-zoom subset passed 86,273
+assertions in 52 cases, including static white remapped to an animated colour.
+Source-description checks passed. Normal release linking was restored after
+profiling. Software, simple, SSE4 and OpenGL runtime checks also passed at 100%,
+130%, 200%, 84% and 25%, including static rest, save/load and agreement between
+pan and complete redraws at 130%, 84% and 66.7%. No additional promotional clips
+were recorded during this work.

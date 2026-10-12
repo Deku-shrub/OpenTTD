@@ -389,9 +389,10 @@ TEST_CASE("Batched fractional rows preserve pixels and native animation metadata
 			BlitterMode::BlackRemap, BlitterMode::Transparent, BlitterMode::TransparentRemap);
 	const bool animated_source = GENERATE(false, true);
 	const bool palette_source = GENERATE(false, true);
+	const bool white_source = GENERATE(false, true);
 	const bool default_brightness = GENERATE(false, true);
 	const int source_alpha = GENERATE(0, 1, 2, 3);
-	CAPTURE(mode, animated_source, palette_source, default_brightness, source_alpha);
+	CAPTURE(mode, animated_source, palette_source, white_source, default_brightness, source_alpha);
 	AutoRestoreBackup animation_backup(_screen_disable_anim, false);
 	AutoRestoreBackup screen_backup(_screen);
 	AutoRestoreBackup palette_backup(_cur_palette);
@@ -399,11 +400,14 @@ TEST_CASE("Batched fractional rows preserve pixels and native animation metadata
 	AutoRestoreBackup zoom_max_backup(_settings_client.gui.zoom_max, ZoomLevel::Max);
 	_cur_palette.palette[42] = Colour(30, 90, 160);
 	_cur_palette.palette[47] = Colour(220, 40, 80);
+	_cur_palette.palette[255] = Colour(255, 255, 255);
 	_cur_palette.palette[PALETTE_ANIM_START + 2] = Colour(0, 240, 140);
 	std::array<uint8_t, 256> remap;
 	for (size_t i = 0; i < remap.size(); ++i) remap[i] = static_cast<uint8_t>(i);
 	remap[42] = 0;
+	remap[255] = PALETTE_ANIM_START + 2;
 	remap[PALETTE_ANIM_START + 2] = 47;
+	const uint8_t palette_index = white_source ? 255 : 42;
 	SpriteLoader::SpriteCollection sprites;
 	SpriteCollMap<std::vector<SpriteLoader::CommonPixel>> source;
 	for (ZoomLevel zoom = ZoomLevel::Min; zoom <= ZoomLevel::Max; ++zoom) {
@@ -411,7 +415,7 @@ TEST_CASE("Batched fractional rows preserve pixels and native animation metadata
 		auto &pixels = source[zoom];
 		pixels.resize(width * height);
 		for (size_t i = 0; i < pixels.size(); ++i) {
-			const uint8_t index = !palette_source ? 0 : animated_source && i % 3 == 1 ? PALETTE_ANIM_START + 2 : i % 3 == 0 ? 42 : 0;
+			const uint8_t index = !palette_source ? 0 : animated_source && i % 3 == 1 ? PALETTE_ANIM_START + 2 : i % 3 == 0 ? palette_index : 0;
 			const bool palette_only = default_brightness && index != 0;
 			pixels[i] = {static_cast<uint8_t>(palette_only ? 0 : i * 17), static_cast<uint8_t>(palette_only ? 0 : i * 37), static_cast<uint8_t>(palette_only ? 0 : i * 61),
 					static_cast<uint8_t>(source_alpha == 0 ? 255 : source_alpha == 3 ? i : i % 7 < 2 ? 0 : source_alpha == 2 && i % 7 == 2 ? 96 : 255),

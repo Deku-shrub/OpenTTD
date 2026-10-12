@@ -41,7 +41,12 @@ uint32_t Blitter_32bppAnim::DrawScaledNearestRow(Colour *destination, const Pixe
 	}
 	uint16_t *animation = !_screen_disable_anim && this->anim_buf != nullptr ? this->ScreenToAnimationBuffer(destination) : nullptr;
 	const auto write = [&](int x, Colour colour, uint8_t alpha) {
-		destination[x] = ComposeColourPA(colour, alpha, destination[x]);
+		if (alpha == 255) {
+			colour.a = 255;
+			destination[x] = colour;
+		} else {
+			destination[x] = ComposeColourPA(colour, alpha, destination[x]);
+		}
 		if (animation != nullptr) animation[x] = 0;
 	};
 	return mode == BlitterMode::Normal ? this->DrawScaledColourRow<false>(source, columns, first, last, remap, write) :
@@ -52,7 +57,8 @@ void Blitter_32bppAnim::WriteScaledColourRow(Colour *destination, const Colour *
 {
 	uint16_t *animation = !_screen_disable_anim && this->anim_buf != nullptr ? this->ScreenToAnimationBuffer(destination) : nullptr;
 	CompositeScaledColourRow(source, columns, first, last, [&](int x, Colour colour) {
-		destination[x] = ComposeColourPA(colour, colour.a, destination[x]);
+		if (colour.a == 255) destination[x] = colour;
+		else destination[x] = ComposeColourPA(colour, colour.a, destination[x]);
 		if (animation != nullptr) animation[x] = 0;
 	});
 }

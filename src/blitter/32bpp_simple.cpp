@@ -192,7 +192,14 @@ static double SnapScaledSpriteCoordinate(double value)
 uint32_t Blitter_32bppSimple::DrawScaledNearestRow(Colour *destination, const Pixel *source, const int *columns,
 		int first, int last, BlitterMode mode, const uint8_t *remap)
 {
-	const auto write = [&](int x, Colour colour, uint8_t alpha) { destination[x] = ComposeColourPA(colour, alpha, destination[x]); };
+	const auto write = [&](int x, Colour colour, uint8_t alpha) {
+		if (alpha == 255) {
+			colour.a = 255;
+			destination[x] = colour;
+		} else {
+			destination[x] = ComposeColourPA(colour, alpha, destination[x]);
+		}
+	};
 	if (mode == BlitterMode::Normal) return this->DrawScaledColourRow<false>(source, columns, first, last, remap, write);
 	if (mode == BlitterMode::ColourRemap) return this->DrawScaledColourRow<true>(source, columns, first, last, remap, write);
 	uint32_t mask = 0;
@@ -211,7 +218,8 @@ uint32_t Blitter_32bppSimple::DrawScaledNearestRow(Colour *destination, const Pi
 void Blitter_32bppSimple::WriteScaledColourRow(Colour *destination, const Colour *source, const int *columns, int first, int last)
 {
 	CompositeScaledColourRow(source, columns, first, last, [&](int x, Colour colour) {
-		destination[x] = ComposeColourPA(colour, colour.a, destination[x]);
+		if (colour.a == 255) destination[x] = colour;
+		else destination[x] = ComposeColourPA(colour, colour.a, destination[x]);
 	});
 }
 

@@ -16,7 +16,8 @@ entries for the same behaviour.
 - [x] Remove superseded documentation clips and per-vehicle movies. Keep capture provenance and a small general-purpose gallery.
 - [x] Record 16 full-HD comparison and mixed-scene takes from a downloaded working network. Keep footage and individual vehicle stills in ignored local output. See [capture notes](validation/promotional-captures.md).
 - [ ] Select and compress current mixed-scene excerpts for the end-user gallery after reviewing the promotional footage.
-- [ ] Investigate low camera cadence in the dense title-game network at 1080p, separating rendering cost from recording overhead. A default town flight produced 22 updates in 1.89 seconds without recording, versus 10 during recording.
+- [x] Profile low camera cadence in the dense title-game network at 1080p and separate rendering cost from recording overhead. Pixel composition is a major CPU cost. See the [dense-view follow-up](validation/zoom-coverage.md#dense-view-follow-up-12-october-2026).
+- [ ] Improve dense zoom-out beyond the current 27-29 camera updates per second in repeated uncaptured tests. Longer frame intervals remain.
 - [ ] Resolve the smoothness failures reported in all ten enhanced promotional scenarios. Repeat zoom-out, town and vehicle flights, fitted city arrival, manual takeover and mixed-network scenes without recording before replacing the footage.
 - [x] Batch fractional sprite rows, reuse native SSE colours and skip transparent margins. Add four-pixel opaque and binary-alpha SSE4 composition with exact animation metadata tests.
 - [x] Test a bounded resolved-colour cache for animated SSE sprites, including palette refresh, reused encoding addresses and eviction. Wide-view cadence and foreground footage still need review.
@@ -26,6 +27,8 @@ entries for the same behaviour.
 - [x] Resume foreground testing on the unlocked desktop and test guarded desktop-duplication recording. Town and fitted-city flights improved, but recording overhead still needs work before replacing promotional footage.
 - [x] Repeat all ten enhanced scenarios without recording on the unlocked desktop. Assert the town and train destinations, fitted arrival scales and manual takeover. Dense rail zoom-out still averages 45.3 ms per update. See the [foreground measurements](validation/promotional-captures.md#foreground-scenario-checks-12-october-2026).
 - [x] Record ten fresh full-HD enhanced QA takes with desktop duplication. Keep them separate from the original footage, with source identities, input events, camera traces and hashes. Visual approval and final promotional selection remain pending.
+- [x] Avoid background reads for opaque fractional pixels and remove temporary SSE sample-array storage. Repeated dense-view averages improved by 6-8%, with unchanged cache limits and expanded white-colour/remapping coverage.
+- [ ] Replace stepped capture gestures with overlapping continuous input and record matching feature-disabled comparisons after the dense-view performance work. Keep deliberate individual-notch demonstrations separate.
 
 - [x] Simplify camera state by removing unused movement-quality flags and sharing vehicle arrival fitting.
 - [x] Verify all eight CI build platforms and the nightly checks on the published defaults-enabled revision.
