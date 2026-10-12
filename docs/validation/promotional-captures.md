@@ -85,8 +85,14 @@ the city arrival. It still needs review in foreground footage.
 
 GDI recording with software or AMD AMF encoding reduced camera cadence in the
 previous tests. A GPU desktop-duplication capture was attempted, but stopped
-before recording because Windows was showing its lock screen. Foreground
-smoothness and replacement promotional captures remain unverified.
+before recording because Windows was showing its lock screen. On 12 October,
+the desktop was unlocked and guarded desktop duplication succeeded at full HD.
+The foreground town flight produced 71 camera updates in 1887 ms without
+recording. Desktop duplication with AMD encoding produced 52 updates at 60 fps
+and 56 at 30 fps. Software encoding at 30 fps also produced 56 updates. Frame
+download and colour conversion are still required with the installed FFmpeg
+build. These tests remain local QA clips. They do not replace the failed
+promotional takes. See the [foreground results](zoom-coverage.md#release-checkpoint-12-october-2026).
 
 Local validation of the rendering changes passed all 149 CTest cases, including
 51 smooth-zoom cases and 77,632 assertions. The source-description checker
@@ -101,3 +107,49 @@ and High Def each passed the SSE4 checks. The published `04833375bd` revision
 passed all eight platform jobs and the Doxygen comparison. See the
 [coverage checkpoint](zoom-coverage.md#rendering-optimisation-checks-11-october-2026)
 for the CI and download links.
+
+## Foreground scenario checks, 12 October 2026
+
+The clean `e761771dd8` Windows build was retested at 1920 x 1080 on the unlocked
+desktop without recording. Each scenario reset its windows before navigation.
+The input runner uses physical coordinates and the current vehicle controls.
+A preliminary run selected the wrong town and was discarded. The corrected
+run asserted both town destinations, the train target, 100%, 50% and 200%
+arrival scales, and interruption by manual dragging.
+
+| Scenario | Camera updates | Active duration (ms) | Average interval (ms) | Maximum interval (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| City zoom-out | 45 | 1288 | 28.6 | 59 |
+| Rail and river zoom-out | 29 | 1313 | 45.3 | 77 |
+| Town flight | 74 | 1894 | 25.6 | 64 |
+| Train arrival | 68 | 1961 | 28.8 | 52 |
+| Fitted city arrival | 79 | 2117 | 26.8 | 49 |
+| One-extra-level flight | 72 | 1804 | 25.1 | 53 |
+| Airport zoom-out | 36 | 1267 | 35.2 | 42 |
+| River zoom-out | 36 | 1313 | 36.5 | 49 |
+| Oil shipping zoom-out | 52 | 1271 | 24.4 | 30 |
+
+The one-octave zoom figures combine the active intervals of four wheel steps.
+The manual takeover trace started a flight but did not report an arrival after
+the drag. Moving traffic was enabled in the zoom and train scenarios.
+
+Rendering is faster than in the original takes, but dense rail views still
+fall below 30 camera updates per second. Occasional longer intervals also
+remain. These measurements do not establish that all reported smoothness
+issues are fixed. Replacement recordings need their own visual review.
+
+Ten fresh enhanced recordings are in ignored local output at
+`build-smoothzoom/promo/qa-foreground-takes`. Its `README.md` links every movie
+and lists camera traces. Each 10-12 second clip uses full-HD desktop duplication
+at 30 fps, AMD encoding and no audio. Variable frame timestamps retain capture
+timing. No motion interpolation or playback speed changes were applied.
+Capture stopped if the owned game lost the foreground. The test game was closed
+after recording.
+
+The new recorded town flight produced 56 updates in 1900 ms with a 71 ms maximum
+interval. Fitted-city arrival produced 57 in 2143 ms with a 62 ms maximum, and
+train arrival produced 51 in 1986 ms with a 75 ms maximum. Destination, arrival
+scale and takeover assertions passed for these clips. Dense rail zoom-out still
+averaged 54.1 ms between updates while recording. The clips remain QA output
+pending visual review. The original footage has not been overwritten, and no
+new clips have been embedded in end-user documentation.

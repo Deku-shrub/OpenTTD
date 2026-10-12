@@ -22,7 +22,10 @@ entries for the same behaviour.
 - [x] Test a bounded resolved-colour cache for animated SSE sprites, including palette refresh, reused encoding addresses and eviction. Wide-view cadence and foreground footage still need review.
 - [x] Guard cache accounting against 32-bit storage-size overflow. Make SSE4 tests respect CPU support, cover SSE2 composition and remove camera-test range-loop copy warnings.
 - [x] Verify all eight platform jobs and clean package identities on `e761771dd8`. Source and Doxygen checks passed. See the [release checkpoint](validation/zoom-coverage.md#release-checkpoint-12-october-2026).
-- [ ] Review the final revision's pending [CodeQL scan](https://github.com/Deku-shrub/OpenTTD/actions/runs/38181538017) and address any new findings.
+- [x] Review the final revision's [CodeQL scan](https://github.com/Deku-shrub/OpenTTD/actions/runs/38181538017). It passed with no new alerts relative to the preceding fork scan.
+- [x] Resume foreground testing on the unlocked desktop and test guarded desktop-duplication recording. Town and fitted-city flights improved, but recording overhead still needs work before replacing promotional footage.
+- [x] Repeat all ten enhanced scenarios without recording on the unlocked desktop. Assert the town and train destinations, fitted arrival scales and manual takeover. Dense rail zoom-out still averages 45.3 ms per update. See the [foreground measurements](validation/promotional-captures.md#foreground-scenario-checks-12-october-2026).
+- [x] Record ten fresh full-HD enhanced QA takes with desktop duplication. Keep them separate from the original footage, with source identities, input events, camera traces and hashes. Visual approval and final promotional selection remain pending.
 
 - [x] Simplify camera state by removing unused movement-quality flags and sharing vehicle arrival fitting.
 - [x] Verify all eight CI build platforms and the nightly checks on the published defaults-enabled revision.

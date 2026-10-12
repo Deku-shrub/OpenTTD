@@ -189,10 +189,25 @@ passed on the rendering commit `04833375bd`. Its
 passed and added no alerts relative to the preceding fork scan. Existing alerts
 remain in the repository. The
 [final revision's CodeQL scan](https://github.com/Deku-shrub/OpenTTD/actions/runs/38181538017)
-was still running at this checkpoint.
+passed with no new alert IDs relative to the preceding fork scan. Existing
+alerts remain open.
 
 The original fitted-city trace reached the intended Chindingwell destination.
 It recorded only ten camera updates in 2141 ms, with a 429 ms maximum interval.
 This confirms poor cadence in that take, without resolving its reported
-vertical appearance. Foreground review and replacement captures remain blocked
-by the Windows lock screen. The owned test games have been closed.
+vertical appearance. The desktop was subsequently unlocked and foreground
+testing resumed. Replacement promotional captures remain unfinished.
+
+On the unlocked desktop, the town flight produced 71 camera updates in 1887 ms
+with a 63 ms maximum interval. The fitted-city flight produced 78 updates in
+2118 ms with a 52 ms maximum interval. The city zoom-out produced 47 updates in
+1297 ms with a 40 ms maximum interval. The rail measurement overlapped a
+recorder experiment and is excluded from the uncaptured comparison.
+
+Guarded desktop duplication recorded only the owned, foreground 1920 x 1080
+game. Direct D3D11 BGRA input was rejected by the AMD encoder, so the successful
+test downloaded frames and converted them to NV12. At 60 fps, the recorded
+town flight produced 52 camera updates with an 86 ms maximum interval. At
+30 fps it produced 56 updates, with a 73 ms maximum interval using AMD encoding
+and 78 ms using software encoding. Recording overhead remains measurable.
+These local recordings are QA output, rather than approved promotional takes.
