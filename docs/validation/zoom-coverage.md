@@ -232,6 +232,12 @@ anchored at the viewport centre. The same original executable was tested before
 and after the optimized build to check timing drift. No recorder or video
 encoder ran during these measurements.
 
+Both executables had smooth zoom enabled. These figures compare the previous
+fractional renderer with the optimized renderer, rather than with the feature
+disabled. Dense-map performance is assessed against feature-disabled rendering
+at matching scene density. The base game's rendering cost is acceptable. Extra
+cost from fractional rendering needs separate measurement and optimization.
+
 | Traffic | Original mean interval (ms) | Optimized mean interval (ms) | Reduction | Optimized camera updates per second |
 | --- | ---: | ---: | ---: | ---: |
 | Paused, warm | 37.2 | 34.4 | 7.7% | 29.1 |
@@ -251,3 +257,53 @@ profiling. Software, simple, SSE4 and OpenGL runtime checks also passed at 100%,
 130%, 200%, 84% and 25%, including static rest, save/load and agreement between
 pan and complete redraws at 130%, 84% and 66.7%. No additional promotional clips
 were recorded during this work.
+
+### Feature-disabled baseline
+
+The performance requirement is to avoid additional dense-map slowdown from
+the feature, rather than meet a fixed frame-rate target. The feature-disabled
+baseline below uses this fork's native renderer. It is not a separate upstream
+binary.
+
+Two moving-traffic runs at the same rail location used an eight-second
+continuous horizontal pan without recording. At 25%, viewport drawing averaged
+0.71 ms with smooth zoom disabled and 0.73 ms with it enabled. Both maintained
+about 60 drawing updates per second. At a fractional 33.33%, viewport drawing
+averaged 1.28 ms and also maintained about 60 updates per second. The fractional
+view has a different field of view, so its timing is not a matched-density
+comparison.
+
+Those pan runs used the later discarded SIMD experiment. Its changes affected
+only fractional row writes. The native-level comparison used the unchanged
+native path in both cases. The full-redraw comparison below used the retained
+renderer.
+
+A separate test repeatedly requested complete screen redraws for eight seconds
+using an isolated refresh-screen hotkey. It used the retained renderer from
+`5e98f414a61b`, moving traffic and the same 1920 x 1080 rail view. A scale of
+25.001% keeps the field of view within 0.004% of the native 25% view while
+exercising fractional rendering. The console confirmed the rendering path.
+Each row averages two runs of the console's most recent 64 viewport drawing
+measurements. The refresh test measures sustained redraw cost, not a flight or
+zoom animation's frame cadence.
+
+| Scale and setting | Viewport drawing (ms) |
+| --- | ---: |
+| Native 25%, smooth zoom disabled | 19.70 |
+| Native 25%, smooth zoom enabled | 18.83 |
+| Fractional 25.001%, smooth zoom enabled | 33.37 |
+
+There is no measured native-level regression in these runs. The fractional
+redraw still costs about 13.7 ms more than the disabled baseline, roughly 69%.
+The previously measured 6-8% optimization does not establish native parity.
+Further fractional redraw optimization remains pending. No additional clips
+were recorded.
+
+A later experiment replaced scalar alpha checks with vector checks and loaded
+contiguous groups of four samples together. Repeated zoom-out measurements did
+not improve, so that experiment was removed.
+
+All eight platform build jobs and Doxygen checks passed for `5e98f414a61b`.
+All four published platform manifests identify that revision with an unmodified
+source tree. Its CodeQL scan was still running at this checkpoint, with no new
+alerts reported so far.
