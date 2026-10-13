@@ -128,6 +128,7 @@ TEST_CASE("Binary viewport sampling agrees with floating-point centre coordinate
 	const double displacement = GENERATE(0.0, -1e-9, 1e-9, -0.25, 0.125,
 			-1.0 / (1U << 30), 1.0 / (1U << 30), -1.0 / (1U << 29), 1.0 / (1U << 29));
 	const int clip_left = GENERATE(0, 1, 3);
+	const bool clipped = GENERATE(false, true);
 	SmoothZoomTestBlitter blitter;
 	std::array<SmoothZoomTestBlitter::Pixel, 65 * 33> source;
 	for (size_t i = 0; i < source.size(); ++i) {
@@ -139,12 +140,12 @@ TEST_CASE("Binary viewport sampling agrees with floating-point centre coordinate
 	actual.fill(background);
 	expected.fill(background);
 	Blitter::ScaledBlitterParams bp{source.data(), nullptr, 65, 33, -step * 0.5 + displacement,
-			0.25, step, width, height, actual.data(), pitch};
+			-step * 0.5 + displacement, step, width, height, actual.data(), pitch};
 	bp.nearest = true;
-	bp.clip_left = clip_left;
-	bp.clip_top = 2;
-	bp.clip_right = 3;
-	bp.clip_bottom = 1;
+	bp.clip_left = clipped ? clip_left : 0;
+	bp.clip_top = clipped ? 2 : 0;
+	bp.clip_right = clipped ? 3 : 0;
+	bp.clip_bottom = clipped ? 1 : 0;
 	REQUIRE(blitter.DrawScaled(&bp, BlitterMode::Normal));
 	const auto centre = [](double value) {
 		const double boundary = std::floor(value * 32 + 0.5) / 32;
@@ -154,7 +155,7 @@ TEST_CASE("Binary viewport sampling agrees with floating-point centre coordinate
 		for (int x = 0; x < width; ++x) {
 			const double sx = centre(bp.src_x + (x + 0.5) * step);
 			const double sy = centre(bp.src_y + (y + 0.5) * step);
-			if (sx < clip_left || sx >= 62 || sy < 2 || sy >= 32) continue;
+			if (sx < bp.clip_left || sx >= 65 - bp.clip_right || sy < bp.clip_top || sy >= 33 - bp.clip_bottom) continue;
 			const auto &pixel = source[static_cast<int>(std::floor(sy)) * 65 + static_cast<int>(std::floor(sx))];
 			expected[y * pitch + x] = Colour(pixel.r, pixel.g, pixel.b);
 		}

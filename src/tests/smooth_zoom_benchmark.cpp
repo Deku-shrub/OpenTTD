@@ -12,6 +12,7 @@
 #include "../blitter/32bpp_optimized.hpp"
 #include "../blitter/32bpp_anim.hpp"
 #include "../blitter/32bpp_sse2.hpp"
+#include "../blitter/32bpp_anim_sse4.hpp"
 #include "../core/backup_type.hpp"
 #include "../settings_type.h"
 #include "../spritecache_type.h"
@@ -53,6 +54,9 @@ TEST_CASE("Measure integer and fractional production blitter throughput", "[.][s
 	blitters.push_back(std::make_unique<Blitter_32bppAnim>());
 #ifdef WITH_SSE
 	blitters.push_back(std::make_unique<Blitter_32bppSSE2>());
+	if (HasCPUIDFlag(1, 2, 19)) {
+		blitters.push_back(std::unique_ptr<Blitter>{static_cast<Blitter_32bppSSE2_Anim *>(new Blitter_32bppSSE4_Anim())});
+	}
 #endif
 	std::cout << "blitter,source,method,step,draws,us_per_draw,us_per_destination_megapixel,checksum\n";
 	for (auto &blitter : blitters) {
@@ -82,9 +86,13 @@ TEST_CASE("Measure integer and fractional production blitter throughput", "[.][s
 			SmoothZoomBenchmarkAllocator allocator;
 			const Sprite *sprite = blitter->Encode(SpriteType::Normal, sprites, allocator);
 			for (ZoomLevel zoom : {ZoomLevel::Normal, ZoomLevel::Out4x}) {
-				for (int sampler : {0, 1, 2}) {
+				for (int sampler : {0, 1, 2, 3, 4, 5, 6}) {
 					const bool fractional = sampler != 0;
-					const double step = fractional ? (zoom == ZoomLevel::Normal ? 4.0 / 1.3 : 20.0) : ScaleByZoom(1, zoom);
+					const double native_step = ScaleByZoom(1, zoom);
+					const std::array steps{native_step, zoom == ZoomLevel::Normal ? 4.0 / 1.3 : 20.0,
+							zoom == ZoomLevel::Normal ? 4.0 / 1.3 : 20.0, native_step * .99996, native_step * 1.00004,
+							native_step * .75, native_step * 1.5};
+					const double step = steps[sampler];
 					const int width = static_cast<int>(std::ceil(256 / step));
 					const int height = static_cast<int>(std::ceil(128 / step));
 					std::vector<Colour> output((width + 1) * height, Colour(10, 20, 30));
@@ -92,7 +100,7 @@ TEST_CASE("Measure integer and fractional production blitter throughput", "[.][s
 							0, 0, output.data(), width + 1};
 					Blitter::ScaledBlitterParams scaled{sprite->data, nullptr, sprite->width, sprite->height,
 							0.35, 0.2, step, width, height, output.data(), width + 1};
-					scaled.nearest = sampler == 2;
+					scaled.nearest = sampler >= 2;
 					/* Warm up scratch buffers before starting the clock. */
 					if (fractional) REQUIRE(blitter->DrawScaled(&scaled, BlitterMode::Normal));
 					else blitter->Draw(&integer, BlitterMode::Normal, zoom);
@@ -112,7 +120,7 @@ TEST_CASE("Measure integer and fractional production blitter throughput", "[.][s
 					const double elapsed_us = std::chrono::duration<double, std::micro>(finish - start).count();
 					const double us_per_draw = elapsed_us / draws;
 					std::cout << fmt::format("{},{},{},{:.6f},{},{:.3f},{:.3f},{}\n", blitter->GetName(),
-							terrain ? "terrain-alpha" : "opaque-palette", sampler == 2 ? "motion" : fractional ? "fractional" : "integer", step, draws,
+							terrain ? "terrain-alpha" : "opaque-palette", sampler >= 2 ? "nearest" : fractional ? "area" : "integer", step, draws,
 							us_per_draw, us_per_draw * 1000000 / (width * height), checksum);
 					CHECK(draws > 0);
 					CHECK(checksum > 0);

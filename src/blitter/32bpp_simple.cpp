@@ -189,6 +189,13 @@ static double SnapScaledSpriteCoordinate(double value)
 	return std::abs(value - boundary) <= 1e-9 ? boundary : value;
 }
 
+/** Whole sprites only need snapping at integer pixel edges. */
+static int ScaledSpritePixel(double value)
+{
+	const double lower = std::floor(value);
+	return static_cast<int>(lower) + (std::abs(value - (lower + 1)) <= 1e-9);
+}
+
 uint32_t Blitter_32bppSimple::DrawScaledNearestRow(Colour *destination, const Pixel *source, const int *columns,
 		int first, int last, BlitterMode mode, const uint8_t *remap)
 {
@@ -254,11 +261,14 @@ bool Blitter_32bppSimple::DrawScaledNearestRows(ScaledBlitterParams *bp, int wid
 	int last_column = 0;
 	const double origin_x = bp->src_x / factor;
 	const double origin_y = bp->src_y / factor;
+	const bool clipped_x = bp->clip_left != 0 || bp->clip_right != 0;
+	const bool clipped_y = bp->clip_top != 0 || bp->clip_bottom != 0;
 	for (int x = 0; x < destination_width; x++) {
-		const double centre = SnapScaledSpriteCoordinate(origin_x + (x + 0.5) * step);
-		const int cx = static_cast<int>(std::floor(centre));
+		const double value = origin_x + (x + 0.5) * step;
+		const double centre = clipped_x ? SnapScaledSpriteCoordinate(value) : value;
+		const int cx = clipped_x ? static_cast<int>(std::floor(centre)) : ScaledSpritePixel(value);
 		this->scaled_nearest_columns[x] = -1;
-		if (cx < 0 || cx >= width || centre < clip_left || centre >= clip_right) continue;
+		if (cx < 0 || cx >= width || (clipped_x && (centre < clip_left || centre >= clip_right))) continue;
 		this->scaled_nearest_columns[x] = cx;
 		first_column = std::min(first_column, x);
 		last_column = x + 1;
@@ -268,9 +278,10 @@ bool Blitter_32bppSimple::DrawScaledNearestRows(ScaledBlitterParams *bp, int wid
 	Colour *destination = static_cast<Colour *>(bp->dst);
 	uint32_t palette_mask = 0;
 	for (int y = 0; y < destination_height; y++, destination += destination_pitch) {
-		const double centre = SnapScaledSpriteCoordinate(origin_y + (y + 0.5) * step);
-		const int cy = static_cast<int>(std::floor(centre));
-		if (cy < 0 || cy >= height || centre < clip_top || centre >= clip_bottom) continue;
+		const double value = origin_y + (y + 0.5) * step;
+		const double centre = clipped_y ? SnapScaledSpriteCoordinate(value) : value;
+		const int cy = clipped_y ? static_cast<int>(std::floor(centre)) : ScaledSpritePixel(value);
+		if (cy < 0 || cy >= height || (clipped_y && (centre < clip_top || centre >= clip_bottom))) continue;
 		palette_mask |= draw_row(context, cy, destination, columns, first_column, last_column);
 	}
 	bp->palette_mask = palette_mask;
