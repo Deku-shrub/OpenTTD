@@ -87,7 +87,7 @@ growth after repeated warm cycles.
 
 ## Pending coverage
 
-- Foreground repetitions of the dense baseline, flights and repeated-use runs.
+- Longer foreground repetitions and a foreground repeated-use run. The initial interaction and dense-baseline runs completed.
 - Repeat the slower OpenGL fractional-redraw case and profile its rendering cost.
 - Investigate continued small private-memory growth in the paused repeated-use run.
 - Review long frame intervals and arrival stability in the representative

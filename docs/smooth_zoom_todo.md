@@ -18,7 +18,7 @@ The repeatable runs are described in [the performance protocol](validation/perfo
 - [x] Add whole-sprite sampling fast paths and independent pixel-boundary checks.
 - [x] Run 32-cycle moving and paused zoom checks, vehicle following and label, animation, resolution and OpenGL diagnostics.
 - [ ] Reduce the remaining fractional full-redraw overhead, including the slower OpenGL path.
-- [ ] Complete unlocked foreground interaction and dense-view repetitions.
+- [x] Complete unlocked foreground interaction and two dense-view repetitions. All nine interaction and sixteen dense-view checks passed.
 - [ ] Investigate the small continued private-memory growth in the paused repeat-zoom run.
 
 ## Current coverage follow-up

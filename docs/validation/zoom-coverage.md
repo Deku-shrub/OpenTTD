@@ -361,4 +361,10 @@ averaged 32.7 ms, with a 50 ms maximum. The short flight arrived in 347 ms with
 with 74 frames and a 58 ms maximum interval. Pan and wheel input both cancelled
 the long flight. Disabled navigation produced no flight traces. Passing these
 behaviour checks does not mean dense zoom or flight cadence is satisfactory.
-Foreground dense-view repetitions remain in progress.
+Two foreground dense-view repetitions completed all 16 cases. Median full
+redraw durations were 27.36 ms at 25% with smooth zoom Off, 28.43 ms at 25%
+with it On, 44.16 ms at 25.001%, and 37.31 ms at 33.333%. Continuous-pan samples
+were 0.56 ms, 0.53 ms, 1.58 ms and 0.84 ms respectively. All cases retained
+foreground focus. These checks confirm that the fractional redraw overhead
+also appears in foreground runs. The small native timing difference needs
+longer matched repetitions before attributing it to the feature.
