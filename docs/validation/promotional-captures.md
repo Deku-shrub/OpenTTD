@@ -161,3 +161,30 @@ continuous gesture. Matching feature-disabled takes are also still required for
 the new foreground set. Performance work now takes priority. See the
 [dense-view follow-up](zoom-coverage.md#dense-view-follow-up-12-october-2026) for
 the uncaptured comparison and remaining frame-rate limit.
+
+
+## Recreated set, 13 October 2026
+
+Six classic/enhanced pairs and four extra scenes were recreated in local output
+at `build-smoothzoom/promo/retakes-20261013T233238`. Its `README.md` links all
+16 videos and their camera traces. The original sets remain unchanged.
+
+Enhanced wheel inputs overlap at 120 ms spacing. Each zoom direction produces
+one continuous animation rather than repeated completed notch animations.
+Classic pairs use matching magnification endpoints with smooth wheel zoom and
+flights disabled in the same fork executable. These compare controls, rather
+than stock upstream rendering.
+
+The executable SHA256 is
+`b8efefc46667cc231d3c49328e287963cfbec2210c59587ba0e1ade3db94ee3b`.
+All clips are full HD, 30 fps, without audio, interpolation or playback speed
+changes. Desktop duplication produced no frames in this session, so the set
+uses owned-window GDI capture and AMD encoding. Capture overhead remains part
+of the recorded motion. Invalid setup and encoder attempts are excluded.
+
+All 16 videos passed full decoding and SHA256 checks. Arrival traces confirmed
+completed town and vehicle flights, a 50% fitted-city arrival and interruption
+by manual takeover. Dense rail zoom-out still averaged 48.4 ms between camera
+updates, with a 78 ms maximum. Oil/coast zoom-out averaged 26.7 ms, with a 36 ms
+maximum. These are recorded camera intervals, not guarantees of presentation
+cadence. Visual review remains pending before selecting promotional excerpts.

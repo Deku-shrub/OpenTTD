@@ -9,8 +9,10 @@ Current cross-renderer and graphics-set results are in
 retain historical checkpoints. Later checked items supersede earlier pending
 entries for the same behaviour.
 
-Performance and QA are the current priority. Demo capture is paused.
+Performance and QA remain active. Demo capture resumed on request on 13 October.
 The repeatable runs are described in [the performance protocol](validation/performance-qa.md).
+
+- [x] Recreate all 16 classic/enhanced comparison and mixed-scene clips with overlapping zoom inputs. Verify full decoding, hashes and camera traces. Visual selection remains pending. See [capture notes](validation/promotional-captures.md#recreated-set-13-october-2026).
 
 ## Current performance follow-up
 
