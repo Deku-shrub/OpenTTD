@@ -305,5 +305,60 @@ not improve, so that experiment was removed.
 
 All eight platform build jobs and Doxygen checks passed for `5e98f414a61b`.
 All four published platform manifests identify that revision with an unmodified
-source tree. Its CodeQL scan was still running at this checkpoint, with no new
-alerts reported so far.
+source tree. Its CodeQL scan passed with no new alerts relative to the preceding
+fork scan.
+
+
+## Uncovered performance checks, 13 October 2026
+
+The whole-sprite sampling shortcut passed 150 unit cases and 86,597 smooth-zoom
+assertions. Boundary tests compare its pixel selection with the previous
+sampling rules, including negative origins and clipped axes.
+
+Matched 1920x1080 background CPU measurements used the downloaded OpenTTD 13.4
+network, moving traffic and SSE4 animation. Both builds had the same diagnostics.
+F6 sampled timings with the console closed. Three eight-second repetitions gave
+these median viewport drawing durations for forced full redraws:
+
+| Scale and setting | Previous renderer | Candidate |
+| --- | --- | --- |
+| 25%, smooth zoom Off | 27.13 ms | 27.80 ms |
+| 25%, smooth zoom On | 27.19 ms | 26.95 ms |
+| 25.001%, smooth zoom On | 44.64 ms | 42.65 ms |
+| 33.333%, smooth zoom On | 38.84 ms | 37.35 ms |
+
+Fractional redraw cost fell about 4-5%. Native results varied between runs.
+The near-native fractional case still cost about 53% more than the candidate's
+fixed-zoom control. Performance parity remains unresolved. These uncovered
+measurements supersede earlier console-obscured comparisons for this protocol.
+Background CPU measurements do not establish foreground presentation smoothness.
+
+A 32-cycle moving-traffic run measured fractional pan at 0.96 ms before and
+0.95 ms after repeated zooming. Private bytes rose from 279.85 MiB to 294.24 MiB
+and stayed at that value for the last six cycles. A paused counterpart rose
+from 269.62 MiB to 271.08 MiB, with small increases still present near its end.
+Neither run proves that longer sessions have no memory growth. The paused
+viewport's recent CPU samples were zero at rest and are not a useful pan-cost
+comparison.
+
+Vehicle-following checks passed at 100%, 130% and 33.333%, with vehicle 1
+reported as the followed vehicle. Separate single-run diagnostics covered
+hidden labels, disabled palette animation, 1280x720 and OpenGL. Hidden labels
+reduced fractional redraw cost. OpenGL's fractional redraw samples were much
+higher than its native samples, reaching 93.15 ms near 25%. Repeat and profile
+that path before treating OpenGL as performance-ready. Single-run differences
+are diagnostic leads, not measured optimization gains.
+
+Raw logs and JSON remain in ignored local output under
+`build-smoothzoom/performance`. No promotional recordings were made for these
+runs.
+
+The unlocked foreground interaction run completed all nine checks with the
+owned game in front. Slow zoom averaged 38.9 ms between camera updates, with
+a 60 ms maximum. Fast zoom averaged 43.4 ms, with a 75 ms maximum. Reversal
+averaged 32.7 ms, with a 50 ms maximum. The short flight arrived in 347 ms with
+18 frames and a 23 ms maximum interval. The long flight arrived in 2087 ms
+with 74 frames and a 58 ms maximum interval. Pan and wheel input both cancelled
+the long flight. Disabled navigation produced no flight traces. Passing these
+behaviour checks does not mean dense zoom or flight cadence is satisfactory.
+Foreground dense-view repetitions remain in progress.

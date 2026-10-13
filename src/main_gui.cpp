@@ -22,6 +22,7 @@
 #include "transparency.h"
 #include "zoom_func.h"
 #include "gfx_type.h"
+#include "framerate_type.h"
 #include "blitter/factory.hpp"
 #include "core/smooth_zoom_motion.hpp"
 #include "core/viewport_flight.hpp"
@@ -492,6 +493,7 @@ enum GlobalHotKeys : int32_t {
 	GHK_DELETE_NONVITAL_WINDOWS,
 	GHK_DELETE_ALL_MESSAGES,
 	GHK_REFRESH_SCREEN,
+	GHK_PRINT_FRAMERATE,
 	GHK_CRASH,
 	GHK_MONEY,
 	GHK_UPDATE_COORDS,
@@ -637,6 +639,7 @@ struct MainWindow : Window
 			case GHK_DELETE_NONVITAL_WINDOWS: CloseAllNonVitalWindows(); break;
 			case GHK_DELETE_ALL_MESSAGES: DeleteAllMessages(); break;
 			case GHK_REFRESH_SCREEN: MarkWholeScreenDirty(); break;
+			case GHK_PRINT_FRAMERATE: ConPrintFramerate(); break;
 
 			case GHK_CRASH: // Crash the game
 				*(volatile uint8_t *)nullptr = 0;
@@ -796,6 +799,7 @@ struct MainWindow : Window
 		Hotkey(WKC_DELETE | WKC_SHIFT, "delete_all_windows", GHK_DELETE_NONVITAL_WINDOWS),
 		Hotkey(WKC_DELETE | WKC_CTRL, "delete_all_messages", GHK_DELETE_ALL_MESSAGES),
 		Hotkey('R' | WKC_CTRL, "refresh_screen", GHK_REFRESH_SCREEN),
+		Hotkey(0, "print_framerate", GHK_PRINT_FRAMERATE),
 #if defined(_DEBUG)
 		Hotkey('0' | WKC_ALT, "crash_game", GHK_CRASH),
 		Hotkey('1' | WKC_ALT, "money", GHK_MONEY),

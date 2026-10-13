@@ -42,6 +42,7 @@
 #include "newgrf.h"
 #include "newgrf_profiling.h"
 #include "console_func.h"
+#include "framerate_type.h"
 #include "engine_base.h"
 #include "road.h"
 #include "rail.h"
@@ -378,10 +379,13 @@ static bool ConSmoothZoom(std::span<std::string_view> argv)
 		if (w == nullptr || w->viewport == nullptr) {
 			IConsolePrint(CC_ERROR, "There is no main viewport to zoom.");
 		} else {
-			const Viewport &vp = *w->viewport;
+			const ViewportData &vp = *w->viewport;
 			const double step = vp.zoom_step > 0 ? vp.zoom_step : ScaleByZoom(1, vp.zoom);
-			IConsolePrint(CC_DEFAULT, "Zoom {:.4f}x; nearest traditional {:.4f}x; {} rendering.",
+			IConsolePrint(CC_DEFAULT, "Zoom {:.4f}x, nearest traditional {:.4f}x, {} rendering.",
 				ZOOM_BASE / step, static_cast<double>(ZOOM_BASE) / ScaleByZoom(1, vp.zoom), vp.zoom_step > 0 ? "fractional" : "integer");
+			IConsolePrint(CC_DEFAULT, "Camera centre {},{}. Following vehicle {}.",
+				vp.scrollpos_x + vp.virtual_width / 2, vp.scrollpos_y + vp.virtual_height / 2,
+				vp.follow_vehicle == VehicleID::Invalid() ? "none" : fmt::format("{}", vp.follow_vehicle.base()));
 		}
 		return true;
 	}
@@ -1342,7 +1346,6 @@ static bool ConReturn(std::span<std::string_view> argv)
  ******************************/
 extern bool CloseConsoleLogIfActive();
 extern std::span<const GRFFile> GetAllGRFFiles();
-extern void ConPrintFramerate(); // framerate_gui.cpp
 extern void ShowFramerateWindow();
 
 /** Enable or disable logging of console output. @copydoc IConsoleCmdProc */
@@ -2813,6 +2816,18 @@ static void IConsoleDebugLibRegister()
 }
 #endif
 
+/** Close before scripted navigation, without a synthetic key cancelling its flight. @copydoc IConsoleCmdProc */
+static bool ConHideConsole(std::span<std::string_view> argv)
+{
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "Close the console. Usage: 'hide_console'.");
+		return true;
+	}
+	if (argv.size() != 1) return false;
+	IConsoleClose();
+	return true;
+}
+
 /** Show the current framerate statistics. @copydoc IConsoleCmdProc */
 static bool ConFramerate(std::span<std::string_view> argv)
 {
@@ -3143,6 +3158,7 @@ void IConsoleStdLibRegister()
 	IConsoleDebugLibRegister();
 #endif
 	IConsole::CmdRegister("fps",                     ConFramerate);
+	IConsole::CmdRegister("hide_console",            ConHideConsole);
 	IConsole::CmdRegister("fps_wnd",                 ConFramerateWindow);
 
 	/* NewGRF development stuff */

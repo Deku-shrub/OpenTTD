@@ -3,11 +3,23 @@
 [Fork homepage](../README.md) | [User guide](smooth_zoom_readme.md) |
 [CI requirements and results](validation/upstream-readiness.md)
 
-Updated 12 October 2026. Checkpoint and regular commits are now authorized.
+Updated 13 October 2026. Checkpoint and regular commits are now authorized.
 Current cross-renderer and graphics-set results are in
 [the coverage notes](validation/zoom-coverage.md). The dated sections below
 retain historical checkpoints. Later checked items supersede earlier pending
 entries for the same behaviour.
+
+Performance and QA are the current priority. Demo capture is paused.
+The repeatable runs are described in [the performance protocol](validation/performance-qa.md).
+
+## Current performance follow-up
+
+- [x] Compare uncovered dense redraws with fixed-zoom controls and the preceding renderer.
+- [x] Add whole-sprite sampling fast paths and independent pixel-boundary checks.
+- [x] Run 32-cycle moving and paused zoom checks, vehicle following and label, animation, resolution and OpenGL diagnostics.
+- [ ] Reduce the remaining fractional full-redraw overhead, including the slower OpenGL path.
+- [ ] Complete unlocked foreground interaction and dense-view repetitions.
+- [ ] Investigate the small continued private-memory growth in the paused repeat-zoom run.
 
 ## Current coverage follow-up
 
@@ -29,7 +41,7 @@ entries for the same behaviour.
 - [x] Record ten fresh full-HD enhanced QA takes with desktop duplication. Keep them separate from the original footage, with source identities, input events, camera traces and hashes. Visual approval and final promotional selection remain pending.
 - [x] Avoid background reads for opaque fractional pixels and remove temporary SSE sample-array storage. Repeated dense-view averages improved by 6-8%, with unchanged cache limits and expanded white-colour/remapping coverage.
 - [x] Verify all eight platform build jobs and Doxygen checks on `5e98f414a61b`. All four published platform manifests identify the same clean source revision.
-- [ ] Finish the `5e98f414a61b` CodeQL review. The scan is still running. No new alerts have appeared so far.
+- [x] Finish the `5e98f414a61b` CodeQL review. The scan passed with no new alerts relative to the preceding fork scan.
 - [ ] Replace stepped capture gestures with overlapping continuous input and record matching feature-disabled comparisons after the dense-view performance work. Keep deliberate individual-notch demonstrations separate.
 
 - [x] Simplify camera state by removing unused movement-quality flags and sharing vehicle arrival fitting.

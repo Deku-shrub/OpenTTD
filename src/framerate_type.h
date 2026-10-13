@@ -119,6 +119,7 @@ public:
 };
 
 void ShowFramerateWindow();
+void ConPrintFramerate();
 void ProcessPendingPerformanceMeasurements();
 
 #endif /* FRAMERATE_TYPE_H */
