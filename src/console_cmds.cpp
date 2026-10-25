@@ -1346,7 +1346,6 @@ static bool ConReturn(std::span<std::string_view> argv)
  ******************************/
 extern bool CloseConsoleLogIfActive();
 extern std::span<const GRFFile> GetAllGRFFiles();
-extern void ShowFramerateWindow();
 
 /** Enable or disable logging of console output. @copydoc IConsoleCmdProc */
 static bool ConScript(std::span<std::string_view> argv)
