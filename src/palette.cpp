@@ -15,7 +15,6 @@
 #include "landscape_type.h"
 #include "palette_func.h"
 #include "settings_type.h"
-#include "core/smooth_zoom_palette.hpp"
 
 #include "table/palettes.h"
 

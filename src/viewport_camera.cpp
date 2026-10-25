@@ -10,15 +10,15 @@
 #include "stdafx.h"
 #include "viewport_func.h"
 #include "window_gui.h"
-#include "window_func.h"
 #include "settings_type.h"
-#include "gfx_type.h"
+#include "gfx_func.h"
 #include "zoom_func.h"
 #include "landscape.h"
 #include "vehicle_base.h"
 #include "openttd.h"
 #include "debug.h"
 #include "blitter/factory.hpp"
+#include "core/math_func.hpp"
 #include "core/smooth_zoom_motion.hpp"
 #include "core/viewport_flight.hpp"
 #include "linkgraph/linkgraph_gui.h"
@@ -87,14 +87,40 @@ void CancelViewportSmoothZoomAnimation(Window *w)
 static void UpdateViewportFlight(Window *w, uint delta_ms);
 
 /**
- * Track the exact vehicle after its flight has been created.
- * @param w Window with an active navigation flight.
- * @param vehicle Destination vehicle identifier.
+ * Check navigation policy before fitting a destination or creating a flight.
+ * @param w Destination window.
+ * @param target Category of the navigation action.
+ * @return True for a usable main viewport with enabled flight navigation.
  */
-void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle)
+bool CanStartViewportFlight(const Window *w, ViewportFlightTarget target)
 {
+	return w != nullptr && w->window_class == WindowClass::MainWindow && w->viewport != nullptr && w->viewport->width > 0 && w->viewport->height > 0 &&
+			_game_mode != GameMode::Menu && _settings_client.gui.smooth_scroll && IsViewportFlightEnabled(_settings_client.gui, target) &&
+			BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom();
+}
+
+/**
+ * Fit and track a vehicle without exposing animation state to GUI callers.
+ * @param vehicle Selected vehicle or consist part.
+ * @param w Destination window.
+ * @param target Category authorising the navigation.
+ * @return Whether the viewport destination changed.
+ */
+bool ScrollWindowToVehicle(const Vehicle &vehicle, Window *w, ViewportFlightTarget target)
+{
+	if (w == nullptr || w->viewport == nullptr) return false;
+	const Vehicle *front = vehicle.GetMovingFront();
+	double arrival_scale = 0;
+	if (CanStartViewportFlight(w, target)) {
+		const Viewport &vp = *w->viewport;
+		const auto [width, height] = GetNavigationVehicleExtent(front, ZOOM_BASE, INVALID_COORD);
+		arrival_scale = ZOOM_BASE / GetNavigationArrivalStep(width, height, vp.width, vp.height, ZOOM_BASE / 2.0,
+				ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
+	}
+	const bool changed = ScrollWindowTo(front->x_pos, front->y_pos, front->z_pos, w, false, arrival_scale, target);
 	auto it = _viewport_flights.find(w);
-	if (it != _viewport_flights.end()) it->second.vehicle = vehicle;
+	if (it != _viewport_flights.end()) it->second.vehicle = front->index;
+	return changed;
 }
 
 /**
@@ -107,10 +133,8 @@ void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle)
  */
 bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale, ViewportFlightTarget target)
 {
-	if (!_settings_client.gui.smooth_scroll || !IsViewportFlightEnabled(_settings_client.gui, target) || w == nullptr || w != GetMainWindow() || w->viewport == nullptr ||
-			_game_mode == GameMode::Menu || !BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) return false;
+	if (!CanStartViewportFlight(w, target)) return false;
 	ViewportData &vp = *w->viewport;
-	if (vp.width <= 0 || vp.height <= 0) return false;
 	const double min_step = ScaleByZoom(1, _settings_client.gui.zoom_min);
 	const double max_step = ScaleByZoom(1, _settings_client.gui.zoom_max);
 	const double start_step = vp.zoom_step > 0 ? vp.zoom_step : ScaleByZoom(1, vp.zoom);
@@ -152,8 +176,7 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 {
 	auto it = _viewport_flights.find(w);
 	if (it == _viewport_flights.end()) return;
-	if (w->viewport == nullptr || !_settings_client.gui.smooth_scroll || !IsViewportFlightEnabled(_settings_client.gui, it->second.target) ||
-			!BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() || w->viewport->follow_vehicle != VehicleID::Invalid()) {
+	if (!CanStartViewportFlight(w, it->second.target) || w->viewport->follow_vehicle != VehicleID::Invalid()) {
 		CancelViewportFlight(w);
 		return;
 	}

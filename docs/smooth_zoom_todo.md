@@ -32,6 +32,9 @@ Details and CI links are in [the upstream readiness notes](validation/upstream-r
 - [x] Moved per-window wheel and flight animation into `src/viewport_camera.cpp`.
 - [x] Staged the shared NoAI base from `ZoomStatic/main.nut` instead of keeping three duplicate files.
 - [x] Documented the engine-only diff separately from fork packaging, media and validation tooling.
+- [x] Kept vehicle fitting and tracking inside the camera module, removing the public state setter.
+- [x] Shared flight eligibility between destination fitting, flight creation and active-flight validation.
+- [x] Moved graphics invalidation declarations out of the numerical palette tracker.
 
 ## Current performance follow-up
 

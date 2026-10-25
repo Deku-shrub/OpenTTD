@@ -39,9 +39,8 @@ bool TrySmoothZoomWindow(bool in, Window *w, bool to_cursor, uint notches = 1);
 void CancelViewportSmoothZoomAnimation(Window *w);
 void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms);
 void CancelViewportFlight(Window *w);
-void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle);
+bool CanStartViewportFlight(const Window *w, ViewportFlightTarget target);
 bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale = 0, ViewportFlightTarget target = ViewportFlightTarget::Other);
-double GetVehicleNavigationArrivalScale(const Vehicle *front, const Viewport &vp);
 void ConstrainAllViewportsZoom();
 Point GetTileZoomCenterWindow(bool in, Window * w);
 void FixTitleGameZoom(int zoom_adjust = 0);
@@ -84,6 +83,7 @@ bool SetViewportSmoothZoom(Window *w, float scale, bool cancel_animation = true)
 
 bool ScrollWindowToTile(TileIndex tile, Window *w, bool instant = false);
 bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant = false, double arrival_scale = 0, ViewportFlightTarget target = ViewportFlightTarget::Other);
+bool ScrollWindowToVehicle(const Vehicle &vehicle, Window *w, ViewportFlightTarget target);
 
 void RebuildViewportOverlay(Window *w);
 

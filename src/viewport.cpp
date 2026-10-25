@@ -2846,19 +2846,6 @@ void RebuildViewportOverlay(Window *w)
 }
 
 /**
- * Fit a complete vehicle or consist using the client's zoom bounds.
- * @param front Front vehicle of the selected consist.
- * @param vp Destination viewport supplying the screen dimensions.
- * @return Arrival magnification that fits the vehicle extent.
- */
-double GetVehicleNavigationArrivalScale(const Vehicle *front, const Viewport &vp)
-{
-	const auto [width, height] = GetNavigationVehicleExtent(front, ZOOM_BASE, INVALID_COORD);
-	return ZOOM_BASE / GetNavigationArrivalStep(width, height, vp.width, vp.height, ZOOM_BASE / 2.0,
-			ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
-}
-
-/**
  * Fit a destination once when navigation starts; no per-frame scans or image caches.
  * @param x World x coordinate, adjusted to the fitted target centre.
  * @param y World y coordinate, adjusted to the fitted target centre.
@@ -2959,8 +2946,7 @@ bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival
 		}
 	}
 
-	if (!instant && arrival_scale == 0 && w == GetMainWindow() && _settings_client.gui.smooth_scroll &&
-			IsViewportFlightEnabled(_settings_client.gui, target) && BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
+	if (!instant && arrival_scale == 0 && CanStartViewportFlight(w, target)) {
 		arrival_scale = GetDestinationArrivalScale(x, y, z, *w->viewport, target);
 	}
 	Point pt = MapXYZToViewport(*w->viewport, x, y, z);

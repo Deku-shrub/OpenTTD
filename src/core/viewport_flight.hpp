@@ -149,7 +149,11 @@ public:
 					for (int i = 0; i < 40; ++i) {
 						const double middle = (low + high) / 2;
 						this->MakeCurve(middle);
-						if (this->peak_step > cap) high = middle; else low = middle;
+						if (this->peak_step > cap) {
+							high = middle;
+						} else {
+							low = middle;
+						}
 					}
 					this->MakeCurve(low);
 				}

@@ -203,6 +203,7 @@ void LoadStringWidthTable(FontSizes fontsizes = FONTSIZES_REQUIRED);
 void DrawDirtyBlocks();
 void AddDirtyBlock(int left, int top, int right, int bottom);
 void MarkWholeScreenDirty();
+void InvalidateSmoothZoomPalette(uint32_t changed);
 
 void CheckBlitter();
 

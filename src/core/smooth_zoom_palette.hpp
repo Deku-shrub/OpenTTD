@@ -144,10 +144,4 @@ public:
 	}
 };
 
-/**
- * Mark fractional pixels dirty after changes to the animation palette.
- * @param changed Bit mask of animated palette entries that changed.
- */
-void InvalidateSmoothZoomPalette(uint32_t changed);
-
 #endif /* SMOOTH_ZOOM_PALETTE_HPP */

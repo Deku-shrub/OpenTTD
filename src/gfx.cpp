@@ -85,6 +85,10 @@ static SmoothZoomPaletteTracker _smooth_zoom_palette; ///< Animated-palette depe
 static_assert(DIRTY_BLOCK_WIDTH == SmoothZoomPaletteTracker::BLOCK_WIDTH);
 static_assert(DIRTY_BLOCK_HEIGHT == SmoothZoomPaletteTracker::BLOCK_HEIGHT);
 
+/**
+ * Mark fractional pixels dirty after changes to the animation palette.
+ * @param changed Bit mask of animated palette entries that changed.
+ */
 void InvalidateSmoothZoomPalette(uint32_t changed)
 {
 	_smooth_zoom_palette.ForEachChanged(changed, [](int left, int top, int right, int bottom) {

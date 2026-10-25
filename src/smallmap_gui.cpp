@@ -2191,13 +2191,7 @@ bool ScrollMainWindowTo(int x, int y, int z, ViewportFlightTarget target, bool i
  */
 bool ScrollMainWindowToVehicle(const Vehicle &vehicle, ViewportFlightTarget target)
 {
-	Window *w = GetMainWindow();
-	if (w == nullptr || w->viewport == nullptr) return false;
-	const Vehicle *front = vehicle.GetMovingFront();
-	const double arrival_scale = IsViewportFlightEnabled(_settings_client.gui, target) ? GetVehicleNavigationArrivalScale(front, *w->viewport) : 0;
-	const bool changed = ScrollWindowTo(front->x_pos, front->y_pos, front->z_pos, w, false, arrival_scale, target);
-	SetViewportFlightVehicleTarget(w, front->index);
-	return CentreSmallMapAfterScroll(changed);
+	return CentreSmallMapAfterScroll(ScrollWindowToVehicle(vehicle, GetMainWindow(), target));
 }
 
 /**
