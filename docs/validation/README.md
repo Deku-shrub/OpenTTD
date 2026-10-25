@@ -3,6 +3,9 @@
 [Fork homepage](../../README.md) | [User guide](../smooth_zoom_readme.md) |
 [Graphics coverage](zoom-coverage.md) | [CI requirements and results](upstream-readiness.md)
 
+See [engine review scope](review-scope.md) to compare the camera code separately
+from fork packaging, media and validation tooling.
+
 ## Quick navigation demo
 
 Run `launch-prototype.ps1` with a compiled Windows game and installed OpenGFX
@@ -17,10 +20,15 @@ The launcher enables the main flight switch and smooth zoom in a separate
 world. The NoAI scripts below are copied into the isolated runtime directory so
 loading does not require rebuilding the fixture. Keep the terminal open.
 
+To stage the scripts without launching the game, run
+`./docs/validation/stage-fixtures.ps1 -Destination <test-profile>/ai`.
+The fixtures share `ZoomStatic/main.nut`. The staging script copies it as
+`base.nut` into each dependent AI's directory for NoAI's local `require()` lookup.
+
 ## Rebuilding the fixtures
 
 `ZoomStatic` is a NoAI fixture for a disposable test game. It builds infrastructure
-without constructing vehicles. Copy its directory into that game's `ai` search
+without constructing vehicles. Stage the scripts into that game's `ai` search
 directory, then run `rescan_ai`, `debug_level script=5`, and `start_ai ZoomStatic`
 in the console. Unpause while it builds. Pause before comparing rendering frames.
 Use a temperate 256×256 map with enough flat land and some hills and water.

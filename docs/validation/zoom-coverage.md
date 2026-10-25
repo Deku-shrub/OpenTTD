@@ -368,3 +368,20 @@ were 0.56 ms, 0.53 ms, 1.58 ms and 0.84 ms respectively. All cases retained
 foreground focus. These checks confirm that the fractional redraw overhead
 also appears in foreground runs. The small native timing difference needs
 longer matched repetitions before attributing it to the feature.
+
+## Maintenance refactor checks, 25 October 2026
+
+The extracted camera module and shared vehicle navigation helper passed the
+Release build and all 150 CTest tests. The full fork diff passed the official
+OpenTTD diff-style checker and the source-file description check.
+
+An isolated Windows game on the downloaded OpenTTD 13.4 network passed nine
+zoom, flight, opt-out and takeover checks. Five further checks confirmed one
+vehicle-category flight per enabled centre click, no flight with the vehicle
+category disabled, and vehicle following at 100%, 130% and 33.33%. These were
+background behaviour checks, not foreground smoothness measurements.
+
+The fixture staging script produced all four NoAI directories. Each dependent
+AI's generated `base.nut` matched `ZoomStatic/main.nut` byte for byte. Local logs
+remain under ignored `build-smoothzoom/qa-refactor-20261025` and
+`build-smoothzoom/qa-refactor-vehicles-20261025`.

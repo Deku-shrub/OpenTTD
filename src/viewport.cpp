@@ -1418,6 +1418,16 @@ static void ViewportAddLandscape()
 }
 
 /**
+ * Keep label drawing, culling and hit testing on the same renderer policy.
+ * @param step Virtual pixels per screen pixel.
+ * @return Label magnification, or one for an unsupported renderer.
+ */
+static double GetViewportLabelScale(double step)
+{
+	return BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+}
+
+/**
  * Add a string to draw in the current viewport.
  * @param dpi current viewport area
  * @param sign sign position and dimension
@@ -1434,7 +1444,7 @@ std::string *ViewportAddString(const DrawPixelInfo *dpi, const ViewportSign *sig
 
 	bool small = flags.Test(ViewportStringFlag::Small);
 	const double step = dpi->zoom_step > 0 ? dpi->zoom_step : ScaleByZoom(1, dpi->zoom);
-	const double label_scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+	const double label_scale = GetViewportLabelScale(step);
 	const int sign_height = static_cast<int>(std::ceil(GetViewportLabelExtent(WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom, label_scale) * step));
 	const double sign_half_width = GetViewportLabelExtent(small ? sign->width_small : sign->width_normal, label_scale) / 2 * step;
 
@@ -1460,7 +1470,7 @@ static Rect ExpandRectWithViewportSignMargins(Rect r, ZoomLevel zoom, double zoo
 	const int fh = std::max(GetCharacterHeight(FontSize::Normal), GetCharacterHeight(FontSize::Small));
 	const int max_tw = _viewport_sign_maxwidth / 2 + 1;
 	const double step = zoom_step > 0 ? zoom_step : ScaleByZoom(1, zoom);
-	const double label_scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+	const double label_scale = GetViewportLabelScale(step);
 	const int expand_y = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.top + fh + WidgetDimensions::scaled.fullbevel.bottom) * step * label_scale)) + static_cast<int>(std::ceil(step));
 	const int expand_x = static_cast<int>(std::ceil((WidgetDimensions::scaled.fullbevel.left + max_tw + WidgetDimensions::scaled.fullbevel.right) * step * label_scale)) + static_cast<int>(std::ceil(step));
 
@@ -1691,7 +1701,7 @@ void ViewportSign::MarkDirty(ZoomLevel maxzoom) const
 			Rect zl = zoomlevels[vp.zoom];
 			if (vp.zoom_step > 0 || BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
 				const double step = vp.zoom_step > 0 ? vp.zoom_step : ScaleByZoom(1, vp.zoom);
-				const double scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+				const double scale = GetViewportLabelScale(step);
 				const int scaled_width = static_cast<int>(std::ceil((half_width * scale + 1) * step));
 				zl = {this->center - scaled_width, this->top - static_cast<int>(std::ceil(step)),
 						this->center + scaled_width, this->top + static_cast<int>(std::ceil((height * scale + 1) * step))};
@@ -2008,7 +2018,7 @@ static void ViewportDrawScaledLabel(const StringSpriteToDraw &ss, int x, int y, 
 static void ViewportDrawStrings(ZoomLevel zoom, const StringSpriteToDrawVector *sstdv, const DrawPixelInfo *fractional_dpi = nullptr)
 {
 	const double step = fractional_dpi != nullptr ? fractional_dpi->zoom_step : ScaleByZoom(1, zoom);
-	const double scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+	const double scale = GetViewportLabelScale(step);
 	for (const StringSpriteToDraw &ss : *sstdv) {
 		const int x = fractional_dpi == nullptr ? UnScaleByZoom(static_cast<int>(ss.x), zoom) :
 				static_cast<int>(std::floor((ss.x - fractional_dpi->virtual_left) / step));
@@ -2559,7 +2569,7 @@ static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y, const Vie
 	if (vp.zoom_step > 0 || BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
 		/* Match the scaled rectangle, including native stops between fractional views. */
 		const double step = vp.zoom_step > 0 ? vp.zoom_step : ScaleByZoom(1, vp.zoom);
-		const double scale = BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom() ? GetViewportLabelScale(step, ZOOM_BASE) : 1;
+		const double scale = GetViewportLabelScale(step);
 		const int width = GetViewportLabelExtent(small ? sign->width_small : sign->width_normal, scale);
 		const int height = GetViewportLabelExtent(WidgetDimensions::scaled.fullbevel.top + GetCharacterHeight(small ? FontSize::Small : FontSize::Normal) + WidgetDimensions::scaled.fullbevel.bottom, scale);
 		const int left = static_cast<int>(std::floor((sign->center - vp.GetRenderLeft()) / step - width / 2)) + vp.left;
@@ -2855,24 +2865,14 @@ double GetVehicleNavigationArrivalScale(const Vehicle *front, const Viewport &vp
  * @param z World elevation, adjusted to the fitted target centre.
  * @param vp Viewport supplying screen dimensions.
  * @param target Navigation category.
- * @param vehicle_reference Whether coordinates identify a vehicle.
  * @return Destination-aware arrival magnification.
  */
-static double GetDestinationArrivalScale(int &x, int &y, int &z, const Viewport &vp, ViewportFlightTarget target, bool vehicle_reference)
+static double GetDestinationArrivalScale(int &x, int &y, int &z, const Viewport &vp, ViewportFlightTarget target)
 {
 	const auto fit = [&](double width, double height, double closest_step) {
 		return ZOOM_BASE / GetNavigationArrivalStep(width, height, vp.width, vp.height, closest_step,
 				ScaleByZoom(1, _settings_client.gui.zoom_min), ScaleByZoom(1, _settings_client.gui.zoom_max));
 	};
-	if (vehicle_reference) {
-		for (const Vehicle *candidate : Vehicle::Iterate()) {
-			if (!IsCompanyBuildableVehicleType(candidate)) continue;
-			const Vehicle *front = candidate->GetMovingFront();
-			if (front->x_pos != x || front->y_pos != y || front->z_pos != z) continue;
-			return GetVehicleNavigationArrivalScale(front, vp);
-		}
-		return fit(256 * ZOOM_BASE, 160 * ZOOM_BASE, ZOOM_BASE / 2.0);
-	}
 	if (x < 0 || y < 0 || x >= static_cast<int>(Map::SizeX() * TILE_SIZE) || y >= static_cast<int>(Map::SizeY() * TILE_SIZE)) {
 		return fit(0, 0, ZOOM_BASE);
 	}
@@ -2949,7 +2949,6 @@ static double GetDestinationArrivalScale(int &x, int &y, int &z, const Viewport 
  */
 bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival_scale, ViewportFlightTarget target)
 {
-	const bool vehicle_reference = target == ViewportFlightTarget::Vehicle || (target == ViewportFlightTarget::News && z != -1);
 	/* The slope cannot be acquired outside of the map, so make sure we are always within the map. */
 	if (z == -1) {
 		if ( x >= 0 && x <= (int)Map::SizeX() * (int)TILE_SIZE - 1
@@ -2962,7 +2961,7 @@ bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant, double arrival
 
 	if (!instant && arrival_scale == 0 && w == GetMainWindow() && _settings_client.gui.smooth_scroll &&
 			IsViewportFlightEnabled(_settings_client.gui, target) && BlitterFactory::GetCurrentBlitter()->SupportsSmoothZoom()) {
-		arrival_scale = GetDestinationArrivalScale(x, y, z, *w->viewport, target, vehicle_reference);
+		arrival_scale = GetDestinationArrivalScale(x, y, z, *w->viewport, target);
 	}
 	Point pt = MapXYZToViewport(*w->viewport, x, y, z);
 	w->viewport->CancelFollow(*w);

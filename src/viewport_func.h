@@ -89,6 +89,7 @@ void RebuildViewportOverlay(Window *w);
 
 bool ScrollMainWindowToTile(TileIndex tile, ViewportFlightTarget target, bool instant = false);
 bool ScrollMainWindowTo(int x, int y, int z, ViewportFlightTarget target, bool instant = false);
+bool ScrollMainWindowToVehicle(const struct Vehicle &vehicle, ViewportFlightTarget target = ViewportFlightTarget::Vehicle);
 
 /**
  * Scroll to a tile without a specific destination category.

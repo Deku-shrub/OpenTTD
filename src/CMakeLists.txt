@@ -588,6 +588,7 @@ add_files(
     vehiclelist_cmd.h
     vehiclelist_func.h
     viewport.cpp
+    viewport_camera.cpp
     viewport_cmd.h
     viewport_func.h
     viewport_gui.cpp

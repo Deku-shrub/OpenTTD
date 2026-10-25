@@ -21,9 +21,7 @@ Copy-Item -LiteralPath (Join-Path $navigationBuild 'lang\english.lng') -Destinat
 Get-ChildItem -LiteralPath (Join-Path $navigationBuild 'baseset') -File | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $navigationWork "baseset\$($_.Name)") -Force
 }
-foreach ($navigationFixture in @('ZoomStatic', 'ZoomStaticExtra', 'ZoomVehicles', 'ZoomCoverage')) {
-    Copy-Item -LiteralPath (Join-Path $PSScriptRoot $navigationFixture) -Destination (Join-Path $navigationWork 'ai') -Recurse -Force
-}
+& (Join-Path $PSScriptRoot 'stage-fixtures.ps1') -Destination (Join-Path $navigationWork 'ai')
 if ($GraphicsArchive) {
     Copy-Item -LiteralPath (Resolve-Path -LiteralPath $GraphicsArchive).Path -Destination (Join-Path $navigationWork 'baseset') -Force
 }

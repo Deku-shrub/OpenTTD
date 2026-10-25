@@ -2157,6 +2157,19 @@ void ShowSmallMap()
 }
 
 /**
+ * A repeated navigation request centres the small map instead.
+ * @param changed Whether the main viewport destination changed.
+ * @return Whether the main viewport destination changed.
+ */
+static bool CentreSmallMapAfterScroll(bool changed)
+{
+	if (changed) return true;
+	SmallMapWindow *w = dynamic_cast<SmallMapWindow*>(FindWindowById(WindowClass::SmallMap, 0));
+	if (w != nullptr) w->SmallMapCenterOnCurrentPos();
+	return false;
+}
+
+/**
  * Scrolls the main window to given coordinates.
  * @param x x coordinate
  * @param y y coordinate
@@ -2167,18 +2180,24 @@ void ShowSmallMap()
  */
 bool ScrollMainWindowTo(int x, int y, int z, ViewportFlightTarget target, bool instant)
 {
-	bool res = ScrollWindowTo(x, y, z, GetMainWindow(), instant, 0, target);
+	return CentreSmallMapAfterScroll(ScrollWindowTo(x, y, z, GetMainWindow(), instant, 0, target));
+}
 
-	/* If a user scrolls to a tile (via what way what so ever) and already is on
-	 * that tile (e.g.: pressed twice), move the smallmap to that location,
-	 * so you directly see where you are on the smallmap. */
-
-	if (res) return res;
-
-	SmallMapWindow *w = dynamic_cast<SmallMapWindow*>(FindWindowById(WindowClass::SmallMap, 0));
-	if (w != nullptr) w->SmallMapCenterOnCurrentPos();
-
-	return res;
+/**
+ * Fit and navigate to the exact vehicle, including vehicles sharing a depot.
+ * @param vehicle Selected vehicle or consist part.
+ * @param target Category authorising the navigation.
+ * @return Whether the main viewport destination changed.
+ */
+bool ScrollMainWindowToVehicle(const Vehicle &vehicle, ViewportFlightTarget target)
+{
+	Window *w = GetMainWindow();
+	if (w == nullptr || w->viewport == nullptr) return false;
+	const Vehicle *front = vehicle.GetMovingFront();
+	const double arrival_scale = IsViewportFlightEnabled(_settings_client.gui, target) ? GetVehicleNavigationArrivalScale(front, *w->viewport) : 0;
+	const bool changed = ScrollWindowTo(front->x_pos, front->y_pos, front->z_pos, w, false, arrival_scale, target);
+	SetViewportFlightVehicleTarget(w, front->index);
+	return CentreSmallMapAfterScroll(changed);
 }
 
 /**

@@ -3320,9 +3320,7 @@ public:
 						mainwindow->viewport->follow_vehicle = v->index;
 					} else {
 						if (mainwindow->viewport->follow_vehicle == v->index) mainwindow->viewport->follow_vehicle = VehicleID::Invalid();
-						const Vehicle *moving_front = v->GetMovingFront();
-						ScrollMainWindowTo(moving_front->x_pos, moving_front->y_pos, moving_front->z_pos, ViewportFlightTarget::Vehicle);
-						SetViewportFlightVehicleTarget(mainwindow, moving_front->index);
+						ScrollMainWindowToVehicle(*v);
 					}
 				}
 				break;

@@ -24,6 +24,15 @@ The repeatable runs are described in [the performance protocol](validation/perfo
 
 Details and CI links are in [the upstream readiness notes](validation/upstream-readiness.md#upstream-refresh-25-october-2026).
 
+## Maintenance cleanup, 25 October 2026
+
+- [x] Simplified category-aware navigation calls while retaining the original scrolling interface.
+- [x] Shared vehicle and news navigation through one helper using the exact vehicle and one arrival fit.
+- [x] Centralised renderer-aware label scaling for drawing, bounds and hit testing.
+- [x] Moved per-window wheel and flight animation into `src/viewport_camera.cpp`.
+- [x] Staged the shared NoAI base from `ZoomStatic/main.nut` instead of keeping three duplicate files.
+- [x] Documented the engine-only diff separately from fork packaging, media and validation tooling.
+
 ## Current performance follow-up
 
 - [x] Compare uncovered dense redraws with fixed-zoom controls and the preceding renderer.
