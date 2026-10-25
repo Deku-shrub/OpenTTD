@@ -310,7 +310,10 @@ static void UpdateViewportFlight(Window *w, uint delta_ms)
 	auto pose = flight.path.GetPose();
 	if (flight.vehicle != VehicleID::Invalid()) {
 		const Vehicle *vehicle = Vehicle::GetIfValid(flight.vehicle);
-		if (vehicle == nullptr) { CancelViewportFlight(w); return; }
+		if (vehicle == nullptr) {
+			CancelViewportFlight(w);
+			return;
+		}
 		const Vehicle *front = vehicle->GetMovingFront();
 		const Point live = RemapCoords(front->x_pos, front->y_pos, front->z_pos);
 		pose = flight.path.GetPoseTowards(live.x, live.y);

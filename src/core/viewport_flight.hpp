@@ -33,14 +33,14 @@ inline double GetNavigationArrivalStep(double virtual_width, double virtual_heig
 
 /**
  * Include every vehicle part, using world positions even if sprite bounds are not cached yet.
- * @tparam VehicleType Vehicle type exposing positions, bounds and consist links.
+ * @tparam TVehicle Vehicle type exposing positions, bounds and consist links.
  * @param front Selected vehicle or consist front.
  * @param zoom_base Virtual pixels per traditional map pixel.
  * @param invalid_coord Sentinel for uncached sprite bounds.
  * @return Destination width and height in virtual pixels.
  */
-template <typename VehicleType>
-std::pair<double, double> GetNavigationVehicleExtent(const VehicleType *front, double zoom_base, int invalid_coord)
+template <typename TVehicle>
+std::pair<double, double> GetNavigationVehicleExtent(const TVehicle *front, double zoom_base, int invalid_coord)
 {
 	double half_width = 0, half_height = 0;
 	const double centre_x = (static_cast<double>(front->y_pos) - front->x_pos) * 2 * zoom_base;

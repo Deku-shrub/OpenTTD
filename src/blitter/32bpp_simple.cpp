@@ -328,7 +328,10 @@ bool Blitter_32bppSimple::DrawScaledRows(ScaledBlitterParams *bp, BlitterMode mo
 		int cached_row = -1;
 		return this->DrawScaledNearestRows(bp, width, height, factor,
 				[&](int y, Colour *destination, const int *columns, int first, int last) {
-					if (y != cached_row) { read_row(context, y, source_row); cached_row = y; }
+					if (y != cached_row) {
+						read_row(context, y, source_row);
+						cached_row = y;
+					}
 					return this->DrawScaledNearestRow(destination, source_row, columns, first, last, mode, bp->remap);
 				});
 	}

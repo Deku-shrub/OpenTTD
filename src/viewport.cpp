@@ -2885,7 +2885,10 @@ static double GetDestinationArrivalScale(int &x, int &y, int &z, const Viewport 
 		/* The requested industry's centre or north corner may be a hole occupied
 		 * by another tile type. Prefer its footprint over the tile underneath. */
 		for (const Industry *industry : Industry::Iterate()) {
-			if (industry->location.Contains(tile)) { area = industry->location; break; }
+			if (industry->location.Contains(tile)) {
+				area = industry->location;
+				break;
+			}
 		}
 	} else if (IsTileType(tile, TileType::Station)) {
 		area = BaseStation::GetByTile(tile)->spread;
@@ -2896,7 +2899,10 @@ static double GetDestinationArrivalScale(int &x, int &y, int &z, const Viewport 
 	} else {
 		/* Town references in news, subsidies and scripts still use their own permission category. */
 		for (const Town *candidate : Town::Iterate()) {
-			if (candidate->xy == tile) { town = candidate; break; }
+			if (candidate->xy == tile) {
+				town = candidate;
+				break;
+			}
 		}
 	}
 	if (town != nullptr) {

@@ -6,8 +6,10 @@
  */
 
 /** @file viewport_label_scale.hpp Continuous, readability-bounded map-label scaling. */
+
 #ifndef VIEWPORT_LABEL_SCALE_HPP
 #define VIEWPORT_LABEL_SCALE_HPP
+
 #include <algorithm>
 #include <cmath>
 
@@ -21,6 +23,7 @@ inline double GetViewportLabelScale(double step, double normal_step)
 {
 	return std::clamp(std::pow(normal_step / step, 0.25), 0.75, 1.5);
 }
+
 /**
  * Round a scaled label extent outward.
  * @param pixels Unscaled extent in pixels.
@@ -31,20 +34,22 @@ inline int GetViewportLabelExtent(int pixels, double scale)
 {
 	return std::max(1, static_cast<int>(std::ceil(pixels * scale)));
 }
+
 /**
  * Black/white raster passes recover coverage without assuming glyph alpha semantics.
- * @tparam Pixel RGB pixel type with a three-channel constructor.
+ * @tparam TPixel RGB pixel type with a three-channel constructor.
  * @param black Glyph raster sampled over black.
  * @param white Glyph raster sampled over white.
  * @param background Resolved scene colour below the glyph.
  * @return Glyph colour composited onto the scene.
  */
-template <typename Pixel>
-Pixel CompositeViewportLabelPixel(const Pixel &black, const Pixel &white, const Pixel &background)
+template <typename TPixel>
+TPixel CompositeViewportLabelPixel(const TPixel &black, const TPixel &white, const TPixel &background)
 {
 	const int inverse_alpha = std::clamp(((int(white.r) - black.r) + (int(white.g) - black.g) + (int(white.b) - black.b) + 1) / 3, 0, 255);
-	return Pixel(std::min(255, black.r + (background.r * inverse_alpha + 127) / 255),
+	return TPixel(std::min(255, black.r + (background.r * inverse_alpha + 127) / 255),
 			std::min(255, black.g + (background.g * inverse_alpha + 127) / 255),
 			std::min(255, black.b + (background.b * inverse_alpha + 127) / 255));
 }
-#endif
+
+#endif /* VIEWPORT_LABEL_SCALE_HPP */

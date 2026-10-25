@@ -126,12 +126,12 @@ public:
 
 	/**
 	 * Visit only blocks affected by the changed animated palette entries.
-	 * @tparam Callback Callable accepting four screen-pixel edges.
+	 * @tparam TCallback Callable accepting four screen-pixel edges.
 	 * @param changed Bit mask of animated entries that changed.
 	 * @param callback Receives each affected block as left, top, exclusive right and bottom.
 	 */
-	template <typename Callback>
-	void ForEachChanged(uint32_t changed, const Callback &callback) const
+	template <typename TCallback>
+	void ForEachChanged(uint32_t changed, const TCallback &callback) const
 	{
 		if (changed == 0) return;
 		for (int x = 0; x < this->columns; x++) {

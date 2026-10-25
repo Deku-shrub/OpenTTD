@@ -30,13 +30,13 @@ enum class ViewportFlightTarget {
 
 /**
  * Each category needs its own switch so disabling one does not enable a fallback flight.
- * @tparam Settings Settings type exposing flight switch members.
+ * @tparam TSettings Settings type exposing flight switch members.
  * @param settings Client camera switches.
  * @param target Category of the initiating navigation action.
  * @return True when both the master and category switches allow a flight.
  */
-template <typename Settings>
-bool IsViewportFlightEnabled(const Settings &settings, ViewportFlightTarget target)
+template <typename TSettings>
+bool IsViewportFlightEnabled(const TSettings &settings, ViewportFlightTarget target)
 {
 	if (!settings.fly_navigation) return false;
 	switch (target) {

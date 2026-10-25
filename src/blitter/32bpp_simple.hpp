@@ -45,8 +45,8 @@ protected:
 	};
 	/**
 	 * Resolve sampled colours with format-specific output selected once per row.
-	 * @tparam Remap Whether to apply the source palette remapping table.
-	 * @tparam WritePixel Callable writing a resolved colour and alpha at an output column.
+	 * @tparam TRemap Whether to apply the source palette remapping table.
+	 * @tparam TWritePixel Callable writing a resolved colour and alpha at an output column.
 	 * @param source Decoded source scanline.
 	 * @param columns Source columns selected for the output scanline.
 	 * @param first First output column to draw.
@@ -55,9 +55,9 @@ protected:
 	 * @param write_pixel Output-format callback.
 	 * @return Animated palette entries used by the scanline.
 	 */
-	template <bool Remap, typename WritePixel>
+	template <bool TRemap, typename TWritePixel>
 	uint32_t DrawScaledColourRow(const Pixel *source, const int *columns, int first, int last,
-			const uint8_t *remap, const WritePixel &write_pixel)
+			const uint8_t *remap, const TWritePixel &write_pixel)
 	{
 		uint32_t mask = 0;
 		for (int x = first; x < last; ++x) {
@@ -67,7 +67,7 @@ protected:
 			uint8_t index = pixel.m;
 			Colour colour(pixel.r, pixel.g, pixel.b);
 			if (index != 0) {
-				if constexpr (Remap) index = remap[index];
+				if constexpr (TRemap) index = remap[index];
 				if (index == 0) continue;
 				colour = AdjustBrightness(this->LookupColourInPalette(index), pixel.v);
 				if (index >= PALETTE_ANIM_START && index < PALETTE_ANIM_START + PALETTE_ANIM_SIZE) mask |= uint32_t{1} << (index - PALETTE_ANIM_START);
@@ -91,15 +91,15 @@ protected:
 			int first, int last, BlitterMode mode, const uint8_t *remap);
 	/**
 	 * Sample native colours without decoding or resolving their static palettes again.
-	 * @tparam WritePixel Output-format callback type.
+	 * @tparam TWritePixel Output-format callback type.
 	 * @param source Already-coloured source scanline.
 	 * @param columns Selected source columns.
 	 * @param first First output column.
 	 * @param last Exclusive last output column.
 	 * @param write_pixel Callback writing a sampled colour.
 	 */
-	template <typename WritePixel>
-	static void CompositeScaledColourRow(const Colour *source, const int *columns, int first, int last, const WritePixel &write_pixel)
+	template <typename TWritePixel>
+	static void CompositeScaledColourRow(const Colour *source, const int *columns, int first, int last, const TWritePixel &write_pixel)
 	{
 		for (int x = first; x < last; ++x) {
 			if (columns[x] < 0) continue;
@@ -120,7 +120,7 @@ protected:
 			const void *context, uint32_t (*draw_row)(const void *, int, Colour *, const int *, int, int));
 	/**
 	 * Adapt a row compositor without allocating a callable for each sprite.
-	 * @tparam DrawRow Row-compositor type.
+	 * @tparam TDrawRow Row-compositor type.
 	 * @param bp Fractional source and destination parameters.
 	 * @param width Source mipmap width.
 	 * @param height Source mipmap height.
@@ -128,12 +128,12 @@ protected:
 	 * @param draw_row Row-compositor callback.
 	 * @return True when the sprite was handled.
 	 */
-	template <typename DrawRow>
-	bool DrawScaledNearestRows(ScaledBlitterParams *bp, int width, int height, double factor, const DrawRow &draw_row)
+	template <typename TDrawRow>
+	bool DrawScaledNearestRows(ScaledBlitterParams *bp, int width, int height, double factor, const TDrawRow &draw_row)
 	{
 		return this->DrawScaledNearestRows(bp, width, height, factor, &draw_row,
 				[](const void *context, int y, Colour *destination, const int *columns, int first, int last) {
-					return (*static_cast<const DrawRow *>(context))(y, destination, columns, first, last);
+					return (*static_cast<const TDrawRow *>(context))(y, destination, columns, first, last);
 				});
 	}
 	/** Premultiplied, horizontally filtered source pixel. */
@@ -156,7 +156,7 @@ protected:
 			const void *context, void (*read_row)(const void *, int, Pixel *));
 	/**
 	 * Adapt row readers without allocating a type-erased function object per sprite.
-	 * @tparam ReadRow Source scanline decoder type.
+	 * @tparam TReadRow Source scanline decoder type.
 	 * @param bp Fractional source, destination and clipping parameters.
 	 * @param mode Blitting mode.
 	 * @param width Width of the selected source mipmap in pixels.
@@ -165,11 +165,11 @@ protected:
 	 * @param read_row Callable decoding one source scanline.
 	 * @return True when fractional drawing is supported.
 	 */
-	template <typename ReadRow>
-	bool DrawScaledRows(ScaledBlitterParams *bp, BlitterMode mode, int width, int height, double factor, const ReadRow &read_row)
+	template <typename TReadRow>
+	bool DrawScaledRows(ScaledBlitterParams *bp, BlitterMode mode, int width, int height, double factor, const TReadRow &read_row)
 	{
 		return this->DrawScaledRows(bp, mode, width, height, factor, &read_row, [](const void *context, int y, Pixel *row) {
-			(*static_cast<const ReadRow *>(context))(y, row);
+			(*static_cast<const TReadRow *>(context))(y, row);
 		});
 	}
 public:

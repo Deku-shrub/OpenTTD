@@ -41,12 +41,6 @@ void UpdateViewportSmoothZoomAnimation(Window *w, uint delta_ms);
 void CancelViewportFlight(Window *w);
 void SetViewportFlightVehicleTarget(Window *w, VehicleID vehicle);
 bool TryStartViewportFlight(Window *w, Point centre, double arrival_scale = 0, ViewportFlightTarget target = ViewportFlightTarget::Other);
-/**
- * Fit a vehicle or its complete consist into the destination viewport.
- * @param front Front vehicle of the target consist.
- * @param vp Destination viewport, including its visible dimensions.
- * @return Bounded virtual pixels per screen pixel for arrival.
- */
 double GetVehicleNavigationArrivalScale(const struct Vehicle *front, const Viewport &vp);
 void ConstrainAllViewportsZoom();
 Point GetTileZoomCenterWindow(bool in, Window * w);
