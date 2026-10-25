@@ -25,9 +25,7 @@ view. Captions must identify what is visible rather than imply every vehicle,
 graphics set or NewGRF was tested by a single clip.
 
 The object clip demonstrates terrain, trees, NewGRF structures and map
-labels. It is not a mixed-vehicle demonstration. The next gallery refresh should
-add a current-build overview containing road and rail traffic alongside stations,
-bridges or tunnels, with waterways or an airport in a complementary broad view.
+labels. It is not a mixed-vehicle demonstration.
 
 Keep the user guide text-only, with descriptive click-to-open links and clip
 sizes. The homepage may embed one representative preview. Avoid embedding the

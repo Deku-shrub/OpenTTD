@@ -4,11 +4,8 @@
 
 The downloadable game packages include these written guides. Animated examples and test-map tools are available in the online guide and repository.
 
-[Fork homepage](../README.md) | [Progress and TODO](smooth_zoom_todo.md) |
+[Fork homepage](../README.md) |
 [Test coverage](validation/zoom-coverage.md)
-
-See the [implementation and validation checklist](smooth_zoom_todo.md) for
-what is complete and what still needs work.
 
 This experimental fork adds eased fractional mouse-wheel zoom, a compact toolbar
 percentage/snap control, scaling labels and simultaneous pan-and-zoom flights.
@@ -137,7 +134,7 @@ has been exercised. No specific third-party NewGRF set is certified yet.
 | Multiplayer | Camera preferences are per client, but normal executable-revision and NewGRF compatibility checks still apply. This fork has a different revision from stock OpenTTD and ordinarily cannot join a stock server. Use matching builds and content for server/clients. Multiplayer testing is still open. See the [official multiplayer guide](https://wiki.openttd.org/en/Manual/Multiplayer). |
 | Other engine patches / patch packs | Not a plug-in for another executable. Port the source changes and rebuild. Changes to viewports, blitters, zoom, toolbar/window input or settings may conflict. Patches with custom save formats add separate compatibility constraints. No patch-pack integration has been validated. |
 
-### Current evidence and remaining checks
+### Validation evidence
 
 Existing saved validation worlds have been loaded repeatedly, including loading
 during a flight. Infrastructure, representative moving vehicles and camera
@@ -151,11 +148,6 @@ Source references:
 [camera save/load](../src/saveload/misc_sl.cpp),
 [local settings](../src/table/settings/gui_settings.ini), and
 [network revision checks](../src/network/core/network_game_info.cpp).
-
-Still required: broader combinations of NewGRFs, multiplayer with matching
-builds, multiplayer script redirects, and integration
-with any intended patch pack. Keep these separate from the validated base-game
-coverage in the [TODO list](smooth_zoom_todo.md).
 
 ## Enable smooth mouse-wheel zoom
 
@@ -341,8 +333,7 @@ These clips do not demonstrate every vehicle type. The gallery uses general
 scenes. Individual vehicle checks are recorded in the
 [coverage notes](validation/zoom-coverage.md), rather than separate movies.
 
-See the [capture notes](images/smooth-zoom/README.md) for provenance and the
-mixed-scene requirements for future recordings.
+See the [capture notes](images/smooth-zoom/README.md) for clip provenance.
 
 ## Try the prototype
 
@@ -383,8 +374,7 @@ Dense label overlap still follows the game's existing placement rules.
 
 Graphics-set and renderer test results are recorded in the
 [coverage notes](validation/zoom-coverage.md), including OpenGL, legacy blitters,
-large windows, interface scaling and multilingual text. These notes distinguish
-completed checks from work still in progress.
+large windows, interface scaling and multilingual text.
 
 ### Fractional panning
 

@@ -8,7 +8,6 @@ The standard OpenTTD downloads do not include these changes.
 [Installation](docs/install_smooth_zoom.md) |
 [User guide](docs/smooth_zoom_readme.md) |
 [Animated examples](docs/smooth_zoom_readme.md#zoom-examples) |
-[Progress and TODO](docs/smooth_zoom_todo.md) |
 [Testing and compatibility](docs/validation/zoom-coverage.md)
 
 ## Download and play
@@ -78,8 +77,7 @@ upstream revision `fab8089e6bed2be570b6b0a2cb9f19a5db16a7da`, preserved as the
 
 ### Status and reporting issues
 
-This is a work in progress. The [TODO list](docs/smooth_zoom_todo.md) distinguishes
-implemented work from remaining validation. The [test coverage
+This is an experimental fork. The [test coverage
 notes](docs/validation/zoom-coverage.md) record graphics sets, renderers and
 performance measurements. [CI requirements and results](docs/validation/upstream-readiness.md)
 track the platform checks and submission constraints. Upstream integration is

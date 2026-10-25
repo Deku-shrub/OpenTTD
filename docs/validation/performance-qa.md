@@ -85,12 +85,4 @@ include settled frames. Private bytes and working set are recorded before and
 after each action. Initial cache growth needs to be distinguished from continued
 growth after repeated warm cycles.
 
-## Pending coverage
-
-- Longer foreground repetitions and a foreground repeated-use run. The initial interaction and dense-baseline runs completed.
-- Repeat the slower OpenGL fractional-redraw case and profile its rendering cost.
-- Investigate continued small private-memory growth in the paused repeated-use run.
-- Review long frame intervals and arrival stability in the representative
-  network before resuming promotional capture.
-
 Current measurements and renderer checks are in [coverage notes](zoom-coverage.md).
