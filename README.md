@@ -74,11 +74,7 @@ upstream revision `fab8089e6bed2be570b6b0a2cb9f19a5db16a7da`, preserved as the
 - [All fork changes from the original base](https://github.com/Deku-shrub/OpenTTD/compare/upstream-base...master)
 - [Compare with current upstream master](https://github.com/OpenTTD/OpenTTD/compare/master...Deku-shrub:master)
 
-`master` contains the fork's implementation. `upstream-master` preserves the
-upstream checkpoint taken during fork setup. It is not an automatically updated
-mirror. The original branches and commits are preserved in this fork. The former
-standalone backup repository is no longer available. Its historical CI logs
-were not copied during migration.
+`master` contains the fork's implementation.
 
 ### Status and reporting issues
 

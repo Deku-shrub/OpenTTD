@@ -75,8 +75,7 @@ The launcher stages the matching language, base metadata and NoAI fixture files.
 It accepts `-Executable` for another Windows build, `-GraphicsArchive` for an
 installed `opengfx-8.0.tar`, `-Savegame` for your own world, or `-NewMap` for an
 empty generated map. Audio is disabled. It requires a compiled game and OpenGFX.
-This is not a standalone installation package. The older local `desktop.ps1`
-helper also defaults to the populated map.
+This is not a standalone installation package.
 
 ## Existing saves, rollback and mod compatibility
 
@@ -175,10 +174,8 @@ double or halve the magnification. The updated controller eases into the target
 and keeps its motion when further notches arrive. Zoom buttons continue to
 select integer levels.
 
-Fractional views now use the same mipmap-based pixel-centre sampler during
-wheel zooming, flying, panning, following and rest. This removes the late
-switch to area filtering that could change fine detail around apparent arrival.
-Fine textures remain slightly sharper at rest rather than being averaged again.
+Fractional views use the same mipmap-based pixel-centre sampler during
+wheel zooming, flying, panning, following and rest to keep fine detail consistent.
 The nearly invisible wheel easing tail ends once residual scale displacement is
 at most one pixel across the viewport. Flights also finish once their combined
 remaining pan and scale displacement is below one pixel. Native zoom levels
@@ -187,8 +184,7 @@ continue to use the original integer renderer.
 The main toolbar displays a compact percentage button, such as 84%.
 Its tooltip shows the nearest traditional level. Click it to stop the transition
 and snap to that traditional level. The button is hidden if the toolbar is too
-narrow to accommodate it. An older prototype build will still jump directly
-between wheel targets.
+narrow to accommodate it.
 
 The existing plus and minus buttons continue to select traditional levels.
 
@@ -222,9 +218,9 @@ For longer trips, no pull-back is possible when the extra zoom-out allowance is
 zero or the view is already at its configured zoom-out limit.
 Medium trips use the [van Wijk-Nuij zoom/pan model](https://vanwijk.win.tue.nl/zoompan.pdf),
 which derives height and duration from the perceptual path. Animated flights
-last 300-2,200 ms. Longer flights accelerate to finish within that limit. They
-no longer silently switch to an instant jump after a previous town arrival. Disabling the existing smooth-scrolling setting also disables flights.
-Flights now choose an arrival zoom for the destination, independently of the
+last 300-2,200 ms. Longer flights accelerate to finish within that limit.
+Disabling smooth scrolling also disables flights.
+Flights choose an arrival zoom for the destination, independently of the
 departure zoom. Automatic fitting aims to keep the object within 80% of the
 viewport and stops at a traditional zoom level. Small objects arrive at up to
 200%. Larger objects require a wider view. Your configured zoom limits apply.
@@ -236,9 +232,8 @@ station and industry structures. Coordinate-only destinations use a normal
 100% context view. These are framing estimates rather than exact sprite outlines.
 
 The Expert Town arrival zoom override defaults to Fit target automatically.
-Fixed zoom and Keep current zoom remain available. Existing configurations
-that selected Keep current zoom preserve that choice: select automatic fitting
-or run `set gui.fly_town_zoom 0` to use the new default.
+Fixed zoom and Keep current zoom are also available. To select automatic fitting
+from the console, run `set gui.fly_town_zoom 0`.
 
 These options control flight timing and zoom. Search for flight to find the
 timing controls. Search for arrival to find the town zoom selector, or clear
@@ -288,9 +283,8 @@ The switch follows the action used: a vehicle referenced in a news item uses
 the news switch, while its own location button uses the vehicle switch. Order
 destinations use the order switch even when the destination is a station.
 The Expert Fly to map locations override combines town and uncategorised
-map navigation. It does not override any other disabled category. The combined
-switch retains `gui.fly_towns` and its existing value. The former
-`gui.fly_other_navigation` setting is removed. Use `gui.fly_towns` instead.
+map navigation. It does not override any other disabled category. Its console
+setting is `gui.fly_towns`.
 
 Turning off a category cancels any active flight in that category at its
 currently displayed view. Turning off the master cancels every flight.
@@ -304,8 +298,8 @@ Flight speed, duration scale, curvature and maximum pull-back apply to all enabl
 flights. Changed values take effect on the next flight. Start with 120% speed,
 100% duration and curvature 142. Faster speed or a smaller duration scale gives
 quicker travel. Curvature is reduced automatically to fit zoom limits, while pan
-and zoom stay simultaneous. The old `gui.fly_zoom_duration` setting is replaced
-by `gui.fly_duration_scale` (percent). `gui.fly_curve` is curvature multiplied by 100.
+and zoom stay simultaneous. `gui.fly_duration_scale` is a percentage.
+`gui.fly_curve` is curvature multiplied by 100.
 
 Begin a viewport drag, scroll the wheel or press any key to
 interrupt a flight and take control at the currently displayed position and
