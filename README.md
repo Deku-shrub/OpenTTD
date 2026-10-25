@@ -7,6 +7,7 @@ The standard OpenTTD downloads do not include these changes.
 [Download the latest tested build](https://github.com/Deku-shrub/OpenTTD/releases/latest) |
 [Installation](docs/install_smooth_zoom.md) |
 [User guide](docs/smooth_zoom_readme.md) |
+[Watch the demo](https://www.youtube.com/watch?v=wh537zSUeHo) |
 [Animated examples](docs/smooth_zoom_readme.md#zoom-examples) |
 [Testing and compatibility](docs/validation/zoom-coverage.md)
 
@@ -37,9 +38,10 @@ enabled for new configurations.
 
 ### See it in motion
 
-Zooming around NewGRF objects, trees and map labels:
+Watch the narrated comparison of classic zoom and navigation with smooth zoom,
+fly-to navigation and manual takeover:
 
-<img src="docs/images/smooth-zoom/newgrf-objects.webp" alt="Animated smooth zoom around a gasometer, forests and map labels" width="720">
+[![Watch the smooth zoom and fly navigation demo on YouTube](https://img.youtube.com/vi/wh537zSUeHo/hqdefault.jpg)](https://www.youtube.com/watch?v=wh537zSUeHo)
 
 [More examples](docs/smooth_zoom_readme.md#zoom-examples) show fractional
 panning and zooming with NewGRF objects and map labels.
