@@ -3,7 +3,7 @@
 [Fork homepage](../README.md) | [User guide](smooth_zoom_readme.md) |
 [CI requirements and results](validation/upstream-readiness.md)
 
-Updated 13 October 2026. Checkpoint and regular commits are now authorized.
+Updated 25 October 2026. Checkpoint and regular commits are now authorized.
 Current cross-renderer and graphics-set results are in
 [the coverage notes](validation/zoom-coverage.md). The dated sections below
 retain historical checkpoints. Later checked items supersede earlier pending
@@ -13,6 +13,16 @@ Performance and QA remain active. Demo capture resumed on request on 13 October.
 The repeatable runs are described in [the performance protocol](validation/performance-qa.md).
 
 - [x] Recreate all 16 classic/enhanced comparison and mixed-scene clips with overlapping zoom inputs. Verify full decoding, hashes and camera traces. Visual selection remains pending. See [capture notes](validation/promotional-captures.md#recreated-set-13-october-2026).
+
+## Upstream maintenance, 25 October 2026
+
+- [x] Merge the 31 upstream commits and verify zero commits behind upstream.
+- [x] Fix the MinGW nightly warning and verify the nightly annotation gate passes.
+- [x] Fix missing Doxygen entries and pass source and documentation checks.
+- [x] Pass all 150 local tests, all eight platform builds and download publication. Verify the four package hashes and clean source manifests.
+- [x] Pass CodeQL verification on the refreshed revision.
+
+Details and CI links are in [the upstream readiness notes](validation/upstream-readiness.md#upstream-refresh-25-october-2026).
 
 ## Current performance follow-up
 

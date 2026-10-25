@@ -76,3 +76,31 @@ The runner checks source descriptions, builds all default targets (including reg
 - Completed: compare Doxygen warning sets with the unmodified upstream base. No new warnings remain.
 - Complete multiplayer/client compatibility testing and remaining platform-specific GUI checks listed in the [TODO](../smooth_zoom_todo.md).
 - Keep fork implementation history and large demonstration assets separate from any future independently authored, policy-compliant contribution. No upstream issue or PR has been submitted by this audit.
+
+
+## Upstream refresh, 25 October 2026
+
+Merged 31 upstream commits through `cb7027538c`, retaining the fork's history.
+GitHub reports zero commits behind upstream. The tested source revision is
+`8b279ef16b6ef837a0a65166fa7d4818c77da2cf`.
+
+The recurring nightly failure was a MinGW redundant-declaration warning for
+`ShowFramerateWindow()`. Its declaration already comes from `framerate_type.h`.
+Removed the duplicate declaration without suppressing warnings. The rerun
+passed MinGW, macOS x64 and annotation checks:
+[nightly run](https://github.com/Deku-shrub/OpenTTD/actions/runs/40205220874).
+That run tested the functional fix at `220f8617e6`. The subsequent source
+changes only completed missing Doxygen comments for fractional sampling and
+the timing hotkey.
+
+Validation on the updated tree:
+
+- Full local Release build and all 150 CTest cases passed, including the four upstream regression suites. Test time was 23.08 seconds.
+- All eight platform jobs and download publication passed in [build run](https://github.com/Deku-shrub/OpenTTD/actions/runs/40205422028).
+- [Source checks](https://github.com/Deku-shrub/OpenTTD/actions/runs/40205421967) and the [Doxygen comparison](https://github.com/Deku-shrub/OpenTTD/actions/runs/40205422652) passed.
+- CodeQL passed: [run](https://github.com/Deku-shrub/OpenTTD/actions/runs/40205421951).
+- All four published platform packages matched their SHA256 checksums. Their manifests report the same source revision and `revision_modified=0`.
+
+[Download the tested build](https://github.com/Deku-shrub/OpenTTD/releases/tag/build-40205422028-8b279ef16b6e).
+Local test logs and package verification are in ignored
+`build-smoothzoom/qa-upstream-20261025` output.
