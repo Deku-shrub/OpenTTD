@@ -493,7 +493,7 @@ enum GlobalHotKeys : int32_t {
 	GHK_DELETE_NONVITAL_WINDOWS,
 	GHK_DELETE_ALL_MESSAGES,
 	GHK_REFRESH_SCREEN,
-	GHK_PRINT_FRAMERATE,
+	GHK_PRINT_FRAMERATE, ///< Write timing statistics without covering the viewport with the console.
 	GHK_CRASH,
 	GHK_MONEY,
 	GHK_UPDATE_COORDS,

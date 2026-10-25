@@ -189,7 +189,11 @@ static double SnapScaledSpriteCoordinate(double value)
 	return std::abs(value - boundary) <= 1e-9 ? boundary : value;
 }
 
-/** Whole sprites only need snapping at integer pixel edges. */
+/**
+ * Whole sprites only need snapping at integer pixel edges.
+ * @param value Source coordinate at the destination pixel centre.
+ * @return Source pixel index after snapping near an integer edge.
+ */
 static int ScaledSpritePixel(double value)
 {
 	const double lower = std::floor(value);
