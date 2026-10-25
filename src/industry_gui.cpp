@@ -1090,7 +1090,7 @@ public:
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(i->location.GetCentreTile());
 				} else {
-					ScrollMainWindowToTile(i->location.GetCentreTile(), false, ViewportFlightTarget::Industry);
+					ScrollMainWindowToTile(i->location.GetCentreTile(), ViewportFlightTarget::Industry);
 				}
 				break;
 			}
@@ -1812,7 +1812,7 @@ public:
 					if (_ctrl_pressed) {
 						ShowExtraViewportWindow((*it)->location.tile);
 					} else {
-						ScrollMainWindowToTile((*it)->location.tile, false, ViewportFlightTarget::Industry);
+						ScrollMainWindowToTile((*it)->location.tile, ViewportFlightTarget::Industry);
 					}
 				}
 				break;

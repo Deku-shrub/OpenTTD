@@ -133,7 +133,7 @@ public:
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(this->GetCenterTile());
 				} else {
-					ScrollMainWindowToTile(this->GetCenterTile(), false, ViewportFlightTarget::Waypoint);
+					ScrollMainWindowToTile(this->GetCenterTile(), ViewportFlightTarget::Waypoint);
 				}
 				break;
 

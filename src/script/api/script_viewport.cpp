@@ -22,7 +22,7 @@
 	if (ScriptGame::IsMultiplayer()) return;
 	if (!ScriptMap::IsValidTile(tile)) return;
 
-	ScrollMainWindowToTile(tile, false, ViewportFlightTarget::Script);
+	ScrollMainWindowToTile(tile, ViewportFlightTarget::Script);
 }
 
 /* static */ bool ScriptViewport::ScrollEveryoneTo(TileIndex tile)

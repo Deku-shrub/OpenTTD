@@ -592,7 +592,7 @@ struct NewsWindow : Window {
 			default:
 				if (std::holds_alternative<VehicleID>(ni->ref1)) {
 					const Vehicle *v = Vehicle::Get(std::get<VehicleID>(this->ni->ref1))->GetMovingFront();
-					ScrollMainWindowTo(v->x_pos, v->y_pos, v->z_pos, false, ViewportFlightTarget::News);
+					ScrollMainWindowTo(v->x_pos, v->y_pos, v->z_pos, ViewportFlightTarget::News);
 					SetViewportFlightVehicleTarget(GetMainWindow(), v->index);
 				} else {
 					TileIndex tile1 = GetReferenceTile(this->ni->ref1);
@@ -601,8 +601,8 @@ struct NewsWindow : Window {
 						if (tile1 != INVALID_TILE) ShowExtraViewportWindow(tile1);
 						if (tile2 != INVALID_TILE) ShowExtraViewportWindow(tile2);
 					} else {
-						if ((tile1 == INVALID_TILE || !ScrollMainWindowToTile(tile1, false, ViewportFlightTarget::News)) && tile2 != INVALID_TILE) {
-							ScrollMainWindowToTile(tile2, false, ViewportFlightTarget::News);
+						if ((tile1 == INVALID_TILE || !ScrollMainWindowToTile(tile1, ViewportFlightTarget::News)) && tile2 != INVALID_TILE) {
+							ScrollMainWindowToTile(tile2, ViewportFlightTarget::News);
 						}
 					}
 				}

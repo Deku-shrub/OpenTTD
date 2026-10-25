@@ -632,7 +632,7 @@ public:
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(st->xy);
 				} else {
-					ScrollMainWindowToTile(st->xy, false, ViewportFlightTarget::Station);
+					ScrollMainWindowToTile(st->xy, ViewportFlightTarget::Station);
 				}
 				break;
 			}
@@ -1864,7 +1864,7 @@ struct StationViewWindow : public Window {
 					if (grouping == GR_NEXT && str == STR_STATION_VIEW_VIA) str = this->SearchNonStop(cd, station, column);
 
 					if (pos == -this->scroll_to_row && Station::IsValidID(station)) {
-						ScrollMainWindowToTile(Station::Get(station)->xy, false, ViewportFlightTarget::Station);
+						ScrollMainWindowToTile(Station::Get(station)->xy, ViewportFlightTarget::Station);
 					}
 				}
 
@@ -2009,7 +2009,7 @@ struct StationViewWindow : public Window {
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(Station::Get(this->window_number)->xy);
 				} else {
-					ScrollMainWindowToTile(Station::Get(this->window_number)->xy, false, ViewportFlightTarget::Station);
+					ScrollMainWindowToTile(Station::Get(this->window_number)->xy, ViewportFlightTarget::Station);
 				}
 				break;
 

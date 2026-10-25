@@ -2992,13 +2992,13 @@ bool ScrollWindowToTile(TileIndex tile, Window *w, bool instant)
 /**
  * Scrolls the viewport of the main window to a given location.
  * @param tile    Desired tile to center on.
+ * @param target Category authorising the navigation.
  * @param instant Jump to the location instead of slowly moving to it.
  * @return Destination of the viewport was changed (to activate other actions when the viewport is already at the desired position).
- * @param target Category authorising the navigation.
  */
-bool ScrollMainWindowToTile(TileIndex tile, bool instant, ViewportFlightTarget target)
+bool ScrollMainWindowToTile(TileIndex tile, ViewportFlightTarget target, bool instant)
 {
-	return ScrollMainWindowTo(TileX(tile) * TILE_SIZE + TILE_SIZE / 2, TileY(tile) * TILE_SIZE + TILE_SIZE / 2, -1, instant, target);
+	return ScrollMainWindowTo(TileX(tile) * TILE_SIZE + TILE_SIZE / 2, TileY(tile) * TILE_SIZE + TILE_SIZE / 2, -1, target, instant);
 }
 
 /**
@@ -3010,7 +3010,7 @@ bool ScrollMainWindowToTown(const Town &town)
 {
 	Window *w = GetMainWindow();
 	if (w == nullptr || w->viewport == nullptr) return false;
-	return ScrollMainWindowToTile(town.xy, false, ViewportFlightTarget::Town);
+	return ScrollMainWindowToTile(town.xy, ViewportFlightTarget::Town);
 }
 
 /**
@@ -4074,7 +4074,7 @@ CommandCost CmdScrollViewport(DoCommandFlags flags, TileIndex tile, ViewportScro
 
 	if (flags.Test(DoCommandFlag::Execute)) {
 		ResetObjectToPlace();
-		ScrollMainWindowToTile(tile, false, ViewportFlightTarget::Script);
+		ScrollMainWindowToTile(tile, ViewportFlightTarget::Script);
 	}
 	return CommandCost();
 }

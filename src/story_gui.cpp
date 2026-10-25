@@ -541,7 +541,7 @@ protected:
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow((TileIndex)pe.referenced_id);
 				} else {
-					ScrollMainWindowToTile((TileIndex)pe.referenced_id, false, ViewportFlightTarget::Scenario);
+					ScrollMainWindowToTile((TileIndex)pe.referenced_id, ViewportFlightTarget::Scenario);
 				}
 				break;
 

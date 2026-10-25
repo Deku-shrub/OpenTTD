@@ -1189,7 +1189,7 @@ public:
 
 				if (_ctrl_pressed && sel < this->vehicle->GetNumOrders()) {
 					TileIndex xy = this->vehicle->GetOrder(sel)->GetLocation(this->vehicle);
-					if (xy != INVALID_TILE) ScrollMainWindowToTile(xy, false, ViewportFlightTarget::Order);
+					if (xy != INVALID_TILE) ScrollMainWindowToTile(xy, ViewportFlightTarget::Order);
 					return;
 				}
 

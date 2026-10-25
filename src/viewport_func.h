@@ -93,8 +93,32 @@ bool ScrollWindowTo(int x, int y, int z, Window *w, bool instant = false, double
 
 void RebuildViewportOverlay(Window *w);
 
-bool ScrollMainWindowToTile(TileIndex tile, bool instant = false, ViewportFlightTarget target = ViewportFlightTarget::Other);
-bool ScrollMainWindowTo(int x, int y, int z = -1, bool instant = false, ViewportFlightTarget target = ViewportFlightTarget::Other);
+bool ScrollMainWindowToTile(TileIndex tile, ViewportFlightTarget target, bool instant = false);
+bool ScrollMainWindowTo(int x, int y, int z, ViewportFlightTarget target, bool instant = false);
+
+/**
+ * Scroll to a tile without a specific destination category.
+ * @param tile Desired tile to centre on.
+ * @param instant Jump immediately instead of animating.
+ * @return Whether the viewport destination changed.
+ */
+inline bool ScrollMainWindowToTile(TileIndex tile, bool instant = false)
+{
+	return ScrollMainWindowToTile(tile, ViewportFlightTarget::Other, instant);
+}
+
+/**
+ * Scroll to coordinates without a specific destination category.
+ * @param x World x coordinate.
+ * @param y World y coordinate.
+ * @param z World height, or -1 for terrain height.
+ * @param instant Jump immediately instead of animating.
+ * @return Whether the viewport destination changed.
+ */
+inline bool ScrollMainWindowTo(int x, int y, int z = -1, bool instant = false)
+{
+	return ScrollMainWindowTo(x, y, z, ViewportFlightTarget::Other, instant);
+}
 
 void UpdateAllVirtCoords();
 void ClearAllCachedNames();

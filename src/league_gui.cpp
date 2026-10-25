@@ -243,7 +243,7 @@ static void HandleLinkClick(Link link)
 	if (_ctrl_pressed) {
 		ShowExtraViewportWindow(xy);
 	} else {
-		ScrollMainWindowToTile(xy, false, ViewportFlightTarget::Scenario);
+		ScrollMainWindowToTile(xy, ViewportFlightTarget::Scenario);
 	}
 }
 
